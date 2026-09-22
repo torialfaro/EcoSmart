@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "cfe5984f83d813ac93e23d94cca23ab7",
+    "identityHash": "93b91b98fc9d81093c9d01d1fe7550a3",
     "entities": [
       {
         "tableName": "usuarios",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `email` TEXT NOT NULL, `contrasenaCifradaJwe` TEXT NOT NULL, `nombre` TEXT NOT NULL, `apellido` TEXT NOT NULL, `nombreUsuario` TEXT NOT NULL, `direccion` TEXT NOT NULL, `telefono` TEXT NOT NULL, `categoriasDeInteres` TEXT NOT NULL, `puntosHistoricos` INTEGER NOT NULL, `rachaActual` INTEGER NOT NULL, `ultimaActividadAprobadaEn` TEXT, PRIMARY KEY(`id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `email` TEXT NOT NULL, `contrasenaCifradaJwe` TEXT NOT NULL, `nombre` TEXT NOT NULL, `apellido` TEXT NOT NULL, `nombreUsuario` TEXT NOT NULL, `barrio` TEXT, `telefono` TEXT NOT NULL, `categoriasDeInteres` TEXT NOT NULL, `puntosHistoricos` INTEGER NOT NULL, `rachaActual` INTEGER NOT NULL, `ultimaActividadAprobadaEn` TEXT, PRIMARY KEY(`id`))",
         "fields": [
           {
             "fieldPath": "id",
@@ -45,10 +45,10 @@
             "notNull": true
           },
           {
-            "fieldPath": "direccion",
-            "columnName": "direccion",
+            "fieldPath": "barrio",
+            "columnName": "barrio",
             "affinity": "TEXT",
-            "notNull": true
+            "notNull": false
           },
           {
             "fieldPath": "telefono",
@@ -174,7 +174,7 @@
       },
       {
         "tableName": "puntos_verdes",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `nombre` TEXT NOT NULL, `direccion` TEXT NOT NULL, `latitud` REAL NOT NULL, `longitud` REAL NOT NULL, `categoriasQueAcepta` TEXT NOT NULL, PRIMARY KEY(`id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `nombre` TEXT NOT NULL, `direccion` TEXT NOT NULL, `barrio` TEXT NOT NULL, `latitud` REAL NOT NULL, `longitud` REAL NOT NULL, `categoriasQueAcepta` TEXT NOT NULL, PRIMARY KEY(`id`))",
         "fields": [
           {
             "fieldPath": "id",
@@ -191,6 +191,12 @@
           {
             "fieldPath": "direccion",
             "columnName": "direccion",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "barrio",
+            "columnName": "barrio",
             "affinity": "TEXT",
             "notNull": true
           },
@@ -344,7 +350,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'cfe5984f83d813ac93e23d94cca23ab7')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '93b91b98fc9d81093c9d01d1fe7550a3')"
     ]
   }
 }
