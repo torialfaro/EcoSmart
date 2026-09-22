@@ -1,0 +1,231 @@
+openapi: 3.0.3
+info:
+  title: EcoSmart — Contratos de Dependencias Externas
+  description: >-
+    Contratos consumidos por el cliente Android de EcoSmart (arquitectura
+    local-first, ver plan.md y research.md §0 — EcoSmart NO expone una API
+    propia; este documento describe las APIs de terceros que el cliente
+    consume). Cubre: (1) verificación de fotos vía EcoGPT (RF-027 a RF-030,
+    RF-050, RF-058, RF-059, RNF-008, SC-008) y (2) sincronización del
+    dataset de Puntos Verdes de CABA (RF-052, RF-053).
+  version: 1.0.0
+servers:
+  - url: https://api.ecogpt.example/v1
+    description: Servicio EcoGPT (URL real a configurar en local.properties, ver quickstart.md)
+  - url: https://datos.buenosaires.gob.ar/api/ecosmart-puntos-verdes/v1
+    description: Fuente de sincronización de Puntos Verdes de CABA (URL de ejemplo)
+
+tags:
+  - name: EcoGPT
+    description: Verificación de fotos de Reciclar/Reutilizar mediante IA
+  - name: PuntosVerdes
+    description: Sincronización del dataset de puntos de reciclaje oficiales de CABA
+
+paths:
+  /verificaciones:
+    post:
+      tags: [EcoGPT]
+      operationId: verificarFotoActividad
+      summary: Envía una foto + descripción de una actividad de Reciclar/Reutilizar para su evaluación por IA
+      description: >-
+        Implementa RF-027 (envío combinado de foto, resultado esperado y
+        descripción del usuario) y RF-059 (detección de duplicados: el
+        cliente adjunta las huellas perceptuales de fotos ya Aprobadas del
+        mismo usuario para esa categoría, para que EcoGPT pueda comparar).
+        El cliente Android DEBE configurar un timeout de 30 segundos
+        (RNF-008/SC-008) para esta llamada; superado ese plazo sin
+        respuesta, el cliente trata la solicitud como timeout (código de
+        error local `TIMEOUT`, ver Edge Case "Timeout de EcoGPT" en
+        spec.md), no como un veredicto `RECHAZADO`/`INDETERMINADO`.
+      security:
+        - apiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [imagen, categoria, resultadoEsperado, descripcionUsuario]
+              properties:
+                imagen:
+                  type: string
+                  format: binary
+                  description: Foto capturada o seleccionada por el usuario (JPEG/PNG/WebP).
+                categoria:
+                  $ref: '#/components/schemas/CategoriaActividad'
+                resultadoEsperado:
+                  type: string
+                  description: Texto de "resultado esperado" de la Actividad (RF-015), usado como referencia de evaluación.
+                descripcionUsuario:
+                  type: string
+                  description: Descripción propia ingresada por el usuario (RF-026).
+                huellasImagenesAprobadasPrevias:
+                  type: array
+                  description: >-
+                    Huellas perceptuales (dHash, ver research.md §3) de las
+                    fotos ya Aprobadas por este usuario en esta categoría,
+                    para permitir a EcoGPT detectar duplicados semánticos
+                    (RF-059). Puede venir vacío si es el primer envío.
+                  items:
+                    type: string
+                    example: "a1b2c3d4e5f60718"
+      responses:
+        '200':
+          description: EcoGPT procesó la solicitud (independientemente del veredicto).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VeredictoEcoGpt'
+              examples:
+                aprobado:
+                  value:
+                    veredicto: APROBADO
+                    motivo: null
+                rechazadoPorDuplicado:
+                  value:
+                    veredicto: RECHAZADO
+                    motivo: "La imagen es idéntica a una ya aprobada anteriormente."
+                indeterminado:
+                  value:
+                    veredicto: INDETERMINADO
+                    motivo: "No se pudo determinar el contenido con claridad; probá con mejor iluminación o encuadre."
+        '400':
+          description: Solicitud inválida (p. ej. imagen corrupta o formato no soportado — ver Edge Case "Imagen corrupta").
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEcoGpt'
+        '401':
+          description: API key inválida o ausente.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEcoGpt'
+        '429':
+          description: Límite de tasa excedido; el cliente debe tratarlo igual que un error genérico (reintentar sin consumir tope diario).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEcoGpt'
+        '500':
+          description: Error interno de EcoGPT; el cliente lo trata igual que un timeout (RF-030).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEcoGpt'
+
+  /puntos-verdes:
+    get:
+      tags: [PuntosVerdes]
+      operationId: sincronizarPuntosVerdes
+      summary: Obtiene el listado completo (o delta) de Puntos Verdes oficiales de CABA
+      description: >-
+        Consumido por el Worker de sincronización en segundo plano (RF-052,
+        ver research.md §5). El cliente descarga el dataset completo y
+        reemplaza su copia local en Room; el filtrado se hace enteramente en
+        el cliente, por coincidencia exacta del campo `barrio` contra el
+        barrio elegido en el perfil del usuario (RF-018/RF-063, corrección
+        post-QA 2026-09-22 — reemplaza el filtro por radio GPS de 3 km de
+        RF-053). Esta API no acepta parámetros geográficos ni de barrio.
+      parameters:
+        - name: actualizadoDesde
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+          description: >-
+            Si se provee, la fuente PUEDE devolver solo los puntos
+            modificados desde esa fecha (delta sync). El cliente debe
+            soportar también una respuesta completa si el parámetro se
+            ignora.
+      responses:
+        '200':
+          description: Listado de Puntos Verdes.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  puntos:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PuntoVerde'
+        '304':
+          description: Sin cambios desde `actualizadoDesde` (el cliente conserva su copia local).
+        '5XX':
+          description: >-
+            Error de la fuente de datos; el Worker de WorkManager reintenta
+            en la próxima ventana según su política de backoff, sin
+            bloquear el uso offline de los Puntos Verdes ya sincronizados.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEcoGpt'
+
+components:
+  securitySchemes:
+    apiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-EcoGPT-Api-Key
+      description: Configurada en local.properties del entorno de desarrollo (ver quickstart.md); nunca se commitea.
+
+  schemas:
+    CategoriaActividad:
+      type: string
+      enum: [RECICLAR, REUTILIZAR]
+      description: Solo estas dos categorías pasan por EcoGPT; Caminar se verifica vía podómetro (fuera de este contrato).
+
+    VeredictoEcoGpt:
+      type: object
+      required: [veredicto]
+      properties:
+        veredicto:
+          type: string
+          enum: [APROBADO, RECHAZADO, INDETERMINADO]
+        motivo:
+          type: string
+          nullable: true
+          description: >-
+            Obligatorio (no nulo) cuando `veredicto` es RECHAZADO o
+            INDETERMINADO (RF-029); el cliente lo muestra tal cual al
+            usuario, en un tono no punitivo (RNF-001).
+
+    ErrorEcoGpt:
+      type: object
+      required: [codigo, mensaje]
+      properties:
+        codigo:
+          type: string
+          example: "IMAGEN_NO_SOPORTADA"
+        mensaje:
+          type: string
+
+    PuntoVerde:
+      type: object
+      required: [id, nombre, direccion, barrio, latitud, longitud]
+      properties:
+        id:
+          type: string
+        nombre:
+          type: string
+        direccion:
+          type: string
+        barrio:
+          type: string
+          description: >-
+            Barrio de CABA tal como lo publica la fuente oficial (texto
+            libre). Agregado en la corrección post-QA del 2026-09-22: es la
+            clave de búsqueda de Puntos Verdes por barrio (RF-018/RF-063),
+            que reemplaza al filtro por radio GPS de 3 km (RF-053).
+        latitud:
+          type: number
+          format: double
+        longitud:
+          type: number
+          format: double
+        categoriasQueAcepta:
+          type: array
+          items:
+            type: string

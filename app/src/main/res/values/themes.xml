@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+        Tema base solo para la ventana previa a que Compose tome el control
+        (windowBackground, status bar) — el theming real de la UI vive en
+        presentation/theme/Theme.kt (tarea T020, Fase 2 Foundational).
+    -->
+    <!--
+        Parent de plataforma (no de la librería Material Components, que
+        este proyecto no agrega como dependencia por ser 100% Jetpack
+        Compose) para no requerir una lib extra solo para este estilo previo.
+    -->
+    <style name="Theme.EcoSmart" parent="android:Theme.Material.Light.NoActionBar" />
+</resources>

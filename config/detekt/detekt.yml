@@ -1,0 +1,24 @@
+# Config mínima de detekt (T004) — se apoya en buildUponDefaultConfig (app/build.gradle.kts),
+# acá solo se ajustan los umbrales que chocan con las convenciones de EcoSmart
+# (ver constitution.md, Principio V: métodos < ~40 líneas).
+
+complexity:
+  LongMethod:
+    threshold: 40
+  LongParameterList:
+    functionThreshold: 6
+    constructorThreshold: 8
+  TooManyFunctions:
+    thresholdInClasses: 15
+
+style:
+  ForbiddenComment:
+    active: false # se usa TODO/FIXME normalmente durante /speckit.implement
+  MagicNumber:
+    active: false # 133 pasos, 3km, 30s, umbrales de nivel, etc. son constantes de negocio, no "mágicas"
+
+naming:
+  FunctionNaming:
+    active: true
+  ClassNaming:
+    active: true
