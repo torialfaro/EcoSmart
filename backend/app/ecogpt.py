@@ -25,7 +25,7 @@ from typing import Optional, Tuple
 from google import genai
 from google.genai import types
 
-MODELO_GEMINI = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
+MODELO_GEMINI = os.environ.get("GEMINI_MODEL", "gemini-3.6-flash")
 
 _cliente = genai.Client(api_key=os.environ.get("GEMINI_API_KEY", ""))
 
