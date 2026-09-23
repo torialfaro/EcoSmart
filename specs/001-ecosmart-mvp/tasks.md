@@ -223,6 +223,44 @@
 - [X] T102 Reemplazar la búsqueda de Puntos Verdes por radio GPS con búsqueda por barrio (RF-018/RF-063, deriva de T101) — `PuntoVerde` gana el campo `barrio: String` (`PuntoVerde.kt`, `PuntoVerdeRoomEntity`/`Mapper`, `PuntoVerdeDto`); nuevo caso de uso `ObtenerPuntosVerdesDelBarrio` reemplaza a `ObtenerPuntosVerdesCercanos` (eliminado); `PuntosVerdesScreen.kt`/`PuntosVerdesViewModel` ya no dependen de `UbicacionProvider`; `PuntoVerdeRepositoryImpl.sembrarSiEstaVacio()` siembra Puntos Verdes de ejemplo para que la búsqueda por barrio sea demostrable sin backend real (Depende de: T055, T060, T061, T101)
 - [X] T103 Corregir el crash al tocar "Realizar" en Reciclar/Reutilizar (RF-064, el más importante de esta fase) — causa raíz: `VerificacionFotoScreen` invocaba `CameraX.bindToLifecycle` sin chequear el permiso de Cámara, lanzando `SecurityException` sin capturar; ahora verifica el permiso real del sistema operativo antes de tocar CameraX, pide el permiso una vez más si falta, y muestra `GuiaHabilitarPermisoScreen` (ya existente del Módulo 2) en vez de crashear si se rechaza; el mismo patrón se replica en `VerificacionCaminataScreen` para el permiso de Podómetro (`app/src/main/kotlin/com/ecosmart/presentation/verification/VerificacionFotoScreen.kt`/`VerificacionFotoViewModel.kt`, `VerificacionCaminataScreen.kt`) (Depende de: T075, T078, T079)
 - [X] T104 [P] Actualizar tests existentes afectados por el cambio `Usuario.direccion` → `Usuario.barrio` (`UsuarioTest.kt`, `RegistrarUsuarioTest.kt`, `AplicarTopeDiarioTest.kt`, `CalcularMetricasPerfilTest.kt`, `RoomDaoTest.kt`) y por el nuevo campo `PuntoVerde.barrio` (`PuntoVerdeTest.kt`)
+- [X] T105 Corregir crash al abrir la app en un dispositivo real: `PUNTOS_VERDES_BASE_URL`/`ECOGPT_BASE_URL` por defecto no terminaban en `/`, y Retrofit exige `baseUrl` terminado en `/` (`IllegalArgumentException` no capturada en el hilo de WorkManager al construir `PuntosVerdesNetworkModule`/`NetworkModule`, tumbando el proceso entero apenas arranca el sync periódico) — corregido en `app/build.gradle.kts` y `contracts/openapi.yaml` (Depende de: T003, T018, T059)
+
+---
+
+## Fase 10: Mapa de Puntos Verdes y Perfil Consolidado (sesión 2026-09-22, continuación)
+
+**Propósito**: cubrir RF-065 a RF-069 (`spec.md` § Clarifications, sesión 2026-09-22 continuación) — mapa real de Puntos Verdes, corrección del bug visual de cámara, y consolidación de la pantalla de Perfil.
+
+- [X] T106 [P] Agregar `osmdroid` como proveedor de mapas sin API key (RF-065, research.md §6) — dependencia en `gradle/libs.versions.toml`/`app/build.gradle.kts`, configuración de user-agent y caché privado en `app/src/main/kotlin/com/ecosmart/app/EcoSmartApplication.kt`, reglas de ProGuard en `app/proguard-rules.pro`
+- [X] T107 Ampliar el dataset de ejemplo de Puntos Verdes a los 48 barrios de `Barrio` y mostrarlos en un `MapView` centrado en el promedio de coordenadas (RF-066) en `app/src/main/kotlin/com/ecosmart/infrastructure/persistence/PuntoVerdeRepositoryImpl.kt` y `app/src/main/kotlin/com/ecosmart/presentation/home/PuntosVerdesScreen.kt` (Depende de: T102, T106)
+- [X] T108 [P] Corregir que la vista previa de la Cámara tape los botones "Cámara"/"Galería" (RF-067) — `PreviewView.implementationMode = COMPATIBLE` en `app/src/main/kotlin/com/ecosmart/presentation/verification/VerificacionFotoScreen.kt` (Depende de: T103)
+- [X] T109 Consolidar "Perfil" para mostrar todos los datos del usuario, no solo métricas de actividad (RF-068) — `PerfilViewModel`/`PerfilUiState` ahora traen también el `Usuario` completo; nueva sección de datos de cuenta y botón "Editar perfil" en `PerfilScreen.kt`; se conecta por primera vez la ruta `perfil-edicion` → `PerfilEdicionScreen` (que gana un botón "Volver") en `EcoSmartNavHost.kt` (Depende de: T032, T087)
+- [X] T110 [P] Agregar el saludo "Hola, {nombreUsuario}" junto al ícono de perfil de la Home (RF-069) en `app/src/main/kotlin/com/ecosmart/presentation/home/HomeScreen.kt` (Depende de: T100)
+
+---
+
+## Fase 11: Rediseño Visual y Pasos del Día (sesión 2026-09-22, continuación 2)
+
+**Propósito**: cubrir RF-070 a RF-072 (`spec.md` § Clarifications, sesión 2026-09-22 continuación 2) — paleta y formas consistentes en toda la app, restyle de Login/Registro, y tarjeta de "pasos hoy" en Perfil.
+
+- [X] T111 [P] Rediseñar la paleta, tipografía y formas de toda la app (RF-072) — reescritura completa de `app/src/main/kotlin/com/ecosmart/presentation/theme/Theme.kt` (verde bosque/crema/ámbar, `EcoSmartShapes` con bordes muy redondeados, `FormaBotonPildora`); se propaga automáticamente a toda pantalla que ya usa tokens de `MaterialTheme.colorScheme`/`MaterialTheme.shapes`
+- [X] T112 Reestructurar Login/Registro según el layout de referencia manteniendo la paleta propia de la app (RF-071) — `app/src/main/kotlin/com/ecosmart/presentation/auth/RegistroScreen.kt`: botón "Continuar con Google" arriba (`BotonGoogle`), divisor "o iniciá sesión con", campos con `fillMaxWidth()`, botón principal con `FormaBotonPildora` (Depende de: T111)
+- [X] T113 Agregar `sumaPasosDelDia` a la capa de persistencia (base de RF-070) — nueva query en `app/src/main/kotlin/com/ecosmart/infrastructure/persistence/room/verificacion/RegistroVerificacionDao.kt`, nuevo método en `RegistroVerificacionRepository`/`RegistroVerificacionRepositoryImpl` (Depende de: T024, T061)
+- [X] T114 Calcular `pasosHoy` en `CalcularMetricasPerfil`, gateado por el permiso de Podómetro (RF-070) — `app/src/main/kotlin/com/ecosmart/application/profile/CalcularMetricasPerfil.kt` inyecta `PermisoRepository`, agrega `MetricasPerfil.pasosHoy: Int?` (null si el permiso no está `OTORGADO`); tests actualizados en `CalcularMetricasPerfilTest.kt` (nuevo mock de `PermisoRepository` + 2 tests nuevos de `pasosHoy`) (Depende de: T113, T072)
+- [X] T115 [P] Mostrar la tarjeta de "Pasos hoy" en el Perfil (RF-070) — `PerfilViewModel`/`PerfilUiState` exponen `pasosHoy: Int?`; `PerfilScreen.kt` la renderiza como tarjeta destacada con el color `tertiary` de la app, solo cuando no es `null` (Depende de: T109, T114)
+
+---
+
+## Fase 12: Backend Real de EcoGPT (sesión 2026-09-23)
+
+**Propósito**: cubrir RF-073 a RF-075 (`spec.md` § Clarifications, sesión 2026-09-23 y continuación) — reemplazar el placeholder no funcional `https://api.ecogpt.example/v1/` (dominio RFC 2606, nunca resuelve, causaba que toda verificación fallara con "Sin conexión a internet") por un backend propio real que sí verifica imagen + descripción con IA, usando un proveedor con capa 100% gratuita (RF-075, corrección post-QA ronda 2 tras aclarar que es un proyecto escolar sin presupuesto).
+
+- [X] T116 [P] Implementar el backend FastAPI de `POST /verificaciones` (RF-073) — nuevo directorio `backend/` (`app/main.py`, `app/ecogpt.py`, `app/imagenes.py`, `app/schemas.py`): valida el secreto compartido `X-EcoGPT-Api-Key`, normaliza la imagen con Pillow, y llama a una API de IA con visión para obtener `{veredicto, motivo}` estructurado sin parseo frágil de texto libre
+- [X] T117 [P] Documentar desarrollo local y despliegue en Render (RF-073/RF-074) — `backend/README.md`, `backend/render.yaml` (Blueprint), `backend/.env.example`, `backend/requirements.txt`; actualización de `research.md` §0/§2.1, `plan.md` § Complexity Tracking, `contracts/openapi.yaml` (description + `servers`) y `.gitignore` (Depende de: T116)
+- [X] T118 [P] Reemplazar Claude/Anthropic (pago) por Gemini (Google AI Studio, capa gratuita) como proveedor de IA del backend (RF-075, corrección post-QA ronda 2) — `backend/app/ecogpt.py` reescrito con el SDK `google-genai` (`response_mime_type`/`response_schema` en vez de *tool use* para la salida estructurada); `backend/requirements.txt`, `render.yaml`, `.env.example` y `README.md` actualizados de `ANTHROPIC_API_KEY` a `GEMINI_API_KEY`; probado localmente con un servidor uvicorn real (rutas `/health`, 401 sin API key, 400 con imagen inválida) (Depende de: T116)
+- [ ] T119 Obtener una API key real de Gemini (gratis, sin tarjeta de crédito) en Google AI Studio y configurarla como `GEMINI_API_KEY` — acción manual del usuario, no automatizable (ver `backend/README.md` §2)
+- [ ] T120 Desplegar `backend/` en Render (Blueprint desde `render.yaml` o Web Service manual) y configurar `GEMINI_API_KEY`/`ECOGPT_SHARED_API_KEY` como variables de entorno del servicio — acción manual del usuario (Depende de: T116, T118, T119)
+- [ ] T121 Configurar `ECOGPT_API_KEY`/`ECOGPT_BASE_URL` en `local.properties` apuntando a la URL real de Render, y validar el flujo end-to-end completo (US8/US9: elegir actividad → realizar → verificar con foto real → sumar puntos → ver progreso en Perfil) — acción manual del usuario (Depende de: T120)
 
 ---
 

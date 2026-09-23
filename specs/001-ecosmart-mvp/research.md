@@ -51,6 +51,24 @@ propiedad de EcoSmart.
 multi-dispositivo, esta decisión debe revisarse (implica introducir un
 backend o migrar a una BaaS, y renegociar RNF-006/007 en consecuencia).
 
+**Corrección post-QA (2026-09-23)**: esta decisión se revisó parcialmente.
+"EcoGPT" nunca tuvo un backend real detrás — `ECOGPT_BASE_URL` apuntaba por
+defecto a `https://api.ecogpt.example/v1/`, un dominio reservado por RFC
+2606 que nunca resuelve, así que **toda** verificación de foto fallaba con
+un error de conexión, sin importar la conectividad real del dispositivo.
+Se decidió introducir un backend mínimo propio (no para datos de usuario
+— eso se mantiene 100% local-first, Room sigue siendo la única fuente de
+verdad de `Usuario`/`RegistroVerificacion` — sino exclusivamente como
+proxy de `POST /verificaciones` hacia una API de IA con visión, capa
+gratuita — ver corrección post-QA 2026-09-23 ronda 2 en §2.1). Ver
+detalle en §2.1. Esto NO viola el Principio I ni el resto de esta
+decisión: `constitution.md` § Stack Tecnológico ya declaraba que "el
+cliente de EcoGPT vive en Infraestructura, detrás de una interfaz... de
+modo que el proveedor de IA pueda sustituirse sin afectar reglas de
+negocio" — un proxy propio hacia un proveedor de IA real es, precisamente,
+sustituir el proveedor detrás de esa interfaz, no introducir un backend de
+datos de usuario.
+
 ---
 
 ## 1. APIs de Sensores de Android
@@ -165,6 +183,84 @@ Kotlin actuales, reduce la curva de aprendizaje del equipo). Corrutinas +
 `HttpURLConnection` manual — rechazado por reinventar manejo de
 multipart/timeouts que Retrofit/OkHttp ya resuelven.
 
+### 2.1 Backend real de EcoGPT (corrección post-QA, 2026-09-23)
+
+**Decision**: backend mínimo en **Python + FastAPI** (`backend/`, fuera del
+módulo Android), desplegado en **Render (free tier)**, que implementa
+`POST /verificaciones` del contrato como un proxy hacia una API de IA con
+soporte de visión. El backend es la única pieza que conoce la API key
+real del proveedor de IA (variable de entorno del servicio); el cliente
+Android solo conoce un secreto compartido propio (`ECOGPT_API_KEY` en
+`local.properties` ↔ `ECOGPT_SHARED_API_KEY` en Render) que autentica sus
+llamadas a este backend — la key del proveedor de IA nunca se embebe en
+el APK.
+
+El prompt enviado al modelo combina, en una sola llamada multimodal: la
+imagen, `Actividad.resultadoEsperado` y la descripción del usuario, y le
+pide comparar las tres cosas entre sí (no solo describir la imagen) antes
+de decidir Aprobado/Rechazado/Indeterminado — implementa RF-027
+literalmente. La salida se fuerza a estructura fija (JSON con
+`veredicto`/`motivo`, ver detalle del mecanismo abajo), en vez de parsear
+texto libre, para que la respuesta sea siempre parseable sin heurísticas
+frágiles.
+
+**Corrección post-QA, ronda 2 (2026-09-23)**: la primera implementación de
+este backend usaba **Claude (Anthropic)**, con salida forzada vía *tool
+use* (`tool_choice` fijo a la herramienta `reportar_veredicto`). El
+usuario aclaró explícitamente que este es un proyecto escolar sin
+presupuesto para una API paga ("no puedo pagar por una IA"), así que se
+reemplazó por **Gemini (Google AI Studio)**, que ofrece una capa gratuita
+real sin tarjeta de crédito. El mecanismo de salida estructurada
+equivalente en Gemini es `response_mime_type="application/json"` +
+`response_schema` (un JSON Schema con tipos en mayúsculas: `OBJECT`,
+`STRING`, etc.) en `GenerateContentConfig`, en vez de *tool use* — mismo
+efecto (JSON siempre parseable), mecanismo nativo distinto. Modelo usado:
+`gemini-2.5-flash` (configurable vía `GEMINI_MODEL`, ver
+`backend/app/ecogpt.py`).
+
+**Rationale**: Python + FastAPI fue elegido por el usuario del proyecto
+sobre la alternativa recomendada (Kotlin + Ktor, que hubiera mantenido un
+único lenguaje en todo el repo) porque el ecosistema de SDKs/ejemplos de
+IA está mayormente en Python. Render free tier fue elegido por su
+simplicidad de despliegue (Blueprint desde `render.yaml`, HTTPS
+automático) para un MVP académico sin presupuesto de infraestructura.
+Gemini free tier fue elegido, sobre otras opciones gratuitas, por ser la
+más madura/confiable: no pide tarjeta de crédito, tiene cuota diaria
+generosa en los modelos Flash, y soporte nativo de visión multimodal en
+una sola llamada.
+
+**Riesgo documentado — cold start vs. timeout fijo de 30s**: el plan free
+de Render duerme el servicio tras ~15 min de inactividad; la primera
+request tras dormir puede tardar 30-50+ segundos en responder, mientras
+que el `callTimeout` del cliente Android está fijo en 30s (RNF-008/SC-008,
+no negociable sin reabrir ese requisito). Esto puede manifestarse como un
+falso "Timeout" en la primera verificación del día aunque el backend esté
+sano. Mitigación sugerida (no implementada): un ping externo periódico a
+`/health`, o migrar a un plan de Render sin sleep. Ver `backend/README.md`
+§3.
+
+**Riesgo documentado — calidad de verificación con un modelo gratuito**:
+`gemini-2.5-flash` es un modelo más liviano que Claude Sonnet; es
+razonablemente confiable para esta tarea (comparar una foto contra una
+descripción textual corta), pero puede tener más falsos
+Aprobado/Rechazado en casos ambiguos que un modelo de mayor capacidad. Se
+acepta este trade-off por ser un requisito explícito del usuario (costo
+cero) para un proyecto académico, no para producción.
+
+**Alternatives considered**: Claude/Anthropic (fue la primera
+implementación real de este backend; descartado en la ronda 2 por ser una
+API paga, incompatible con el requisito explícito de costo cero de este
+proyecto escolar); OpenRouter con modelos marcados ":free" (también sin
+costo, descartado por catálogo de modelos gratuitos con visión menos
+estable en el tiempo y límites de tasa más estrictos que Gemini); Kotlin +
+Ktor para el backend (recomendado inicialmente por consistencia de
+lenguaje con el resto del repo, descartado por preferencia explícita del
+usuario por Python); llamar a la API de IA directamente desde el cliente
+Android sin backend intermedio (más simple, pero expone la API key dentro
+del APK — riesgo de abuso de la cuota gratuita por terceros, descartado
+incluso siendo gratis); Railway/Fly.io como hosting (funcionalmente
+equivalentes a Render, descartados por preferencia explícita del usuario).
+
 ---
 
 ## 3. Detección de Imágenes Duplicadas (RF-058/RF-059, SC-007)
@@ -262,3 +358,36 @@ en segundo plano cuando haya conexión disponible").
 Verdes (sin WorkManager) — más simple, pero no cumple "en segundo plano"
 tal como lo redacta RF-052, y dejaría datos desactualizados si el usuario
 no visita la sección seguido.
+
+---
+
+## 6. Visualización en Mapa de Puntos Verdes (RF-065, corrección post-QA 2026-09-22)
+
+**Decision**: **OpenStreetMap** vía la librería **`osmdroid`**
+(`org.osmdroid:osmdroid-android`), envuelta en Compose con `AndroidView`
+(mismo patrón ya usado para `PreviewView` de CameraX). El `MapView` se
+centra en el promedio de coordenadas de los Puntos Verdes encontrados para
+el barrio del usuario (RF-066), con un `Marker` por punto.
+
+**Rationale**: research.md §0 ya estableció que EcoSmart es local-first y
+evita dependencias externas con fricción de configuración (se descartó
+Firebase por el mismo motivo). Google Maps SDK exige crear un proyecto en
+Google Cloud Console, generar una API key y habilitar facturación (aunque
+tenga capa gratuita) — fricción incompatible con un proyecto académico sin
+backend propio. `osmdroid` renderiza tiles de OpenStreetMap sin ninguna
+clave ni cuenta, alineado con el resto de las decisiones técnicas del
+proyecto.
+
+**Alternatives considered**: **Google Maps SDK + Compose** (`maps-compose`)
+— más pulido visualmente y con mejor soporte oficial de Google, pero
+rechazado por la fricción de API key/facturación explicada arriba.
+**Sin mapa, solo listado de texto** (como estaba hasta esta corrección) —
+rechazado explícitamente por el usuario del proyecto al pedir "formato de
+mapa".
+
+**Alcance excluido**: no se implementa detección geográfica real
+(point-in-polygon contra límites oficiales de barrio + GPS del usuario) —
+decisión explícita documentada en `spec.md` § Assumptions
+("Alcance de precisión geográfica"). El mapa muestra los Puntos Verdes que
+ya coinciden por texto de barrio (RF-063), no reordena ni filtra por
+proximidad real.

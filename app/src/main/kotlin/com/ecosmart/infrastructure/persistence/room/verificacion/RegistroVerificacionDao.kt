@@ -28,4 +28,11 @@ interface RegistroVerificacionDao {
             "AND huellaImagen IS NOT NULL",
     )
     suspend fun huellasAprobadas(usuarioId: String, categoria: String): List<String>
+
+    /** Corrección post-QA: pasos de Caminata registrados hoy (RF-070), para mostrarlos en el Perfil. */
+    @Query(
+        "SELECT COALESCE(SUM(pasosRegistrados), 0) FROM registros_verificacion " +
+            "WHERE usuarioId = :usuarioId AND categoria = 'CAMINAR' AND resultado = 'APROBADO' AND fecha = :fecha",
+    )
+    suspend fun sumaPasosDelDia(usuarioId: String, fecha: String): Int
 }

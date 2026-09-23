@@ -13,3 +13,7 @@
 # Nimbus JOSE+JWT
 -keep class com.nimbusds.** { *; }
 -dontwarn com.nimbusds.**
+
+# osmdroid (mapa de Puntos Verdes, research.md §6)
+-keep class org.osmdroid.** { *; }
+-dontwarn org.osmdroid.**

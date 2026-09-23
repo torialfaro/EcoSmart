@@ -24,4 +24,7 @@ interface RegistroVerificacionRepository {
 
     /** Huellas perceptuales de fotos ya Aprobadas del usuario en esa categoría (RF-058/RF-059). */
     suspend fun huellasAprobadas(usuarioId: UsuarioId, categoria: CategoriaActividad): List<String>
+
+    /** Suma de pasos de Caminata Aprobados en [fecha] (RF-070, corrección post-QA). */
+    suspend fun sumaPasosDelDia(usuarioId: UsuarioId, fecha: LocalDate): Int
 }

@@ -51,14 +51,15 @@ android {
         buildConfigField(
             "String",
             "ECOGPT_BASE_URL",
-            "\"${localProperty("ECOGPT_BASE_URL", "https://api.ecogpt.example/v1")}\"",
+            // Retrofit exige que baseUrl termine en "/" (IllegalArgumentException si no) — RNF-008 bug post-QA.
+            "\"${localProperty("ECOGPT_BASE_URL", "https://api.ecogpt.example/v1/")}\"",
         )
         buildConfigField(
             "String",
             "PUNTOS_VERDES_BASE_URL",
             "\"${localProperty(
                 "PUNTOS_VERDES_BASE_URL",
-                "https://datos.buenosaires.gob.ar/api/ecosmart-puntos-verdes/v1",
+                "https://datos.buenosaires.gob.ar/api/ecosmart-puntos-verdes/v1/",
             )}\"",
         )
     }
@@ -159,6 +160,9 @@ dependencies {
     implementation(libs.play.services.location)
     // Puente Task -> suspend fun para FusedLocationProviderClient (T060, UbicacionProvider)
     implementation(libs.kotlinx.coroutines.play.services)
+
+    // Mapa de Puntos Verdes (T106, research.md §6) — OpenStreetMap, sin API key ni facturación
+    implementation(libs.osmdroid.android)
 
     // Seguridad: JWK/JWE + Android Keystore (T002) — research.md §4
     implementation(libs.nimbus.jose.jwt)

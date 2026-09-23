@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -14,12 +15,19 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ecosmart.application.activity.ObtenerPuntosVerdesDelBarrio
@@ -32,7 +40,13 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import org.osmdroid.tileprovider.tilesource.TileSourceFactory
+import org.osmdroid.util.GeoPoint
+import org.osmdroid.views.MapView
+import org.osmdroid.views.overlay.Marker
 import javax.inject.Inject
+
+private const val ZOOM_INICIAL = 13.0
 
 data class PuntosVerdesUiState(
     val cargando: Boolean = true,
@@ -71,7 +85,7 @@ class PuntosVerdesViewModel @Inject constructor(
     }
 }
 
-/** US7 — listado de Puntos Verdes del barrio del usuario (RF-018, RF-020). */
+/** US7 — mapa + listado de Puntos Verdes del barrio del usuario (RF-018, RF-020, RF-065). */
 @Composable
 fun PuntosVerdesScreen(viewModel: PuntosVerdesViewModel = hiltViewModel()) {
     val uiState by viewModel.uiState.collectAsState()
@@ -98,22 +112,75 @@ fun PuntosVerdesScreen(viewModel: PuntosVerdesViewModel = hiltViewModel()) {
                 Text("No encontramos Puntos Verdes en tu barrio todavía.")
             }
 
-            else -> LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                items(uiState.puntos, key = { it.id.valor }) { punto ->
-                    Card(modifier = Modifier.fillMaxWidth()) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Text(text = punto.nombre, style = MaterialTheme.typography.titleLarge)
-                            Text(text = punto.direccion, style = MaterialTheme.typography.bodyLarge)
+            else -> Column(modifier = Modifier.fillMaxSize().padding(padding)) {
+                MapaPuntosVerdes(
+                    puntos = uiState.puntos,
+                    modifier = Modifier.fillMaxWidth().height(260.dp),
+                )
+                LazyColumn(
+                    modifier = Modifier.fillMaxWidth().weight(1f).padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    items(uiState.puntos, key = { it.id.valor }) { punto ->
+                        Card(modifier = Modifier.fillMaxWidth()) {
+                            Column(modifier = Modifier.padding(16.dp)) {
+                                Text(text = punto.nombre, style = MaterialTheme.typography.titleLarge)
+                                Text(text = punto.direccion, style = MaterialTheme.typography.bodyLarge)
+                            }
                         }
                     }
                 }
             }
+        }
+    }
+}
+
+/** RF-065/RF-066 — mapa OpenStreetMap centrado en el promedio de coordenadas de [puntos], con un marcador por cada uno. */
+@Composable
+private fun MapaPuntosVerdes(puntos: List<PuntoVerde>, modifier: Modifier = Modifier) {
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val mapViewRef = remember { mutableStateOf<MapView?>(null) }
+
+    AndroidView(
+        modifier = modifier,
+        factory = { ctx ->
+            MapView(ctx).apply {
+                setTileSource(TileSourceFactory.MAPNIK)
+                setMultiTouchControls(true)
+                controller.setZoom(ZOOM_INICIAL)
+                mapViewRef.value = this
+            }
+        },
+        update = { vista ->
+            vista.overlays.clear()
+            if (puntos.isNotEmpty()) {
+                val latitudPromedio = puntos.map { it.latitud }.average()
+                val longitudPromedio = puntos.map { it.longitud }.average()
+                vista.controller.setCenter(GeoPoint(latitudPromedio, longitudPromedio))
+                puntos.forEach { punto ->
+                    val marcador = Marker(vista)
+                    marcador.position = GeoPoint(punto.latitud, punto.longitud)
+                    marcador.title = punto.nombre
+                    marcador.snippet = punto.direccion
+                    vista.overlays.add(marcador)
+                }
+            }
+            vista.invalidate()
+        },
+    )
+
+    DisposableEffect(lifecycleOwner) {
+        val observador = LifecycleEventObserver { _, evento ->
+            when (evento) {
+                Lifecycle.Event.ON_RESUME -> mapViewRef.value?.onResume()
+                Lifecycle.Event.ON_PAUSE -> mapViewRef.value?.onPause()
+                else -> Unit
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observador)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observador)
+            mapViewRef.value?.onDetach()
         }
     }
 }

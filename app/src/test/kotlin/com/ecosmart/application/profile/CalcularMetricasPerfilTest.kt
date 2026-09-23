@@ -1,21 +1,26 @@
 package com.ecosmart.application.profile
 
+import com.ecosmart.domain.model.PermisoDispositivo
 import com.ecosmart.domain.model.RegistroVerificacion
 import com.ecosmart.domain.model.Usuario
+import com.ecosmart.domain.repository.PermisoRepository
 import com.ecosmart.domain.repository.RegistroVerificacionRepository
 import com.ecosmart.domain.repository.UsuarioRepository
 import com.ecosmart.domain.valueobject.ActividadId
 import com.ecosmart.domain.valueobject.Barrio
 import com.ecosmart.domain.valueobject.CategoriaActividad
 import com.ecosmart.domain.valueobject.ContrasenaCifrada
+import com.ecosmart.domain.valueobject.EstadoPermiso
 import com.ecosmart.domain.valueobject.NivelUsuario
 import com.ecosmart.domain.valueobject.RegistroVerificacionId
 import com.ecosmart.domain.valueobject.ResultadoVerificacion
+import com.ecosmart.domain.valueobject.TipoPermiso
 import com.ecosmart.domain.valueobject.UsuarioId
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
@@ -23,7 +28,9 @@ class CalcularMetricasPerfilTest {
 
     private val usuarioRepository = mockk<UsuarioRepository>()
     private val registroVerificacionRepository = mockk<RegistroVerificacionRepository>()
-    private val calcularMetricasPerfil = CalcularMetricasPerfil(usuarioRepository, registroVerificacionRepository)
+    private val permisoRepository = mockk<PermisoRepository>()
+    private val calcularMetricasPerfil =
+        CalcularMetricasPerfil(usuarioRepository, registroVerificacionRepository, permisoRepository)
 
     private val usuarioId = UsuarioId.nuevo()
 
@@ -61,6 +68,7 @@ class CalcularMetricasPerfilTest {
         coEvery { usuarioRepository.buscarPorId(usuarioId) } returns
             usuarioDePrueba(rachaActual = 5, ultimaActividadAprobadaEn = haceTresDias)
         coEvery { registroVerificacionRepository.todos(usuarioId) } returns emptyList()
+        coEvery { permisoRepository.obtenerTodos() } returns emptyList()
 
         val metricas = calcularMetricasPerfil(usuarioId)
 
@@ -73,6 +81,7 @@ class CalcularMetricasPerfilTest {
         coEvery { usuarioRepository.buscarPorId(usuarioId) } returns
             usuarioDePrueba(rachaActual = 3, ultimaActividadAprobadaEn = ayer)
         coEvery { registroVerificacionRepository.todos(usuarioId) } returns emptyList()
+        coEvery { permisoRepository.obtenerTodos() } returns emptyList()
 
         val metricas = calcularMetricasPerfil(usuarioId)
 
@@ -83,6 +92,7 @@ class CalcularMetricasPerfilTest {
     fun `el nivel se deriva del puntaje historico acumulado, que nunca desciende`() = runTest {
         coEvery { usuarioRepository.buscarPorId(usuarioId) } returns usuarioDePrueba(puntosHistoricos = 3500)
         coEvery { registroVerificacionRepository.todos(usuarioId) } returns emptyList()
+        coEvery { permisoRepository.obtenerTodos() } returns emptyList()
 
         val metricas = calcularMetricasPerfil(usuarioId)
 
@@ -98,10 +108,38 @@ class CalcularMetricasPerfilTest {
             registro(CategoriaActividad.RECICLAR),
             registro(CategoriaActividad.REUTILIZAR),
         )
+        coEvery { permisoRepository.obtenerTodos() } returns emptyList()
 
         val metricas = calcularMetricasPerfil(usuarioId)
 
         assertEquals(75.0, metricas?.porcentajePorCategoria?.get(CategoriaActividad.RECICLAR))
         assertEquals(25.0, metricas?.porcentajePorCategoria?.get(CategoriaActividad.REUTILIZAR))
+    }
+
+    @Test
+    fun `pasosHoy es nulo si el permiso de Podometro no esta otorgado`() = runTest {
+        coEvery { usuarioRepository.buscarPorId(usuarioId) } returns usuarioDePrueba()
+        coEvery { registroVerificacionRepository.todos(usuarioId) } returns emptyList()
+        coEvery { permisoRepository.obtenerTodos() } returns listOf(
+            PermisoDispositivo(TipoPermiso.PODOMETRO, EstadoPermiso.DENEGADO),
+        )
+
+        val metricas = calcularMetricasPerfil(usuarioId)
+
+        assertNull(metricas?.pasosHoy)
+    }
+
+    @Test
+    fun `pasosHoy suma los pasos de Caminata aprobados de hoy si el permiso esta otorgado`() = runTest {
+        coEvery { usuarioRepository.buscarPorId(usuarioId) } returns usuarioDePrueba()
+        coEvery { registroVerificacionRepository.todos(usuarioId) } returns emptyList()
+        coEvery { permisoRepository.obtenerTodos() } returns listOf(
+            PermisoDispositivo(TipoPermiso.PODOMETRO, EstadoPermiso.OTORGADO),
+        )
+        coEvery { registroVerificacionRepository.sumaPasosDelDia(usuarioId, LocalDate.now()) } returns 4200
+
+        val metricas = calcularMetricasPerfil(usuarioId)
+
+        assertEquals(4200, metricas?.pasosHoy)
     }
 }

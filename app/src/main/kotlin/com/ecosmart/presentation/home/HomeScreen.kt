@@ -50,8 +50,19 @@ fun HomeScreen(
         topBar = {
             TopAppBar(
                 title = { Text("EcoSmart") },
-                // Corrección post-QA: atajo al perfil desde la Home (avatar circular, arriba a la derecha).
-                actions = { AvatarUsuario(nombreUsuario = uiState.nombreUsuario, onClick = onVerPerfil) },
+                // Corrección post-QA (RF-062/RF-069): saludo + atajo al perfil, arriba a la derecha.
+                actions = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        if (uiState.nombreUsuario.isNotBlank()) {
+                            Text(
+                                text = "Hola, ${uiState.nombreUsuario}",
+                                modifier = Modifier.padding(end = 8.dp),
+                                style = MaterialTheme.typography.bodyLarge,
+                            )
+                        }
+                        AvatarUsuario(nombreUsuario = uiState.nombreUsuario, onClick = onVerPerfil)
+                    }
+                },
             )
         },
     ) { padding ->

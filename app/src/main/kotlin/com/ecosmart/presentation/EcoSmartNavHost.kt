@@ -10,6 +10,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.ecosmart.domain.valueobject.CategoriaActividad
 import com.ecosmart.presentation.activitydetail.ActividadDetalleScreen
+import com.ecosmart.presentation.auth.PerfilEdicionScreen
 import com.ecosmart.presentation.auth.RegistroScreen
 import com.ecosmart.presentation.home.ContenidoEducativoScreen
 import com.ecosmart.presentation.home.HomeScreen
@@ -48,6 +49,7 @@ sealed class EcoSmartRoute(val ruta: String) {
     data object PuntosVerdes : EcoSmartRoute("puntos-verdes")
     data object ContenidoEducativo : EcoSmartRoute("contenido-educativo")
     data object Perfil : EcoSmartRoute("perfil")
+    data object PerfilEdicion : EcoSmartRoute("perfil-edicion")
     data object Historial : EcoSmartRoute("historial")
 }
 
@@ -118,12 +120,16 @@ fun EcoSmartNavHost(
         composable(EcoSmartRoute.Perfil.ruta) {
             PerfilScreen(
                 onVerHistorial = { navController.navigate(EcoSmartRoute.Historial.ruta) },
+                onEditarPerfil = { navController.navigate(EcoSmartRoute.PerfilEdicion.ruta) },
                 onCerrarSesion = {
                     navController.navigate(EcoSmartRoute.Registro.ruta) {
                         popUpTo(0)
                     }
                 },
             )
+        }
+        composable(EcoSmartRoute.PerfilEdicion.ruta) {
+            PerfilEdicionScreen(onVolver = { navController.popBackStack() })
         }
         composable(EcoSmartRoute.Historial.ruta) {
             HistorialScreen()

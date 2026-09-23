@@ -32,11 +32,14 @@ proyecto Android estándar). Agregar al final del archivo, en la raíz del
 proyecto:
 
 ```properties
-# API key del servicio EcoGPT (ver contracts/openapi.yaml → securitySchemes.apiKeyAuth)
-ECOGPT_API_KEY=reemplazar-con-la-key-real
+# API key del backend propio de EcoGPT (ver backend/README.md — es un secreto
+# inventado por vos, ECOGPT_SHARED_API_KEY en Render, NO la key de Gemini)
+ECOGPT_API_KEY=reemplazar-con-el-mismo-valor-de-ECOGPT_SHARED_API_KEY-en-render
 
-# URL base de EcoGPT, si difiere del valor por defecto en research.md/openapi.yaml
-ECOGPT_BASE_URL=https://api.ecogpt.example/v1
+# URL del backend real desplegado (ver backend/README.md §3); el placeholder
+# https://api.ecogpt.example/v1/ nunca resuelve — usarlo deja toda
+# verificación fallando con "Sin conexión a internet" (CORRECCIÓN-011)
+ECOGPT_BASE_URL=https://ecosmart-ecogpt.onrender.com/
 
 # URL base de la fuente de sincronización de Puntos Verdes de CABA
 PUNTOS_VERDES_BASE_URL=https://datos.buenosaires.gob.ar/api/ecosmart-puntos-verdes/v1
@@ -112,10 +115,20 @@ como mínimo:
 
 ## 7. Mock server de EcoGPT para desarrollo/tests
 
-Para no depender de la API real de EcoGPT durante el desarrollo local ni
-en `connectedDebugAndroidTest`, se recomienda un servidor HTTP embebido de
-pruebas (p. ej. `MockWebServer` de OkHttp) que sirva las respuestas del
-contrato `contracts/openapi.yaml` (`/verificaciones`), incluyendo una ruta
-configurable para simular una respuesta lenta (> 30 s) y validar el
-manejo de timeout de RNF-008 sin depender de la disponibilidad real del
-servicio externo.
+Para no depender del backend real de EcoGPT (§8) durante el desarrollo
+local ni en `connectedDebugAndroidTest`, se recomienda un servidor HTTP
+embebido de pruebas (p. ej. `MockWebServer` de OkHttp) que sirva las
+respuestas del contrato `contracts/openapi.yaml` (`/verificaciones`),
+incluyendo una ruta configurable para simular una respuesta lenta (> 30 s)
+y validar el manejo de timeout de RNF-008 sin depender de la
+disponibilidad del backend real.
+
+## 8. Backend real de EcoGPT
+
+`https://api.ecogpt.example/v1/` (el default histórico de
+`ECOGPT_BASE_URL`) es un dominio de documentación (RFC 2606) que nunca
+resuelve — la app compila y corre igual, pero toda verificación de foto
+falla con "Sin conexión a internet" hasta que se configura un backend
+real (CORRECCIÓN-011/012, RF-073/RF-074). Ver `backend/README.md` para el
+desarrollo local, cómo obtener una API key gratuita de Gemini (sin
+tarjeta de crédito), y cómo desplegarlo en Render.

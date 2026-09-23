@@ -26,3 +26,9 @@ keystore.properties
 *.tmp
 .DS_Store
 Thumbs.db
+
+# Backend Python de EcoGPT (backend/) — ver backend/README.md
+backend/.venv/
+backend/__pycache__/
+backend/**/__pycache__/
+backend/.env

@@ -37,6 +37,78 @@ Ronda de correcciones detectadas al probar el MVP en un dispositivo real (Androi
 - Q: El campo "dirección" del registro era texto libre, sin relación con los datos reales de Puntos Verdes de CABA. ¿Cómo debe capturarse, y para qué se usa? → A: Debe ser un desplegable cerrado con los 48 barrios oficiales de la Ciudad de Buenos Aires (no texto libre); ese valor reemplaza al radio GPS de 3 km como mecanismo de búsqueda de Puntos Verdes — se buscan los Puntos Verdes del barrio elegido, no los más cercanos por coordenadas. RF-018 y RF-053 quedan revisados; nuevo requisito: RF-063. El filtro por radio GPS (`PuntoVerde.estaDentroDelRadio`, Haversine) se conserva en el dominio por si se retoma un filtro geográfico más adelante, pero deja de ser el mecanismo activo.
 - Q: El botón "Realizar" de una actividad de Reciclar/Reutilizar cerraba la app en vez de abrir el formulario de verificación con cámara. ¿Cuál era la causa y cuál es el comportamiento correcto? → A: Defecto de implementación, no ambigüedad de requisito: la pantalla de verificación de foto nunca chequeaba el permiso de Cámara antes de intentar usarla (`CameraX.bindToLifecycle` lanzaba `SecurityException` sin capturar si el permiso no estaba otorgado). RF-044/RF-045 ya exigían bloquear el formulario y mostrar la guía en ese caso — la corrección conecta esa regla, ya modelada en el dominio (`PermisoDispositivo.bloqueaFormulario`), en el punto de uso real. Nuevo requisito explícito: RF-064 (verificación de permiso previa a cualquier acceso a Cámara/Podómetro, sin excepción).
 
+### Session 2026-09-22 (continuación) — Mapa de Puntos Verdes y Perfil consolidado
+
+Segunda ronda de correcciones detectadas en la misma prueba manual, más 3 decisiones de diseño nuevas:
+
+- Q: Caso hipotético — un usuario abre "Puntos Verdes" y no ve ninguno, sin entender por qué. ¿Qué proveedor de mapas se usa para mostrarlos visualmente, dado que el proyecto es local-first y evita dependencias externas con fricción de configuración (research.md §0)? → A: OpenStreetMap vía `osmdroid` — gratis, sin API key ni cuenta de facturación, coherente con el resto de las decisiones técnicas del proyecto. Se descarta Google Maps por requerir una API key de Google Cloud Console con facturación habilitada. Nuevo requisito: RF-065.
+- Q: Caso hipotético — dos usuarios eligen el mismo barrio en su perfil; uno vive a 200 m de un Punto Verde real de un barrio vecino, el otro a 4 km de cualquier Punto Verde dentro de su propio barrio. Con RF-063 (coincidencia por barrio elegido, no por coordenadas), ambos verían exactamente los mismos puntos. ¿Se implementa detección geográfica real (polígonos oficiales de barrio + GPS) o se mantiene la coincidencia por barrio elegido, solo ampliando el dataset de ejemplo a los 48 barrios? → A: Se mantiene la coincidencia por barrio de RF-063 (no se agrega detección por polígonos); se amplía el dataset de ejemplo de Puntos Verdes para cubrir los 48 barrios de `Barrio` (antes cubría solo 6), mostrados en un mapa centrado en el promedio de las coordenadas de los puntos encontrados. La precisión geográfica real queda fuera de alcance del MVP — ver Assumptions. Nuevo requisito: RF-066.
+- Q: Caso hipotético — un usuario toca "Cámara" y después quiere tocar "Galería" para elegir una foto existente en cambio, pero no logra tocar el botón porque la vista previa de la cámara lo tapa visualmente. ¿Cuál es la causa y el comportamiento correcto? → A: Defecto de implementación, no ambigüedad: `PreviewView` de CameraX en su modo de implementación por defecto (`PERFORMANCE`) usa un `SurfaceView`, que se compone en una capa de hardware separada y se dibuja por encima de cualquier otra vista de Compose sin importar el orden declarado en el layout. El comportamiento correcto es que los botones "Cámara"/"Galería" sean siempre tocables, nunca tapados por la vista previa. Nuevo requisito explícito: RF-067 (modo de implementación `COMPATIBLE` para que la vista previa respete el orden de composición normal).
+- Q: Hoy "Perfil" (RF-036 a RF-040) solo muestra puntos/nivel/racha/%, y los datos de cuenta (nombre, email, barrio, teléfono, categorías de interés — RF-007) viven en una pantalla de edición separada que nunca se conectó a la navegación, por lo que son inalcanzables. ¿Se fusiona todo en una sola pantalla editable, o se mantienen dos pantallas (una de solo lectura con todos los datos, y un botón "Editar" hacia la pantalla de edición ya construida)? → A: Dos pantallas separadas. "Perfil" pasa a mostrar TODOS los datos del usuario (cuenta + métricas de actividad), de solo lectura, con un botón "Editar perfil" que navega a la pantalla de edición existente (que finalmente se conecta a la navegación). Nuevo requisito: RF-068.
+- Q: ¿Debe haber algún saludo visible junto al ícono de perfil de la Home (RF-062), o alcanza con el ícono solo? → A: Debe mostrarse el texto "Hola, {nombreUsuario}" junto al ícono circular, arriba a la derecha de la Home. Nuevo requisito: RF-069.
+
+### Session 2026-09-22 (continuación 2) — Rediseño visual y pasos del día
+
+Ronda de refinamiento visual solicitada tras probar el MVP, con 3 imágenes de referencia adjuntas (una app "Pasito" con fondo verde bosque, tarjetas color crema y acentos ámbar/naranja de bordes muy redondeados; un swatch abstracto de paleta/formas; y una pantalla de ejemplo de Login/Signup con botón "Sign in with Google", divisor "or sign in with", campos etiquetados, toggle de contraseña, "Forgot Password" y botón grande en pastilla), más 2 decisiones de diseño nuevas:
+
+- Q: Caso hipotético — un usuario tiene el permiso de Podómetro otorgado y caminó 4.200 pasos hoy; otro usuario nunca otorgó ese permiso. ¿Dónde debe verse "clara y visiblemente" la cantidad de pasos del día, y qué debe pasar si el permiso no está activo? → A: Dentro de la pantalla de Perfil, como una tarjeta destacada con el color de acento (no en la Home). Si el permiso de Podómetro no está otorgado, el dato no se muestra (no se muestra "0" ni ningún placeholder). Nuevo requisito: RF-070.
+- Q: Las 3 imágenes de referencia usan una paleta azul en el ejemplo de Login/Signup, distinta de la paleta verde/ámbar del resto de la app (paleta ya elegida por RF-070 y el resto del rediseño). ¿El Login/Signup adopta el azul del ejemplo, o mantiene la paleta verde/ámbar propia de EcoSmart? → A: Mantiene la paleta verde/ámbar propia de EcoSmart, por consistencia visual con el resto de la app; del ejemplo se adopta solo la estructura del layout (botón de Google arriba, divisor "o iniciá sesión con", campos etiquetados, toggle de contraseña, botón principal en pastilla), no sus colores. Nuevo requisito: RF-071.
+
+Además, sin necesidad de pregunta adicional (aplica directamente el estilo visual de las 3 imágenes de referencia a toda la app): paleta verde bosque/crema/ámbar con bordes fuertemente redondeados en tarjetas y botones, y jerarquía visual consistente (título > tarjeta destacada > detalle) en todas las pantallas. Nuevo requisito: RF-072.
+
+### Session 2026-09-23 — Backend real de EcoGPT
+
+Al probar el flujo completo (US8/US9: elegir actividad → realizarla →
+verificación por IA → sumar puntos → ver progreso), toda verificación de
+foto fallaba con "Sin conexión a internet". Causa raíz (no ambigüedad de
+diseño): `ECOGPT_BASE_URL` apuntaba por defecto a
+`https://api.ecogpt.example/v1/`, un dominio reservado por RFC 2606 que
+nunca resuelve — "EcoGPT" nunca tuvo un backend real implementado, solo un
+contrato (`contracts/openapi.yaml`) diseñado contra un proveedor de
+terceros hipotético que jamás se contrató. 2 decisiones de negocio nuevas
+sobre cómo resolverlo:
+
+- Q: ¿Se implementa un backend propio real detrás de EcoGPT (proxy hacia
+  una IA de verdad), se llama a una IA directamente desde el cliente
+  Android sin intermediario, o se deja un mock local solo para demos? → A:
+  Backend propio real (Opción A, la más completa): un servicio HTTP propio
+  que recibe la foto + descripción del cliente y llama a la API de Claude
+  (Anthropic, con visión) para comparar ambas contra
+  `Actividad.resultadoEsperado` en una sola llamada multimodal, devolviendo
+  el veredicto Aprobado/Rechazado/Indeterminado. Se descarta llamar a la
+  IA directamente desde el cliente por exponer una API key de pago dentro
+  del APK. Nuevo requisito: RF-073. Ver research.md §2.1 y
+  `backend/README.md`.
+- Q: ¿Con qué stack se construye ese backend y dónde se despliega? → A:
+  Python + FastAPI (sobre la alternativa recomendada de Kotlin + Ktor, que
+  hubiera mantenido un único lenguaje en el repo, mayormente por
+  familiaridad con el ecosistema Python para integrar SDKs de IA),
+  desplegado en Render (free tier). Riesgo aceptado y documentado: el free
+  tier de Render duerme el servicio tras inactividad, y la primera
+  request tras dormir puede superar el timeout fijo de 30s del cliente
+  Android (RNF-008/SC-008), mostrando un falso "Timeout" aunque el backend
+  esté sano. Nuevo requisito: RF-074 (ver Assumptions).
+
+### Session 2026-09-23 (continuación) — Proveedor de IA sin costo
+
+El backend de EcoGPT (RF-073) se había implementado con Claude/Anthropic,
+una API paga. El usuario aclaró un requisito de negocio no capturado
+antes: este es un proyecto escolar sin presupuesto, y debe funcionar
+íntegramente sin que el usuario tenga que pagar por ningún servicio de IA.
+
+- Q: Caso hipotético — la noche antes de la entrega, se hace la demo
+  final subiendo 30 fotos seguidas sin haber cargado nunca una tarjeta de
+  crédito en ningún lado. ¿Qué proveedor de IA con capa 100% gratuita
+  reemplaza a Claude/Anthropic detrás del backend? → A: Gemini (Google AI
+  Studio, capa gratuita) — no pide tarjeta de crédito, cuota diaria
+  generosa en los modelos Flash, y soporte nativo de visión (imagen +
+  texto en una sola llamada), igual que ya estaba armado con Claude. Se
+  descartó OpenRouter (modelos ":free") por catálogo de modelos gratuitos
+  con visión menos estable en el tiempo. RF-073 se actualiza para reflejar
+  esto: reemplaza "Requisito derivado" implícito de que el proveedor de IA
+  debe tener una capa de uso sin costo. Ver research.md §2.1 (corrección
+  post-QA ronda 2) y `backend/README.md`.
+
 ## User Scenarios & Testing *(mandatory)*
 
 Las historias de usuario (US) están agrupadas por épica del producto. Cada una es
@@ -614,6 +686,79 @@ permiso.
   acción y mostrar la guía de habilitación (RF-044/RF-045) en lugar de
   fallar sin control.
 
+**Correcciones Post-QA Manual, ronda 2 (RF-065 a RF-069, sesión 2026-09-22 continuación)**
+
+- **RF-065**: La sección "Puntos Verdes" DEBE mostrar los resultados en
+  formato de mapa (no solo listado de texto), usando un proveedor de mapas
+  que no requiera API key ni cuenta de facturación (OpenStreetMap).
+- **RF-066**: El dataset de ejemplo de Puntos Verdes DEBE cubrir los 48
+  barrios del valor cerrado `Barrio` (uno como mínimo por barrio), para que
+  la búsqueda por barrio (RF-063) devuelva resultados sin importar cuál
+  elija el usuario. El mapa DEBE centrarse en el promedio de coordenadas de
+  los puntos encontrados. No se exige coincidencia geográfica real
+  (polígonos de barrio/GPS) — ver Assumptions.
+- **RF-067**: La vista previa de la Cámara en el formulario de
+  Reciclar/Reutilizar NUNCA DEBE tapar ni bloquear visualmente los botones
+  "Cámara"/"Galería"; ambos DEBEN permanecer tocables en todo momento
+  mientras la vista previa está activa.
+- **RF-068**: La pantalla "Perfil" DEBE mostrar todos los datos del
+  usuario: los datos de cuenta (nombre, apellido, nombre de usuario,
+  correo, barrio, teléfono, categorías de interés — RF-007) además de las
+  métricas de actividad (puntos, % por categoría, racha, nivel — RF-036 a
+  RF-040), de solo lectura, con un botón "Editar perfil" que lleva a la
+  pantalla de edición (US3).
+- **RF-069**: Junto al ícono de acceso al perfil en la Home (RF-062) DEBE
+  mostrarse el texto "Hola, {nombreUsuario}".
+
+**Rediseño Visual y Pasos del Día (RF-070 a RF-072, sesión 2026-09-22 continuación 2)**
+
+- **RF-070**: La pantalla "Perfil" (RF-068) DEBE mostrar, en una tarjeta
+  destacada con el color de acento de la app, la cantidad de pasos
+  registrados hoy (suma de pasos de actividades de Caminar Aprobadas con
+  fecha de hoy), únicamente si el permiso de Podómetro está otorgado
+  (`EstadoPermiso.OTORGADO`). Si el permiso no está otorgado, la tarjeta NO
+  DEBE mostrarse (nunca "0" ni un placeholder vacío).
+- **RF-071**: Las pantallas de Login y Registro DEBEN reestructurarse según
+  el patrón: botón "Iniciar sesión con Google" en la parte superior, un
+  divisor visual ("o iniciá sesión con"), campos de formulario etiquetados
+  con ancho completo, alternador de visibilidad de contraseña (RF-060) y un
+  botón principal de envío en forma de píldora (bordes totalmente
+  redondeados). Los colores DEBEN seguir la paleta propia de la app
+  (verde/ámbar — ver RF-072), no la paleta del ejemplo de referencia.
+- **RF-072**: Toda la interfaz de la app DEBE usar una paleta verde
+  bosque/crema/ámbar consistente (fondo verde oscuro o crema según el
+  elemento, tarjetas en tono crema/superficie clara, acentos en ámbar) con
+  bordes fuertemente redondeados en tarjetas y botones, manteniendo
+  jerarquía visual clara (título de sección > tarjeta destacada > detalle
+  secundario) en cada pantalla.
+
+**Backend Real de EcoGPT (RF-073/RF-074, sesión 2026-09-23)**
+
+- **RF-073**: El sistema DEBE contar con un backend propio (`backend/`,
+  fuera del módulo Android) que implemente `POST /verificaciones`
+  (`contracts/openapi.yaml`) como proxy hacia una API de IA con capacidad
+  de visión real, comparando en una sola evaluación la imagen, la
+  descripción del usuario y `Actividad.resultadoEsperado`, antes de
+  devolver Aprobado/Rechazado/Indeterminado con un motivo en tono
+  alentador (RNF-001). La API key del proveedor de IA NUNCA DEBE
+  embeberse en el cliente Android ni en el APK — el backend es la única
+  pieza que la conoce; el cliente solo usa un secreto compartido propio
+  para autenticarse contra este backend (`X-EcoGPT-Api-Key`).
+- **RF-074**: Dado que el backend (RF-073) puede desplegarse en un hosting
+  de capa gratuita con "cold start" (el servicio se duerme tras
+  inactividad), el sistema DEBE tolerar que la primera verificación tras
+  un período de inactividad falle por timeout (RNF-008) sin tratarlo como
+  un defecto de la app — el usuario ve el mismo mensaje de timeout
+  existente y puede reintentar (RF-030), sin necesidad de un mensaje
+  distinto para este caso.
+- **RF-075**: El proveedor de IA detrás del backend de EcoGPT (RF-073)
+  DEBE tener una capa de uso sin costo (sin requerir tarjeta de crédito
+  del usuario), consistente con el alcance de un proyecto escolar sin
+  presupuesto. El cliente de IA en `backend/app/ecogpt.py` vive detrás de
+  la misma interfaz interna del backend (`verificar_con_ia`), de modo que
+  el proveedor pueda sustituirse en el futuro sin afectar el contrato
+  `POST /verificaciones` ni el resto de la app.
+
 ### Non-Functional Requirements
 
 - **RNF-001**: La interfaz DEBE ser intuitiva y amigable, con un tono
@@ -705,6 +850,15 @@ permiso.
 - Se asume conectividad a internet intermitente pero disponible para el
   envío a EcoGPT; el comportamiento sin conexión se limita al descripto en
   Edge Cases.
+- **Riesgo aceptado explícitamente — backend de EcoGPT en hosting free
+  tier (RF-073/RF-074)**: el backend real de EcoGPT (`backend/`) se
+  despliega en Render free tier, que duerme el servicio tras inactividad;
+  la primera verificación después de un período sin uso puede demorar más
+  que el timeout fijo de 30s del cliente (RNF-008/SC-008) y mostrarse como
+  un "Timeout" al usuario aunque el backend esté funcionando
+  correctamente. Se asume que esto es aceptable para un MVP académico sin
+  presupuesto de infraestructura; ver `backend/README.md` §3 para
+  mitigaciones posibles (ping periódico externo, o plan pago sin sleep).
 - El reinicio de los topes diarios ("un día") se calcula según la zona
   horaria del dispositivo del usuario, reiniciando a las 00:00:00 hora
   local (ver RF-057).
@@ -714,6 +868,16 @@ permiso.
 - Se asume que el dataset empaquetado de Puntos Verdes (RF-052) se
   actualiza en segundo plano cuando hay conexión; no se define en este
   alcance una periodicidad mínima garantizada de esa sincronización.
+- **Alcance de precisión geográfica (RF-066)**: la búsqueda de Puntos
+  Verdes por barrio (RF-063) es una coincidencia de texto contra el barrio
+  elegido por el usuario en su perfil, no una detección geográfica real
+  por coordenadas GPS ni por polígonos oficiales de límites de barrio. Un
+  usuario que vive cerca del límite entre dos barrios puede no ver Puntos
+  Verdes reales que están físicamente más cerca de él pero catalogados en
+  el barrio vecino. Se asume que esto es aceptable para el MVP; una
+  detección geográfica real (point-in-polygon con el dataset oficial de
+  límites de barrio de CABA) queda fuera de alcance y documentada como
+  mejora futura.
 - **Riesgo aceptado explícitamente**: se optó por cifrado reversible
   (JWK/JWE, RNF-006) en lugar de un hash unidireccional (el estándar
   habitual para contraseñas) por decisión explícita del proyecto. Esto
@@ -745,3 +909,10 @@ tabla como registro histórico de trazabilidad.
 | [CORRECCIÓN-003] | Sin atajo de navegación hacia el perfil desde la Home (omisión de diseño de UI, no cubierta explícitamente por ningún RF anterior). | ✅ Resuelto | Ícono circular con la inicial del usuario, arriba a la derecha de la Home. | RF-062 |
 | [CORRECCIÓN-004] | El campo "dirección" del registro era texto libre sin relación real con los datos de Puntos Verdes, que se organizan por barrio. | ✅ Resuelto | Desplegable cerrado de 48 barrios de CABA; reemplaza el radio GPS de 3 km como mecanismo de búsqueda de Puntos Verdes. | RF-063 (reemplaza RF-053) |
 | [CORRECCIÓN-005] | El botón "Realizar" de Reciclar/Reutilizar cerraba la app: `VerificacionFotoScreen` nunca chequeaba el permiso de Cámara antes de invocar CameraX (defecto de implementación — RF-044/RF-045 ya exigían el bloqueo, pero no estaba conectado en este punto de uso). | ✅ Resuelto | Chequeo de permiso real del sistema operativo antes de cualquier acceso a Cámara/Podómetro, con fallback a la guía de habilitación existente en vez de fallar sin control. | RF-064 |
+| [CORRECCIÓN-006] | "Puntos Verdes" no mostraba ningún resultado para casi ningún barrio (dataset de ejemplo cubría solo 6 de 48 barrios) ni tenía formato de mapa. | ✅ Resuelto | Mapa con OpenStreetMap/osmdroid, sin API key; dataset de ejemplo ampliado a los 48 barrios. | RF-065, RF-066 |
+| [CORRECCIÓN-007] | La vista previa de la Cámara tapaba visualmente los botones "Cámara"/"Galería" (defecto de implementación: `PreviewView` en modo `PERFORMANCE` usa `SurfaceView`, que se dibuja por encima de Compose sin respetar el orden del layout). | ✅ Resuelto | Modo de implementación `COMPATIBLE` en `PreviewView`. | RF-067 |
+| [CORRECCIÓN-008] | "Perfil" solo mostraba métricas de actividad; los datos de cuenta vivían en una pantalla de edición nunca conectada a la navegación (inalcanzable). | ✅ Resuelto | "Perfil" ahora muestra todos los datos (cuenta + métricas); botón "Editar perfil" conecta la pantalla de edición existente. | RF-068 |
+| [CORRECCIÓN-009] | Sin saludo visible junto al ícono de perfil de la Home (omisión de diseño de UI). | ✅ Resuelto | Texto "Hola, {nombreUsuario}" junto al ícono circular. | RF-069 |
+| [CORRECCIÓN-010] | La interfaz no seguía ninguna paleta/forma consistente ni mostraba la cantidad de pasos del día en ningún lugar visible; Login/Registro no seguía un layout de referencia claro. | ✅ Resuelto | Paleta verde bosque/crema/ámbar con bordes redondeados en toda la app (`Theme.kt`); tarjeta destacada de "Pasos hoy" en Perfil, visible solo con permiso de Podómetro otorgado; Login/Registro reestructurados (Google arriba, divisor, campos etiquetados, botón en píldora) manteniendo la paleta propia de EcoSmart. | RF-070, RF-071, RF-072 |
+| [CORRECCIÓN-011] | El flujo completo de verificación (US8/US9) fallaba siempre con "Sin conexión a internet": `ECOGPT_BASE_URL` apuntaba por defecto a un dominio RFC 2606 que nunca resuelve — "EcoGPT" nunca tuvo un backend real implementado, solo un contrato de terceros hipotético jamás contratado. | ✅ Resuelto | Backend propio en `backend/` (Python + FastAPI, desplegado en Render) que implementa `POST /verificaciones` como proxy hacia una API de IA con visión, comparando imagen + descripción del usuario contra `Actividad.resultadoEsperado`. Requiere configuración manual pendiente del usuario: desplegar el backend y completar `ECOGPT_API_KEY`/`ECOGPT_BASE_URL` en `local.properties` (ver `backend/README.md`). | RF-073, RF-074 |
+| [CORRECCIÓN-012] | La primera versión del backend de EcoGPT (CORRECCIÓN-011) usaba Claude/Anthropic, una API paga — incompatible con que este es un proyecto escolar sin presupuesto para servicios de IA. | ✅ Resuelto | Se reemplazó el proveedor de IA por Gemini (Google AI Studio, capa gratuita sin tarjeta de crédito), manteniendo el mismo contrato `POST /verificaciones` y el mismo backend (`backend/app/ecogpt.py`); solo cambia el proveedor detrás de la interfaz interna. | RF-075 |

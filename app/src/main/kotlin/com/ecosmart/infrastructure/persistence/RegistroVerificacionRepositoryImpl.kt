@@ -33,4 +33,7 @@ class RegistroVerificacionRepositoryImpl @Inject constructor(
 
     override suspend fun huellasAprobadas(usuarioId: UsuarioId, categoria: CategoriaActividad): List<String> =
         registroVerificacionDao.huellasAprobadas(usuarioId.valor, categoria.name)
+
+    override suspend fun sumaPasosDelDia(usuarioId: UsuarioId, fecha: LocalDate): Int =
+        registroVerificacionDao.sumaPasosDelDia(usuarioId.valor, fecha.toString())
 }

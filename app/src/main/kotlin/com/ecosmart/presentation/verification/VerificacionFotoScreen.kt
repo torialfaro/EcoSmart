@@ -173,7 +173,13 @@ private fun VistaCamara(imageCapture: ImageCapture, modifier: Modifier = Modifie
     AndroidView(
         modifier = modifier,
         factory = { ctx ->
-            val previewView = PreviewView(ctx)
+            val previewView = PreviewView(ctx).apply {
+                // Corrección post-QA: el modo PERFORMANCE (default) usa un SurfaceView, que se
+                // compone en una capa de hardware separada y se dibuja por encima de cualquier
+                // otra vista de Compose sin respetar el orden del layout — tapaba los botones
+                // "Cámara"/"Galería". COMPATIBLE usa un TextureView, que sí respeta el z-order.
+                implementationMode = PreviewView.ImplementationMode.COMPATIBLE
+            }
             val cameraProviderFuture = ProcessCameraProvider.getInstance(ctx)
             cameraProviderFuture.addListener(
                 {

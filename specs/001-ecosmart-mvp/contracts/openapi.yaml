@@ -3,17 +3,25 @@ info:
   title: EcoSmart — Contratos de Dependencias Externas
   description: >-
     Contratos consumidos por el cliente Android de EcoSmart (arquitectura
-    local-first, ver plan.md y research.md §0 — EcoSmart NO expone una API
-    propia; este documento describe las APIs de terceros que el cliente
-    consume). Cubre: (1) verificación de fotos vía EcoGPT (RF-027 a RF-030,
-    RF-050, RF-058, RF-059, RNF-008, SC-008) y (2) sincronización del
-    dataset de Puntos Verdes de CABA (RF-052, RF-053).
+    local-first, ver plan.md y research.md §0 — los datos de usuario NUNCA
+    salen del dispositivo salvo lo descrito acá). Cubre: (1) verificación
+    de fotos vía EcoGPT (RF-027 a RF-030, RF-050, RF-058, RF-059, RNF-008,
+    SC-008), implementado como backend propio en `backend/` (Python +
+    FastAPI, proxy hacia la API de Gemini — capa gratuita de Google AI
+    Studio — ver research.md §2.1, correcciones post-QA 2026-09-23) y (2)
+    sincronización del dataset de Puntos Verdes de CABA (RF-052, RF-053).
   version: 1.0.0
 servers:
-  - url: https://api.ecogpt.example/v1
-    description: Servicio EcoGPT (URL real a configurar en local.properties, ver quickstart.md)
-  - url: https://datos.buenosaires.gob.ar/api/ecosmart-puntos-verdes/v1
-    description: Fuente de sincronización de Puntos Verdes de CABA (URL de ejemplo)
+  - url: https://api.ecogpt.example/v1/
+    description: >-
+      Placeholder de documentación (dominio RFC 2606, nunca resuelve).
+      Reemplazar por la URL real del backend propio desplegado en Render
+      (ver backend/README.md §3), configurada en local.properties como
+      ECOGPT_BASE_URL. Barra final obligatoria: Retrofit exige que
+      `baseUrl` termine en "/" (bug detectado en QA manual 2026-09-22 —
+      crasheaba la app al construir el cliente sin esa barra).
+  - url: https://datos.buenosaires.gob.ar/api/ecosmart-puntos-verdes/v1/
+    description: Fuente de sincronización de Puntos Verdes de CABA (URL de ejemplo, con barra final obligatoria por Retrofit)
 
 tags:
   - name: EcoGPT

@@ -10,6 +10,7 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.ecosmart.infrastructure.network.PuntosVerdesSyncWorker
 import dagger.hilt.android.HiltAndroidApp
+import org.osmdroid.config.Configuration as OsmdroidConfiguration
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
@@ -45,6 +46,20 @@ class EcoSmartApplication : Application(), Configuration.Provider {
         super.onCreate()
         WorkManager.initialize(applicationContext, workManagerConfiguration)
         programarSincronizacionPuntosVerdes()
+        configurarOsmdroid()
+    }
+
+    /**
+     * RF-065 (research.md §6) — osmdroid exige un user-agent propio para no
+     * quedar bloqueado por la política de uso de tiles de OpenStreetMap, y
+     * usa el almacenamiento privado de la app para el caché (sin pedir
+     * ningún permiso de almacenamiento adicional).
+     */
+    private fun configurarOsmdroid() {
+        val configuracion = OsmdroidConfiguration.getInstance()
+        configuracion.userAgentValue = packageName
+        configuracion.osmdroidBasePath = getDir("osmdroid", MODE_PRIVATE)
+        configuracion.osmdroidTileCache = java.io.File(configuracion.osmdroidBasePath, "tiles")
     }
 
     /** RF-052 — sincronización en segundo plano de Puntos Verdes cuando hay conexión (research.md §5). */
