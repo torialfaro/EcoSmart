@@ -29,7 +29,7 @@ class RegistrarUsuarioTest {
         apellido = "Pérez",
         nombreUsuario = "anap",
         barrio = Barrio.PALERMO,
-        telefono = "11-5555-5555",
+        telefono = "+5491155554444",
         categoriasDeInteres = setOf(CategoriaActividad.RECICLAR),
     )
 
@@ -78,6 +78,24 @@ class RegistrarUsuarioTest {
         val resultado = registrarUsuario(datosValidos().copy(contrasenaPlana = "abcdefgh"))
 
         assertEquals(ResultadoRegistro.ContrasenaInvalida, resultado)
+    }
+
+    @Test
+    fun `rechaza un telefono sin el formato +549 mas 10 digitos`() = runTest {
+        coEvery { usuarioRepository.buscarPorEmail(any()) } returns null
+
+        val resultado = registrarUsuario(datosValidos().copy(telefono = "11-5555-5555"))
+
+        assertEquals(ResultadoRegistro.TelefonoInvalido, resultado)
+    }
+
+    @Test
+    fun `rechaza el registro si falta el nombre, apellido o nombre de usuario`() = runTest {
+        coEvery { usuarioRepository.buscarPorEmail(any()) } returns null
+
+        val resultado = registrarUsuario(datosValidos().copy(nombre = ""))
+
+        assertEquals(ResultadoRegistro.CamposObligatoriosIncompletos, resultado)
     }
 
     @Test

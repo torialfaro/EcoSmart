@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.ecosmart.application.activity.ObtenerActividadesFiltradas
 import com.ecosmart.domain.model.Actividad
 import com.ecosmart.domain.repository.ActividadRepository
+import com.ecosmart.domain.repository.PasosDelDiaRepository
 import com.ecosmart.domain.repository.UsuarioRepository
 import com.ecosmart.domain.valueobject.CategoriaActividad
 import com.ecosmart.infrastructure.session.SesionUsuario
@@ -28,12 +29,15 @@ class HomeViewModel @Inject constructor(
     private val usuarioRepository: UsuarioRepository,
     private val obtenerActividadesFiltradas: ObtenerActividadesFiltradas,
     private val sesionUsuario: SesionUsuario,
+    private val pasosDelDiaRepository: PasosDelDiaRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
     init {
+        // Corrección post-QA (2026-09-24): fija cuanto antes la base de pasos del día (RF-070).
+        viewModelScope.launch { pasosDelDiaRepository.pasosDeHoy() }
         viewModelScope.launch {
             actividadRepository.sembrarCatalogoSiEstaVacio()
             val usuarioId = sesionUsuario.usuarioActualId.value ?: return@launch

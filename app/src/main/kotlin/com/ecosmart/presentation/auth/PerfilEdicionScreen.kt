@@ -28,6 +28,9 @@ import com.ecosmart.application.auth.DatosPerfil
 import com.ecosmart.domain.model.Usuario
 import com.ecosmart.domain.valueobject.Barrio
 import com.ecosmart.domain.valueobject.CategoriaActividad
+import com.ecosmart.domain.valueobject.esTelefonoValido
+import com.ecosmart.presentation.theme.EncabezadoEcoSmart
+import com.ecosmart.presentation.theme.FormaBotonPildora
 
 /**
  * US3 — edición de perfil y cambio de contraseña (RF-007 a RF-009).
@@ -81,12 +84,15 @@ private fun CamposDePerfil(
     var contrasenaActual by remember { mutableStateOf("") }
     var contrasenaNueva by remember { mutableStateOf("") }
 
-    Scaffold { padding ->
+    Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
+        topBar = { EncabezadoEcoSmart(inicialUsuario = usuario.nombreUsuario.ifBlank { "U" }) },
+    ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(padding)
-                .padding(24.dp)
+                .padding(horizontal = 20.dp)
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
@@ -94,20 +100,49 @@ private fun CamposDePerfil(
 
             Text(text = "Editar perfil", style = MaterialTheme.typography.titleLarge)
 
-            OutlinedTextField(value = email, onValueChange = { email = it }, label = { Text("Correo electrónico") })
-            OutlinedTextField(value = nombre, onValueChange = { nombre = it }, label = { Text("Nombre") })
-            OutlinedTextField(value = apellido, onValueChange = { apellido = it }, label = { Text("Apellido") })
+            // Corrección post-QA (2026-09-23): el correo NUNCA se edita desde acá (única excepción).
+            OutlinedTextField(
+                value = email,
+                onValueChange = {},
+                readOnly = true,
+                label = { Text("Correo electrónico") },
+                modifier = Modifier.fillMaxWidth(),
+            )
+            OutlinedTextField(
+                value = nombre,
+                onValueChange = { nombre = it },
+                label = { Text("Nombre") },
+                isError = nombre.isBlank(),
+                modifier = Modifier.fillMaxWidth(),
+            )
+            OutlinedTextField(
+                value = apellido,
+                onValueChange = { apellido = it },
+                label = { Text("Apellido") },
+                isError = apellido.isBlank(),
+                modifier = Modifier.fillMaxWidth(),
+            )
             OutlinedTextField(
                 value = nombreUsuario,
                 onValueChange = { nombreUsuario = it },
                 label = { Text("Nombre de usuario") },
+                isError = nombreUsuario.isBlank(),
+                modifier = Modifier.fillMaxWidth(),
             )
             SelectorBarrio(
                 barrioSeleccionado = barrio,
                 onSeleccionar = { barrio = it },
                 modifier = Modifier.fillMaxWidth(),
             )
-            OutlinedTextField(value = telefono, onValueChange = { telefono = it }, label = { Text("Teléfono") })
+            OutlinedTextField(
+                value = telefono,
+                onValueChange = { telefono = it },
+                label = { Text("Teléfono") },
+                placeholder = { Text("+54911XXXXXXXX") },
+                isError = telefono.isNotBlank() && !esTelefonoValido(telefono),
+                supportingText = { Text("Formato: +54911XXXXXXXX") },
+                modifier = Modifier.fillMaxWidth(),
+            )
 
             Text(text = "Categorías de interés", style = MaterialTheme.typography.labelLarge)
             CategoriaActividad.entries.forEach { categoria ->
@@ -125,14 +160,20 @@ private fun CamposDePerfil(
             mensajeError?.let { Text(text = it, color = MaterialTheme.colorScheme.tertiary) }
             mensajeExito?.let { Text(text = it, color = MaterialTheme.colorScheme.primary) }
 
+            val formularioValido = barrio != null &&
+                nombre.isNotBlank() &&
+                apellido.isNotBlank() &&
+                nombreUsuario.isNotBlank() &&
+                esTelefonoValido(telefono)
+
             Button(
-                enabled = !guardando && barrio != null,
+                shape = FormaBotonPildora,
+                enabled = !guardando && formularioValido,
                 onClick = {
                     val barrioElegido = barrio
                     if (barrioElegido != null) {
                         onGuardar(
                             DatosPerfil(
-                                email = email,
                                 nombre = nombre,
                                 apellido = apellido,
                                 nombreUsuario = nombreUsuario,
@@ -164,6 +205,7 @@ private fun CamposDePerfil(
                 modifier = Modifier.fillMaxWidth(),
             )
             Button(
+                shape = FormaBotonPildora,
                 enabled = !guardando,
                 onClick = { onCambiarContrasena(contrasenaActual, contrasenaNueva) },
                 modifier = Modifier.fillMaxWidth(),

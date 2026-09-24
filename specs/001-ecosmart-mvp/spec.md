@@ -109,6 +109,83 @@ antes: este es un proyecto escolar sin presupuesto, y debe funcionar
   debe tener una capa de uso sin costo. Ver research.md §2.1 (corrección
   post-QA ronda 2) y `backend/README.md`.
 
+### Session 2026-09-23 (continuación 2) — Correcciones post-QA manual, ronda 3
+
+Ronda de correcciones detectadas al probar el MVP con el modelo real de IA
+ya funcionando, 3 defectos + 1 decisión de mitigación:
+
+- Q: El teléfono del usuario podía quedar vacío/nulo, sin ningún formato
+  exigido. ¿Cuál es el comportamiento correcto? → A: Obligatorio, con
+  formato de celular argentino "+549" + código de área + número (10
+  dígitos en total, p. ej. "+54911XXXXXXXX"); además, TODOS los campos del
+  registro y edición de perfil (nombre, apellido, nombre de usuario,
+  barrio, teléfono, categorías de interés) pasan a ser obligatorios — no
+  solo el teléfono. Nuevo requisito: RF-076.
+- Q: Al editar el perfil, los cambios se guardaban pero la pantalla
+  "Perfil" seguía mostrando los datos viejos al volver. ¿Cuál era la
+  causa? → A: Defecto de implementación, no ambigüedad: `PerfilViewModel`
+  cargaba los datos una única vez en su `init{}`, y como `PerfilScreen`
+  queda vivo debajo de `PerfilEdicionScreen` en el back stack, Compose
+  Navigation reutilizaba esa misma instancia de ViewModel al volver — su
+  `init{}` nunca se repetía. El comportamiento correcto es que "Perfil" se
+  refresque cada vez que la pantalla vuelve a primer plano. Nuevo
+  requisito explícito: RF-077.
+- Q: De los campos de perfil, ¿cuáles deben poder editarse? → A: Todos
+  excepto el correo electrónico, que nunca se edita desde "Editar perfil"
+  (única excepción a la obligatoriedad/editabilidad general). Nuevo
+  requisito: RF-078.
+- Q: El envío de foto + descripción a EcoGPT respondía siempre "error de
+  conexión a internet" en el primer intento, y recién al tocar "Volver a
+  intentar" se aprobaba — independientemente de la conectividad real del
+  dispositivo. ¿Cuál era la causa y qué se implementa? → A: No es un
+  defecto nuevo sino la materialización del riesgo ya documentado en
+  RF-074 (arranque en frío del backend en Render free tier, más lento que
+  el timeout fijo de 30s del cliente). Mitigación elegida: (1) apenas se
+  abre la pantalla de verificación, el cliente manda un ping best-effort a
+  `/health` para empezar a despertar el backend con minutos de ventaja
+  antes de que el usuario termine de sacar la foto; (2) si aun así falla
+  por timeout/conexión, el cliente reintenta automáticamente UNA vez en
+  segundo plano antes de mostrarle cualquier error al usuario. Se
+  descartó aumentar el timeout de 30s (reabriría RNF-008/SC-008 sin
+  necesidad) y depender de un servicio externo de keep-alive (agrega una
+  pieza de infraestructura más para mantener). Nuevo requisito: RF-079.
+
+### Session 2026-09-23 (continuación 3) — Ampliación del catálogo de actividades
+
+- Q: El catálogo de ejemplo (`ActividadRepositoryImpl.CATALOGO_INICIAL`)
+  tenía una única actividad por categoría. ¿Cuántas actividades más se
+  agregan, y con qué criterio de "objetivo distinto"? → A: 3 actividades
+  más por categoría (4 en total por categoría, 12 en todo el catálogo),
+  cada una con un objetivo temático distinto dentro de la misma categoría:
+  Reciclar (envases, papel/cartón, vidrio, residuos electrónicos),
+  Reutilizar (transformar un objeto genérico, ropa, envases), Caminar
+  (meta de pasos genérica, trayecto cotidiano en vez de auto/colectivo,
+  caminata en plaza/espacio verde). Para Caminar en particular: la meta
+  numérica de pasos NO es un campo del catálogo (`Actividad` no tiene
+  `metaPasos`/`metaMetros` — la elige el usuario en el momento, ver
+  `VerificacionCaminataScreen.kt`), así que las 3 nuevas actividades de
+  Caminar se diferencian por el contexto/propósito sugerido en
+  `descripcionCorta`/`pasosASeguir`, no por un objetivo numérico
+  distinto. El puntaje (`puntosBase`) de cada actividad nueva se mantiene
+  igual al de su categoría (50/100/50), consistente con la grilla
+  "valores cerrados" de `constitution.md`. Nuevo requisito: RF-080.
+
+### Session 2026-09-24 — Pasos del podómetro en 0
+
+- Q: Los pasos se veían siempre en 0 y el sistema "no registraba" el podómetro. ¿Cuál era la causa y cuál es el comportamiento correcto? → A: Defecto de diseño/implementación, no ambigüedad de requisito. (1) El contador diario del Perfil (RF-070) sumaba solo los pasos de caminatas de actividad aprobadas — nunca leía el podómetro — así que valía 0 salvo completar una meta. (2) Si el dispositivo no tenía sensor `TYPE_STEP_COUNTER`, el flujo de la pantalla de Caminata se cerraba en silencio, dejando "Llevás 0 pasos" sin explicación. El comportamiento correcto es leer el podómetro real para el contador diario e informar cuando no hay sensor. Nuevo requisito: RF-081.
+
+### Session 2026-09-24 (continuación) — Caminata en segundo plano
+
+- Q: Caso hipotético — Ana inicia una caminata de 8.000 pasos a las 9:00, sale de la app, y a las 14:00 sabe que no va a llegar. Como la actividad solo termina al llegar a la meta, ¿qué puede hacer con esa caminata en curso? → A: No hay botón de cancelar ni de "Terminar" anticipado; la caminata se completa solo al llegar a la meta y, si no llega, se descarta sola a medianoche (00:00, consistente con el reinicio diario de RF-057). Hasta entonces no puede iniciar otra. Nuevo requisito: RF-082.
+- Q: Caso hipotético — Ana ya tiene en curso "Caminar 8.000 pasos" y toca "Realizar" en otra actividad de Caminar de la Home. ¿Qué pasa? → A: Una sola caminata activa a la vez: la pantalla muestra el avance de la que está en curso en vez de iniciar otra (evita contar los mismos pasos para dos metas y cobrar puntos duplicados). RF-082.
+
+### Session 2026-09-24 (continuación 2) — Rediseño visual según mockup
+
+El usuario adjuntó un mockup de 9 pantallas y el logo de EcoSmart y pidió adherirse al 100% a esa interfaz (logo, distribución de la información, colores y tipografías).
+
+- Q: Caso hipotético — Ana abre la app y ve el mockup: cinco pantallas son cambios de estilo sobre pantallas existentes, pero cuatro muestran cosas que hoy no existen (barra inferior Inicio/Misiones/Perfil, "Tus puntos" con Rachas, "Tu progreso" con gráfico semanal y pestañas Semana/Mes/Total, y "Galería"). ¿Hasta dónde se llega? → A: Estilo + barra inferior, sin pantallas nuevas: logo, colores, tipografía y distribución en TODAS las pantallas existentes, más la barra inferior que las conecta. "Tus puntos"/Rachas quedan como secciones del Perfil ya existente; el gráfico de progreso y la Galería quedan fuera de alcance (no hay requisito que los defina). Nuevo requisito: RF-083.
+- Q: Caso hipotético — el nombre de la tipografía no se puede extraer de una imagen; el logo y los títulos del mockup son de trazo redondeado. ¿Cómo se resuelve "tipografía exacta"? → A: Nunito (variable), empaquetada en la app (`res/font/nunito.ttf`); es la fuente gratuita más cercana, sin garantía de ser idéntica a la del diseño original. RF-083.
+
 ## User Scenarios & Testing *(mandatory)*
 
 Las historias de usuario (US) están agrupadas por épica del producto. Cada una es
@@ -714,8 +791,10 @@ permiso.
 
 - **RF-070**: La pantalla "Perfil" (RF-068) DEBE mostrar, en una tarjeta
   destacada con el color de acento de la app, la cantidad de pasos
-  registrados hoy (suma de pasos de actividades de Caminar Aprobadas con
-  fecha de hoy), únicamente si el permiso de Podómetro está otorgado
+  dados hoy según el podómetro real del dispositivo (RF-081 — originalmente
+  se sumaban solo los pasos de actividades de Caminar aprobadas, lo que
+  dejaba el contador en 0 salvo que se completara una meta), únicamente si
+  el permiso de Podómetro está otorgado
   (`EstadoPermiso.OTORGADO`). Si el permiso no está otorgado, la tarjeta NO
   DEBE mostrarse (nunca "0" ni un placeholder vacío).
 - **RF-071**: Las pantallas de Login y Registro DEBEN reestructurarse según
@@ -758,6 +837,87 @@ permiso.
   la misma interfaz interna del backend (`verificar_con_ia`), de modo que
   el proveedor pueda sustituirse en el futuro sin afectar el contrato
   `POST /verificaciones` ni el resto de la app.
+
+**Correcciones Post-QA Manual, ronda 3 (RF-076 a RF-079, sesión 2026-09-23 continuación 2)**
+
+- **RF-076**: El teléfono del usuario es OBLIGATORIO (nunca nulo ni vacío)
+  y DEBE cumplir el formato de celular argentino "+549" seguido de
+  exactamente 10 dígitos (código de área + número, p. ej.
+  "+54911XXXXXXXX"), tanto en el registro (RF-001) como en la edición de
+  perfil (RF-007). Además, nombre, apellido, nombre de usuario y barrio
+  también son obligatorios en ambos flujos (categorías de interés ya lo
+  eran desde RF-006).
+- **RF-077**: La pantalla "Perfil" (RF-068) DEBE reflejar los cambios
+  guardados en "Editar perfil" inmediatamente al volver a ella, sin
+  requerir reiniciar la app ni navegar por otra pantalla intermedia.
+- **RF-078**: El correo electrónico NUNCA DEBE poder editarse desde
+  "Editar perfil" — se muestra de solo lectura; todos los demás campos
+  del perfil (RF-076) SÍ son editables ahí.
+- **RF-079**: Al enviar una foto + descripción para verificación (RF-025),
+  el sistema DEBE: (a) disparar un aviso best-effort de "despertar" hacia
+  el backend de EcoGPT apenas se abre la pantalla de verificación, antes
+  de que el usuario complete el formulario; y (b) reintentar
+  automáticamente UNA vez, de forma transparente para el usuario (sin
+  mostrar ningún error intermedio), ante una falla de conexión o timeout
+  del primer intento, antes de reportar un error real. Esto DEBE evitar
+  que el arranque en frío del backend (RF-074) se perciba como un error
+  de conectividad cuando el dispositivo sí tiene conexión real.
+
+**Ampliación del Catálogo de Actividades (RF-080, sesión 2026-09-23 continuación 3)**
+
+**Pasos del Día desde el Podómetro (RF-081, sesión 2026-09-24)**
+
+- **RF-081**: Los pasos del día (RF-070) DEBEN calcularse leyendo el
+  podómetro del dispositivo (`TYPE_STEP_COUNTER`) — conteo acumulado actual
+  menos una base guardada por fecha, reiniciada si cambia el día o si el
+  conteo baja (reinicio del celular) — y NO derivarse de las verificaciones
+  de Caminar. La base del día es la primera lectura que la app logra ese
+  día (se dispara al abrir la Home), por lo que los pasos previos a esa
+  primera apertura no se cuentan. Si el dispositivo no tiene podómetro, la
+  pantalla de Caminata DEBE informarlo en vez de dejar el contador en 0
+  sin explicación.
+
+**Rediseño Visual según Mockup (RF-083, sesión 2026-09-24 continuación 2)**
+
+- **RF-083**: Toda la interfaz DEBE seguir el mockup de referencia del
+  usuario (reemplaza el estilo definido en RF-071/RF-072): (a) logo oficial
+  (isotipo `logo_ecosmart_icono.png` + texto "ecosmart") en un encabezado
+  común con avatar circular del usuario y, en Home/Perfil, el saludo "Hola,
+  {usuario}" (RF-062/RF-069); (b) paleta muestreada del mockup — fondo
+  verde-crema `#F1F4E5`, tarjetas verde claro `#DFEBD8`, botones y textos
+  en verde `#215D41`/`#193F34`, acento ámbar `#F2B855` para "Pasos hoy";
+  (c) tipografía Nunito; (d) tarjetas de esquinas muy redondeadas y botones
+  principales en píldora; (e) barra inferior Inicio / Misiones / Perfil en
+  las 3 pantallas de nivel superior (Inicio = Home, Misiones = historial de
+  misiones realizadas, Perfil = Perfil), y solo el encabezado en las demás;
+  (f) Home con pestañas "Puntos Verdes"/"Aprender más" y tarjetas de
+  actividad con "+N pts" y botón "Realizarla"; Detalle con pasos numerados y
+  tarjeta "Resultado esperado"; Cámara/Galería como pestañas en píldora;
+  Permisos como tarjetas con ícono. El logo también es el ícono de la app.
+  Fuera de alcance: pantallas "Tus puntos", "Tu progreso" (gráfico) y
+  "Galería" del mockup, que no tienen requisito funcional definido.
+
+**Caminata en Segundo Plano (RF-082, sesión 2026-09-24 continuación)**
+
+- **RF-082**: Al presionar "Realizar" en una actividad de Caminar con una
+  meta de pasos, el sistema DEBE seguir contando los pasos en segundo plano
+  (servicio en primer plano con notificación de avance) aunque el usuario
+  salga de la pantalla o de la app. La caminata NO DEBE terminar por
+  acción del usuario: se completa (aprobación + puntos, RF-031/RF-048) solo
+  al alcanzar la meta; no existe botón "Terminar" ni "Cancelar". Si no se
+  alcanza la meta el mismo día, se descarta a medianoche (RF-057). Solo
+  puede haber UNA caminata en curso a la vez; intentar iniciar otra
+  muestra el avance de la activa. El estado persiste aunque se cierre el
+  proceso de la app. Requiere ACTIVITY_RECOGNITION (RF-064) y, desde
+  Android 13, el permiso de notificaciones para mostrar el avance (su
+  denegación no bloquea la caminata).
+
+- **RF-080**: El catálogo de ejemplo (`ActividadRepositoryImpl.CATALOGO_INICIAL`)
+  DEBE tener al menos 4 actividades por categoría (RECICLAR, REUTILIZAR,
+  CAMINAR), cada una con un objetivo/tema distinto dentro de su categoría
+  (p. ej., Reciclar: envases, papel/cartón, vidrio, residuos
+  electrónicos), manteniendo el `puntosBase` fijo de la grilla de
+  `constitution.md` (50/100/50) para cada actividad de su categoría.
 
 ### Non-Functional Requirements
 
@@ -916,3 +1076,10 @@ tabla como registro histórico de trazabilidad.
 | [CORRECCIÓN-010] | La interfaz no seguía ninguna paleta/forma consistente ni mostraba la cantidad de pasos del día en ningún lugar visible; Login/Registro no seguía un layout de referencia claro. | ✅ Resuelto | Paleta verde bosque/crema/ámbar con bordes redondeados en toda la app (`Theme.kt`); tarjeta destacada de "Pasos hoy" en Perfil, visible solo con permiso de Podómetro otorgado; Login/Registro reestructurados (Google arriba, divisor, campos etiquetados, botón en píldora) manteniendo la paleta propia de EcoSmart. | RF-070, RF-071, RF-072 |
 | [CORRECCIÓN-011] | El flujo completo de verificación (US8/US9) fallaba siempre con "Sin conexión a internet": `ECOGPT_BASE_URL` apuntaba por defecto a un dominio RFC 2606 que nunca resuelve — "EcoGPT" nunca tuvo un backend real implementado, solo un contrato de terceros hipotético jamás contratado. | ✅ Resuelto | Backend propio en `backend/` (Python + FastAPI, desplegado en Render) que implementa `POST /verificaciones` como proxy hacia una API de IA con visión, comparando imagen + descripción del usuario contra `Actividad.resultadoEsperado`. Requiere configuración manual pendiente del usuario: desplegar el backend y completar `ECOGPT_API_KEY`/`ECOGPT_BASE_URL` en `local.properties` (ver `backend/README.md`). | RF-073, RF-074 |
 | [CORRECCIÓN-012] | La primera versión del backend de EcoGPT (CORRECCIÓN-011) usaba Claude/Anthropic, una API paga — incompatible con que este es un proyecto escolar sin presupuesto para servicios de IA. | ✅ Resuelto | Se reemplazó el proveedor de IA por Gemini (Google AI Studio, capa gratuita sin tarjeta de crédito), manteniendo el mismo contrato `POST /verificaciones` y el mismo backend (`backend/app/ecogpt.py`); solo cambia el proveedor detrás de la interfaz interna. | RF-075 |
+| [CORRECCIÓN-013] | El teléfono del usuario podía quedar nulo/vacío sin ningún formato exigido; el resto de los campos de registro/edición tampoco eran obligatorios. | ✅ Resuelto | Teléfono obligatorio con formato "+549" + 10 dígitos (`esTelefonoValido`, `ValidacionesCredenciales.kt`); nombre, apellido, nombre de usuario y barrio también obligatorios en `RegistrarUsuario`/`EditarPerfil` y en ambas pantallas. | RF-076 |
+| [CORRECCIÓN-014] | Editar el perfil guardaba los cambios correctamente, pero la pantalla "Perfil" seguía mostrando los datos viejos al volver — `PerfilViewModel` solo cargaba datos una vez en `init{}`, y Compose Navigation reutilizaba esa misma instancia al volver del back stack. | ✅ Resuelto | `PerfilViewModel.refrescar()` se llama en cada `ON_RESUME` del ciclo de vida de `PerfilScreen`, no solo una vez. De paso, se sacó `email` de los campos editables (`DatosPerfil`) — el correo nunca se edita desde ahí. | RF-077, RF-078 |
+| [CORRECCIÓN-015] | El envío de foto + descripción a EcoGPT siempre mostraba "Sin conexión a internet" en el primer intento y recién aprobaba tras "Volver a intentar", sin importar la conectividad real — materialización del riesgo de cold-start ya documentado en RF-074 (backend en Render free tier). | ✅ Resuelto | Ping best-effort a `/health` apenas se abre la pantalla de verificación (`precalentarBackend`, llamado desde `VerificacionFotoViewModel.init`) + 1 reintento automático transparente ante timeout/conexión antes de reportar error real (`intentarConUnReintentoAutomatico`, `VerificarFotoConIA.kt`). | RF-079 |
+| [CORRECCIÓN-016] | El catálogo de ejemplo tenía una única actividad por categoría, poca variedad para demostrar el flujo completo con distintos objetivos. | ✅ Resuelto | `CATALOGO_INICIAL` ampliado a 4 actividades por categoría (12 en total), cada una con un tema/objetivo distinto, manteniendo el `puntosBase` fijo de la grilla de `constitution.md`. Requiere reinstalar la app o borrar sus datos para verse (`sembrarCatalogoSiEstaVacio` solo siembra si la tabla está vacía). | RF-080 |
+| [CORRECCIÓN-017] | Los pasos se mantenían en 0: el contador diario del Perfil solo sumaba caminatas de actividad aprobadas (nunca leía el podómetro) y, sin sensor, la pantalla de Caminata quedaba en 0 sin avisar. | ✅ Resuelto | Nuevo puerto `PasosDelDiaRepository` (impl. `PasosDelDiaRepositoryImpl`: conteo del sensor menos base diaria en SharedPreferences), usado por `CalcularMetricasPerfil`; `HomeViewModel` fija la base al abrir; aviso "sin podómetro" en `VerificacionCaminataScreen`. Se eliminó `sumaPasosDelDia`. Limitación: no cuenta pasos previos a la primera apertura del día. | RF-081 |
+| [CORRECCIÓN-018] | La caminata solo contaba mientras la pantalla "Realizar" estaba abierta: al salir se perdía el seguimiento y la aprobación dependía de un botón "Terminar". | ✅ Resuelto | `CaminataService` (servicio en primer plano tipo `health`, notificación con avance) + `CaminataEnCursoStore` (estado persistente, una sola caminata, vence a medianoche); aprueba sola al llegar a la meta vía `RegistrarCaminata`. Sin botón Terminar/Cancelar. Reiniciar el celular no reanuda el servicio (la caminata vence igual a medianoche). | RF-082 |
+| [CORRECCIÓN-019] | La interfaz no seguía el diseño de referencia del usuario (logo, distribución, colores, tipografía, navegación inferior). | ✅ Resuelto | `Theme.kt` con paleta muestreada del mockup y Nunito; componentes `EncabezadoEcoSmart`/`BarraInferiorEcoSmart`/`TarjetaEcoSmart`; logo como recurso e ícono de la app; todas las pantallas restilizadas; barra inferior cableada en `EcoSmartNavHost`. Limitaciones: la tipografía es la más cercana (Nunito), no una copia garantizada; "Misiones" abre el historial; sin gráfico de progreso ni Galería. | RF-083 |

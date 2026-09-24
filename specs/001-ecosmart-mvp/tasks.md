@@ -258,9 +258,62 @@
 - [X] T116 [P] Implementar el backend FastAPI de `POST /verificaciones` (RF-073) — nuevo directorio `backend/` (`app/main.py`, `app/ecogpt.py`, `app/imagenes.py`, `app/schemas.py`): valida el secreto compartido `X-EcoGPT-Api-Key`, normaliza la imagen con Pillow, y llama a una API de IA con visión para obtener `{veredicto, motivo}` estructurado sin parseo frágil de texto libre
 - [X] T117 [P] Documentar desarrollo local y despliegue en Render (RF-073/RF-074) — `backend/README.md`, `backend/render.yaml` (Blueprint), `backend/.env.example`, `backend/requirements.txt`; actualización de `research.md` §0/§2.1, `plan.md` § Complexity Tracking, `contracts/openapi.yaml` (description + `servers`) y `.gitignore` (Depende de: T116)
 - [X] T118 [P] Reemplazar Claude/Anthropic (pago) por Gemini (Google AI Studio, capa gratuita) como proveedor de IA del backend (RF-075, corrección post-QA ronda 2) — `backend/app/ecogpt.py` reescrito con el SDK `google-genai` (`response_mime_type`/`response_schema` en vez de *tool use* para la salida estructurada); `backend/requirements.txt`, `render.yaml`, `.env.example` y `README.md` actualizados de `ANTHROPIC_API_KEY` a `GEMINI_API_KEY`; probado localmente con un servidor uvicorn real (rutas `/health`, 401 sin API key, 400 con imagen inválida) (Depende de: T116)
-- [ ] T119 Obtener una API key real de Gemini (gratis, sin tarjeta de crédito) en Google AI Studio y configurarla como `GEMINI_API_KEY` — acción manual del usuario, no automatizable (ver `backend/README.md` §2)
-- [ ] T120 Desplegar `backend/` en Render (Blueprint desde `render.yaml` o Web Service manual) y configurar `GEMINI_API_KEY`/`ECOGPT_SHARED_API_KEY` como variables de entorno del servicio — acción manual del usuario (Depende de: T116, T118, T119)
-- [ ] T121 Configurar `ECOGPT_API_KEY`/`ECOGPT_BASE_URL` en `local.properties` apuntando a la URL real de Render, y validar el flujo end-to-end completo (US8/US9: elegir actividad → realizar → verificar con foto real → sumar puntos → ver progreso en Perfil) — acción manual del usuario (Depende de: T120)
+- [X] T119 Obtener una API key real de Gemini (gratis, sin tarjeta de crédito) en Google AI Studio y configurarla como `GEMINI_API_KEY` — acción manual del usuario (ver `backend/README.md` §2)
+- [X] T120 Desplegar `backend/` en Render (`ecosmart-ecogpt.onrender.com`) y configurar `GEMINI_API_KEY`/`ECOGPT_SHARED_API_KEY` como variables de entorno del servicio — acción manual del usuario (Depende de: T116, T118, T119)
+- [X] T121 Configurar `ECOGPT_API_KEY`/`ECOGPT_BASE_URL` en `local.properties` apuntando a la URL real de Render, y validar el flujo end-to-end completo (US8/US9: elegir actividad → realizar → verificar con foto real → sumar puntos → ver progreso en Perfil) — validado con una imagen real contra el backend desplegado, veredicto real de Gemini recibido correctamente (Depende de: T120)
+
+---
+
+## Fase 13: Correcciones Post-QA Manual, ronda 3 (sesión 2026-09-23, continuación 2)
+
+**Propósito**: cubrir RF-076 a RF-079 (`spec.md` § Clarifications, sesión 2026-09-23 continuación 2) — teléfono y campos obligatorios, refresco de Perfil tras editar, y mitigación del falso "error de conexión" por cold-start del backend.
+
+- [X] T122 [P] Agregar `esTelefonoValido` (formato "+549" + 10 dígitos) en `app/src/main/kotlin/com/ecosmart/domain/valueobject/ValidacionesCredenciales.kt` (RF-076)
+- [X] T123 Hacer obligatorios teléfono (con formato) y nombre/apellido/nombre de usuario/barrio en el registro (RF-076) — nuevos casos `ResultadoRegistro.CamposObligatoriosIncompletos`/`TelefonoInvalido` en `RegistrarUsuario.kt`; validación + `isError` visual en `RegistroScreen.kt`; manejo en `RegistroViewModel.kt`; tests nuevos en `RegistrarUsuarioTest.kt` (Depende de: T122)
+- [X] T124 Mismas validaciones obligatorias en la edición de perfil, y sacar `email` de los campos editables (RF-076, RF-078) — `DatosPerfil` pierde el campo `email`; nuevos casos `ResultadoEdicionPerfil.CamposObligatoriosIncompletos`/`TelefonoInvalido` en `EditarPerfil.kt`; campo de correo pasa a `readOnly` en `PerfilEdicionScreen.kt`; manejo en `PerfilEdicionViewModel.kt` (Depende de: T122)
+- [X] T125 [P] Refrescar "Perfil" al volver de "Editar perfil" (RF-077) — `PerfilViewModel.init` se extrae a `refrescar()` (pública); `PerfilScreen.kt` la llama en cada `ON_RESUME` vía `DisposableEffect`/`LifecycleEventObserver` (mismo patrón que `MapaPuntosVerdes` en `PuntosVerdesScreen.kt`)
+- [X] T126 [P] Ping best-effort de "despertar" del backend de EcoGPT (RF-079) — nuevo `EcoGptClient.ping()` (`GET /health`) en `app/src/main/kotlin/com/ecosmart/infrastructure/network/EcoGptClient.kt`; `VerificarFotoConIA.precalentarBackend()` lo invoca ignorando errores; `VerificacionFotoViewModel.init` lo dispara apenas se abre la pantalla, antes de que el usuario termine de sacar la foto
+- [X] T127 Reintento automático transparente ante timeout/sin conexión (RF-079) — `VerificarFotoConIA.intentarConUnReintentoAutomatico` reintenta UNA vez tras 3s ante cualquier `IOException` antes de propagar el error a `invoke`; nuevo test `VerificarFotoConIATest.kt` que verifica que un fallo transitorio seguido de éxito termina en `Completado`, no en `Timeout`/`SinConexion` (Depende de: T126)
+
+---
+
+## Fase 14: Ampliación del Catálogo de Actividades (sesión 2026-09-23, continuación 3)
+
+**Propósito**: cubrir RF-080 (`spec.md` § Clarifications, sesión 2026-09-23 continuación 3) — 3 actividades más por categoría, cada una con un objetivo distinto.
+
+- [X] T128 Agregar 3 actividades más a RECICLAR (papel/cartón, vidrio, residuos electrónicos), 3 más a REUTILIZAR (ropa, envases, y la genérica ya existente) y 3 más a CAMINAR (trayecto cotidiano, plaza/espacio verde, y la genérica ya existente) en `CATALOGO_INICIAL` de `app/src/main/kotlin/com/ecosmart/infrastructure/persistence/ActividadRepositoryImpl.kt` (RF-080) — 12 actividades en total (4 por categoría), cada `puntosBase` igual al de su categoría en la grilla de `constitution.md`
+
+---
+
+## Fase 15: Pasos del Podómetro en 0 (sesión 2026-09-24)
+
+**Propósito**: cubrir RF-081 (`spec.md` § Clarifications, sesión 2026-09-24) — el contador de pasos nunca salía de 0.
+
+- [X] T129 Leer el podómetro real para los pasos del día (RF-081) — nuevo puerto `domain/repository/PasosDelDiaRepository.kt`, implementación `infrastructure/sensors/PasosDelDiaRepositoryImpl.kt` (conteo de `TYPE_STEP_COUNTER` menos base diaria en SharedPreferences, rebase si cambia el día o el conteo baja), `PodometroProvider.leerPasosAcumuladosActual()`/`hayPodometro()`, binding en `RepositoryModule.kt`
+- [X] T130 `CalcularMetricasPerfil` usa `PasosDelDiaRepository` en vez de `sumaPasosDelDia`, que se elimina de `RegistroVerificacionRepository`/`Impl`/`Dao`; `CalcularMetricasPerfilTest` actualizado (Depende de: T129)
+- [X] T131 [P] `HomeViewModel` dispara una lectura al abrir para fijar cuanto antes la base del día (RF-081) (Depende de: T129)
+- [X] T132 [P] Aviso "Este dispositivo no tiene podómetro" en `VerificacionCaminataScreen` en vez de dejar el contador en 0 en silencio (RF-081)
+
+---
+
+## Fase 16: Caminata en Segundo Plano (sesión 2026-09-24, continuación)
+
+**Propósito**: cubrir RF-082 (`spec.md` § Clarifications, sesión 2026-09-24 continuación).
+
+- [X] T133 Estado persistente de la caminata en curso (RF-082) — `infrastructure/sensors/CaminataEnCursoStore.kt` (`EstadoCaminata`: Ninguna/EnCurso/Completada en SharedPreferences, una sola a la vez, vence a medianoche)
+- [X] T134 Servicio en primer plano que cuenta pasos y aprueba al llegar a la meta (RF-082) — `infrastructure/sensors/CaminataService.kt` (`@AndroidEntryPoint`, notificación de avance, delta reinicio-seguro, usa `RegistrarCaminata`); declaración `foregroundServiceType="health"` y permisos `FOREGROUND_SERVICE`/`FOREGROUND_SERVICE_HEALTH`/`POST_NOTIFICATIONS` en `AndroidManifest.xml` (Depende de: T133)
+- [X] T135 Reescribir `VerificacionCaminataScreen.kt`/ViewModel para iniciar el servicio y mostrar el estado del store, sin botón Terminar; pide `POST_NOTIFICATIONS` en API 33+ (RF-082, RF-064) (Depende de: T133, T134)
+
+---
+
+## Fase 17: Rediseño Visual según Mockup (sesión 2026-09-24, continuación 2)
+
+**Propósito**: cubrir RF-083 (`spec.md` § Clarifications, sesión 2026-09-24 continuación 2).
+
+- [X] T136 [P] Recursos de marca (RF-083) — `res/drawable-nodpi/logo_ecosmart.png` y `logo_ecosmart_icono.png` (logo del usuario con fondo transparente), `res/font/nunito.ttf`, íconos vectoriales `ic_hoja`/`ic_camara`/`ic_galeria`/`ic_caminar`, ícono de la app y `windowBackground` en `themes.xml`/`AndroidManifest.xml`
+- [X] T137 Tema y componentes comunes (RF-083) — reescritura de `presentation/theme/Theme.kt` (paleta muestreada, Nunito, formas) y nuevo `ComponentesEcoSmart.kt` (`EncabezadoEcoSmart`, `BarraInferiorEcoSmart`, `TarjetaEcoSmart`) + `presentation/comun/EncabezadoConUsuario.kt` (Depende de: T136)
+- [X] T138 Restilizar todas las pantallas con encabezado/tarjetas/botones del mockup (RF-083) — Home, Detalle de actividad, Perfil, Foto/Cámara, Resultado, Caminata, Permisos, Guía de permiso, Puntos Verdes, Contenido educativo, Historial, Registro/Login, Edición de perfil (Depende de: T137)
+- [X] T139 Barra inferior Inicio/Misiones/Perfil cableada en `EcoSmartNavHost.kt` para Home, Historial y Perfil (RF-083) (Depende de: T137)
 
 ---
 

@@ -6,6 +6,7 @@ import com.ecosmart.domain.valueobject.ActividadId
 import com.ecosmart.domain.valueobject.CategoriaActividad
 import com.ecosmart.domain.valueobject.UsuarioId
 import com.ecosmart.infrastructure.network.EcoGptClient
+import com.ecosmart.infrastructure.network.VeredictoEcoGptDto
 import com.ecosmart.infrastructure.security.CalculadorHuellaPerceptual
 import io.mockk.coEvery
 import io.mockk.mockk
@@ -51,6 +52,20 @@ class VerificarFotoConIATest {
         val resultado = verificarFotoConIA(datos)
 
         assertTrue(resultado is ResultadoVerificarFotoConIA.Timeout)
+    }
+
+    @Test
+    fun `un solo fallo de red transitorio se reintenta automáticamente y aprueba sin mostrar error`() = runTest {
+        coEvery { registroVerificacionRepository.contarAprobadosDelDia(any(), any(), any()) } returns 0
+        coEvery { registroVerificacionRepository.huellasAprobadas(any(), any()) } returns emptyList()
+        coEvery { calculadorHuellaPerceptual.calcularDesdeArchivo(any()) } returns "a1b2c3d4"
+        coEvery {
+            ecoGptClient.verificarFotoActividad(any(), any(), any(), any(), any(), any())
+        } throws SocketTimeoutException() andThen VeredictoEcoGptDto(veredicto = "APROBADO", motivo = null)
+
+        val resultado = verificarFotoConIA(datos)
+
+        assertTrue(resultado is ResultadoVerificarFotoConIA.Completado)
     }
 
     @Test

@@ -56,12 +56,15 @@ class PerfilEdicionViewModel @Inject constructor(
                         guardando = false,
                         mensajeExito = "Perfil actualizado.",
                     )
-                ResultadoEdicionPerfil.EmailInvalido ->
-                    _uiState.value = _uiState.value.copy(guardando = false, mensajeError = "Ingresá un correo válido.")
-                ResultadoEdicionPerfil.EmailYaRegistrado ->
+                ResultadoEdicionPerfil.CamposObligatoriosIncompletos ->
                     _uiState.value = _uiState.value.copy(
                         guardando = false,
-                        mensajeError = "Ese correo ya tiene una cuenta.",
+                        mensajeError = "Completá nombre, apellido y nombre de usuario.",
+                    )
+                ResultadoEdicionPerfil.TelefonoInvalido ->
+                    _uiState.value = _uiState.value.copy(
+                        guardando = false,
+                        mensajeError = "Ingresá un teléfono válido, formato +54911XXXXXXXX.",
                     )
             }
         }

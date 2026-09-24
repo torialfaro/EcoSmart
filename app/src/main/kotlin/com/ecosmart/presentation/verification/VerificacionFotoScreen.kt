@@ -10,6 +10,7 @@ import androidx.camera.core.ImageCapture
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,6 +19,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -34,15 +37,21 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.ecosmart.domain.valueobject.TipoPermiso
 import com.ecosmart.infrastructure.sensors.SelectorGaleria
+import com.ecosmart.presentation.comun.EncabezadoConUsuario
 import com.ecosmart.presentation.permissions.GuiaHabilitarPermisoScreen
+import com.ecosmart.presentation.theme.FormaBotonPildora
+import com.ecosmart.presentation.theme.TarjetaEcoSmart
+import com.ecosmart.presentation.theme.VerdeTarjeta
 
 /**
  * US9 — formulario de foto (Cámara con preview en vivo o Galería) +
@@ -121,47 +130,93 @@ fun VerificacionFotoScreen(
         uri?.let(viewModel::adjuntarFotoDesdeGaleria)
     }
 
-    Scaffold { padding ->
+    Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
+        topBar = { EncabezadoConUsuario() },
+    ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(16.dp),
+                .padding(horizontal = 20.dp)
+                .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(onClick = { modoCamara = true }) { Text("Cámara") }
-                OutlinedButton(
-                    onClick = {
-                        modoCamara = false
-                        selectorGaleria.launch(SelectorGaleria.solicitudSoloImagenes)
-                    },
-                ) { Text("Galería") }
+            // Pestañas "Cámara" / "Galería" del mockup (RF-083): la activa va rellena, la otra con borde.
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                if (modoCamara) {
+                    Button(onClick = { modoCamara = true }, shape = FormaBotonPildora, modifier = Modifier.weight(1f)) {
+                        Text("Cámara")
+                    }
+                    OutlinedButton(
+                        onClick = {
+                            modoCamara = false
+                            selectorGaleria.launch(SelectorGaleria.solicitudSoloImagenes)
+                        },
+                        shape = FormaBotonPildora,
+                        modifier = Modifier.weight(1f),
+                    ) { Text("Galería") }
+                } else {
+                    OutlinedButton(onClick = { modoCamara = true }, shape = FormaBotonPildora, modifier = Modifier.weight(1f)) {
+                        Text("Cámara")
+                    }
+                    Button(
+                        onClick = { selectorGaleria.launch(SelectorGaleria.solicitudSoloImagenes) },
+                        shape = FormaBotonPildora,
+                        modifier = Modifier.weight(1f),
+                    ) { Text("Galería") }
+                }
             }
 
             if (uiState.archivoFoto == null && modoCamara) {
-                VistaCamara(imageCapture = imageCapture, modifier = Modifier.fillMaxWidth().height(300.dp))
-                Button(onClick = { viewModel.capturarFoto(imageCapture) }, modifier = Modifier.fillMaxWidth()) {
+                VistaCamara(
+                    imageCapture = imageCapture,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(300.dp)
+                        .clip(MaterialTheme.shapes.large)
+                        .background(VerdeTarjeta),
+                )
+                Text(
+                    "Tomá una foto",
+                    style = MaterialTheme.typography.titleMedium,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Text(
+                    "del material que reciclaste o reutilizaste",
+                    style = MaterialTheme.typography.bodyMedium,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Button(
+                    onClick = { viewModel.capturarFoto(imageCapture) },
+                    shape = FormaBotonPildora,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
                     Text("Tomar foto")
                 }
             } else if (uiState.archivoFoto != null) {
-                Text("Foto lista ✓", style = MaterialTheme.typography.labelLarge)
+                TarjetaEcoSmart { Text("Foto lista ✓", style = MaterialTheme.typography.titleSmall) }
             }
 
             OutlinedTextField(
                 value = uiState.descripcion,
                 onValueChange = viewModel::actualizarDescripcion,
                 label = { Text("Describí lo que hiciste") },
+                shape = MaterialTheme.shapes.medium,
                 modifier = Modifier.fillMaxWidth(),
             )
 
             Button(
                 enabled = uiState.archivoFoto != null && uiState.descripcion.isNotBlank() && !uiState.enviando,
                 onClick = viewModel::enviar,
+                shape = FormaBotonPildora,
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Text(if (uiState.enviando) "Enviando…" else "Enviar")
             }
+            Box(modifier = Modifier.height(8.dp))
         }
     }
 }

@@ -40,6 +40,11 @@
         android:name="android.hardware.sensor.stepcounter"
         android:required="false" />
 
+    <!-- Caminata en segundo plano (RF-082): servicio en primer plano de tipo "health" + su notificación. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_HEALTH" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
     <!-- Red: verificación con EcoGPT y sincronización de Puntos Verdes -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
@@ -47,6 +52,8 @@
     <application
         android:name=".EcoSmartApplication"
         android:allowBackup="false"
+        android:icon="@drawable/logo_ecosmart_icono"
+        android:roundIcon="@drawable/logo_ecosmart_icono"
         android:label="@string/app_name"
         android:theme="@style/Theme.EcoSmart">
 
@@ -59,6 +66,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <service
+            android:name="com.ecosmart.infrastructure.sensors.CaminataService"
+            android:exported="false"
+            android:foregroundServiceType="health" />
 
         <!--
             Deshabilita el auto-init de WorkManager: EcoSmartApplication lo

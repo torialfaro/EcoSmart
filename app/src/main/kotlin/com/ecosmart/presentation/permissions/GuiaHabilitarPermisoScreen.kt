@@ -18,6 +18,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.ecosmart.domain.valueobject.TipoPermiso
+import com.ecosmart.presentation.theme.EncabezadoEcoSmart
+import com.ecosmart.presentation.theme.FormaBotonPildora
 
 /**
  * Alerta explicativa con pasos para habilitar un permiso denegado desde la
@@ -32,12 +34,15 @@ fun GuiaHabilitarPermisoScreen(
     val context = LocalContext.current
     val nombre = nombreAmigable(tipoPermiso)
 
-    Scaffold { padding ->
+    Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
+        topBar = { EncabezadoEcoSmart() },
+    ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(24.dp),
+                .padding(horizontal = 20.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Text(text = "Necesitamos un permiso más", style = MaterialTheme.typography.titleLarge)
@@ -53,6 +58,7 @@ fun GuiaHabilitarPermisoScreen(
                     }
                     context.startActivity(intent)
                 },
+                shape = FormaBotonPildora,
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Text("Abrir configuración")

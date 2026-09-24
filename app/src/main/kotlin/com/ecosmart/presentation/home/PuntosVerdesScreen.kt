@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -35,6 +34,8 @@ import com.ecosmart.domain.model.PuntoVerde
 import com.ecosmart.domain.repository.PuntoVerdeRepository
 import com.ecosmart.domain.repository.UsuarioRepository
 import com.ecosmart.infrastructure.session.SesionUsuario
+import com.ecosmart.presentation.comun.EncabezadoConUsuario
+import com.ecosmart.presentation.theme.TarjetaEcoSmart
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -90,7 +91,10 @@ class PuntosVerdesViewModel @Inject constructor(
 fun PuntosVerdesScreen(viewModel: PuntosVerdesViewModel = hiltViewModel()) {
     val uiState by viewModel.uiState.collectAsState()
 
-    Scaffold { padding ->
+    Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
+        topBar = { EncabezadoConUsuario() },
+    ) { padding ->
         when {
             uiState.cargando -> Box(
                 modifier = Modifier.fillMaxSize().padding(padding),
@@ -118,15 +122,13 @@ fun PuntosVerdesScreen(viewModel: PuntosVerdesViewModel = hiltViewModel()) {
                     modifier = Modifier.fillMaxWidth().height(260.dp),
                 )
                 LazyColumn(
-                    modifier = Modifier.fillMaxWidth().weight(1f).padding(16.dp),
+                    modifier = Modifier.fillMaxWidth().weight(1f).padding(20.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     items(uiState.puntos, key = { it.id.valor }) { punto ->
-                        Card(modifier = Modifier.fillMaxWidth()) {
-                            Column(modifier = Modifier.padding(16.dp)) {
-                                Text(text = punto.nombre, style = MaterialTheme.typography.titleLarge)
-                                Text(text = punto.direccion, style = MaterialTheme.typography.bodyLarge)
-                            }
+                        TarjetaEcoSmart {
+                            Text(text = punto.nombre, style = MaterialTheme.typography.titleSmall)
+                            Text(text = punto.direccion, style = MaterialTheme.typography.bodyMedium)
                         }
                     }
                 }

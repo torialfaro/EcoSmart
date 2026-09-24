@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Card
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -21,6 +20,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import com.ecosmart.domain.valueobject.CategoriaActividad
+import com.ecosmart.presentation.comun.EncabezadoConUsuario
+import com.ecosmart.presentation.theme.TarjetaEcoSmart
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -70,12 +71,15 @@ fun ContenidoEducativoScreen(viewModel: ContenidoEducativoViewModel = hiltViewMo
         CATALOGO_CONTENIDO.filter { it.categoria == categoriaSeleccionada }
     }
 
-    Scaffold { padding ->
+    Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
+        topBar = { EncabezadoConUsuario() },
+    ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(16.dp),
+                .padding(horizontal = 20.dp),
         ) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 FilterChip(
@@ -96,14 +100,12 @@ fun ContenidoEducativoScreen(viewModel: ContenidoEducativoViewModel = hiltViewMo
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 items(contenidoFiltrado) { contenido ->
-                    Card(modifier = Modifier.fillMaxWidth()) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Text(text = contenido.titulo, style = MaterialTheme.typography.bodyLarge)
-                            Text(
-                                text = if (contenido.esVideo) "Video" else "Artículo",
-                                style = MaterialTheme.typography.labelLarge,
-                            )
-                        }
+                    TarjetaEcoSmart {
+                        Text(text = contenido.titulo, style = MaterialTheme.typography.titleSmall)
+                        Text(
+                            text = if (contenido.esVideo) "Video" else "Artículo",
+                            style = MaterialTheme.typography.bodySmall,
+                        )
                     }
                 }
             }

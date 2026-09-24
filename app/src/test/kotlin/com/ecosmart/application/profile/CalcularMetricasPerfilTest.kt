@@ -3,6 +3,7 @@ package com.ecosmart.application.profile
 import com.ecosmart.domain.model.PermisoDispositivo
 import com.ecosmart.domain.model.RegistroVerificacion
 import com.ecosmart.domain.model.Usuario
+import com.ecosmart.domain.repository.PasosDelDiaRepository
 import com.ecosmart.domain.repository.PermisoRepository
 import com.ecosmart.domain.repository.RegistroVerificacionRepository
 import com.ecosmart.domain.repository.UsuarioRepository
@@ -29,8 +30,13 @@ class CalcularMetricasPerfilTest {
     private val usuarioRepository = mockk<UsuarioRepository>()
     private val registroVerificacionRepository = mockk<RegistroVerificacionRepository>()
     private val permisoRepository = mockk<PermisoRepository>()
-    private val calcularMetricasPerfil =
-        CalcularMetricasPerfil(usuarioRepository, registroVerificacionRepository, permisoRepository)
+    private val pasosDelDiaRepository = mockk<PasosDelDiaRepository>()
+    private val calcularMetricasPerfil = CalcularMetricasPerfil(
+        usuarioRepository,
+        registroVerificacionRepository,
+        permisoRepository,
+        pasosDelDiaRepository,
+    )
 
     private val usuarioId = UsuarioId.nuevo()
 
@@ -130,13 +136,13 @@ class CalcularMetricasPerfilTest {
     }
 
     @Test
-    fun `pasosHoy suma los pasos de Caminata aprobados de hoy si el permiso esta otorgado`() = runTest {
+    fun `pasosHoy toma los pasos reales del podometro del dia si el permiso esta otorgado`() = runTest {
         coEvery { usuarioRepository.buscarPorId(usuarioId) } returns usuarioDePrueba()
         coEvery { registroVerificacionRepository.todos(usuarioId) } returns emptyList()
         coEvery { permisoRepository.obtenerTodos() } returns listOf(
             PermisoDispositivo(TipoPermiso.PODOMETRO, EstadoPermiso.OTORGADO),
         )
-        coEvery { registroVerificacionRepository.sumaPasosDelDia(usuarioId, LocalDate.now()) } returns 4200
+        coEvery { pasosDelDiaRepository.pasosDeHoy() } returns 4200
 
         val metricas = calcularMetricasPerfil(usuarioId)
 

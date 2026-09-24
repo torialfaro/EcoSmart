@@ -18,6 +18,8 @@ import com.ecosmart.presentation.home.PuntosVerdesScreen
 import com.ecosmart.presentation.permissions.SolicitudPermisosScreen
 import com.ecosmart.presentation.profile.HistorialScreen
 import com.ecosmart.presentation.profile.PerfilScreen
+import com.ecosmart.presentation.theme.BarraInferiorEcoSmart
+import com.ecosmart.presentation.theme.PestanaInferior
 import com.ecosmart.presentation.verification.VerificacionCaminataScreen
 import com.ecosmart.presentation.verification.VerificacionFotoScreen
 
@@ -85,6 +87,7 @@ fun EcoSmartNavHost(
                 onVerPuntosVerdes = { navController.navigate(EcoSmartRoute.PuntosVerdes.ruta) },
                 onVerContenidoEducativo = { navController.navigate(EcoSmartRoute.ContenidoEducativo.ruta) },
                 onVerPerfil = { navController.navigate(EcoSmartRoute.Perfil.ruta) },
+                barraInferior = { BarraInferior(navController, PestanaInferior.INICIO) },
             )
         }
         composable(EcoSmartRoute.ActividadDetalle.ruta, arguments = EcoSmartRoute.ActividadDetalle.argumentos) {
@@ -126,13 +129,33 @@ fun EcoSmartNavHost(
                         popUpTo(0)
                     }
                 },
+                barraInferior = { BarraInferior(navController, PestanaInferior.PERFIL) },
             )
         }
         composable(EcoSmartRoute.PerfilEdicion.ruta) {
             PerfilEdicionScreen(onVolver = { navController.popBackStack() })
         }
         composable(EcoSmartRoute.Historial.ruta) {
-            HistorialScreen()
+            HistorialScreen(barraInferior = { BarraInferior(navController, PestanaInferior.MISIONES) })
         }
     }
+}
+
+/**
+ * Barra inferior del mockup (RF-083): Inicio → Home, Misiones → historial de
+ * misiones realizadas, Perfil → Perfil. Solo se muestra en estas 3 pantallas
+ * de nivel superior; las de detalle/verificación llevan solo el encabezado.
+ */
+@Composable
+private fun BarraInferior(navController: NavHostController, seleccion: PestanaInferior) {
+    fun ir(ruta: String) = navController.navigate(ruta) {
+        popUpTo(EcoSmartRoute.Home.ruta)
+        launchSingleTop = true
+    }
+    BarraInferiorEcoSmart(
+        seleccion = seleccion,
+        onInicio = { ir(EcoSmartRoute.Home.ruta) },
+        onMisiones = { ir(EcoSmartRoute.Historial.ruta) },
+        onPerfil = { ir(EcoSmartRoute.Perfil.ruta) },
+    )
 }

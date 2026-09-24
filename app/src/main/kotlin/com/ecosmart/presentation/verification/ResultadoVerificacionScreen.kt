@@ -13,11 +13,13 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.ecosmart.presentation.comun.EncabezadoConUsuario
+import com.ecosmart.presentation.theme.FormaBotonPildora
 
 /**
  * US9 — pantalla de resultado de una verificación de foto
  * (Aprobado/Rechazado/Indeterminado/Timeout/…), en tono amable y nunca
- * punitivo (RNF-001, RF-028 a RF-030).
+ * punitivo (RNF-001, RF-028 a RF-030), con el estilo del mockup (RF-083).
  */
 @Composable
 fun ResultadoVerificacionScreen(
@@ -26,60 +28,63 @@ fun ResultadoVerificacionScreen(
     onAtras: () -> Unit,
     onVerProgreso: () -> Unit,
 ) {
-    Scaffold { padding ->
+    Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
+        topBar = { EncabezadoConUsuario() },
+    ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(24.dp),
+                .padding(horizontal = 20.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             when (resultado) {
                 is ResultadoUiFoto.Aprobado -> {
                     Titulo("¡Aprobado! Sumaste ${resultado.puntosOtorgados} puntos.")
-                    Button(onClick = onVerProgreso, modifier = Modifier.fillMaxWidth()) { Text("Ver progreso") }
-                    TextButton(onClick = onAtras, modifier = Modifier.fillMaxWidth()) { Text("Atrás") }
+                    BotonPildora("Ver progreso", onVerProgreso)
+                    BotonAtras(onAtras)
                 }
                 is ResultadoUiFoto.Rechazado -> {
                     Titulo("No pudimos aprobar esta foto")
                     Text(resultado.motivo)
-                    Button(onClick = onVolverAIntentar, modifier = Modifier.fillMaxWidth()) { Text("Volver a intentar") }
-                    TextButton(onClick = onAtras, modifier = Modifier.fillMaxWidth()) { Text("Atrás") }
+                    BotonPildora("Volver a intentar", onVolverAIntentar)
+                    BotonAtras(onAtras)
                 }
                 is ResultadoUiFoto.Indeterminado -> {
                     Titulo("Necesitamos una foto más clara")
                     Text(resultado.motivo)
-                    Button(onClick = onVolverAIntentar, modifier = Modifier.fillMaxWidth()) { Text("Volver a intentar") }
-                    TextButton(onClick = onAtras, modifier = Modifier.fillMaxWidth()) { Text("Atrás") }
+                    BotonPildora("Volver a intentar", onVolverAIntentar)
+                    BotonAtras(onAtras)
                 }
                 ResultadoUiFoto.TopeDiarioAlcanzado -> {
                     Titulo("Ya alcanzaste el límite de hoy para esta actividad")
                     Text("Mañana se renueva automáticamente. ¡Volvé pronto!")
-                    TextButton(onClick = onAtras, modifier = Modifier.fillMaxWidth()) { Text("Atrás") }
+                    BotonAtras(onAtras)
                 }
                 ResultadoUiFoto.DuplicadaLocalmente -> {
                     Titulo("Esta foto ya la usaste antes")
                     Text("Probá con una foto nueva de esta actividad.")
-                    Button(onClick = onVolverAIntentar, modifier = Modifier.fillMaxWidth()) { Text("Volver a intentar") }
-                    TextButton(onClick = onAtras, modifier = Modifier.fillMaxWidth()) { Text("Atrás") }
+                    BotonPildora("Volver a intentar", onVolverAIntentar)
+                    BotonAtras(onAtras)
                 }
                 ResultadoUiFoto.Timeout -> {
                     Titulo("EcoGPT tardó más de lo esperado")
                     Text("Tu foto y descripción se conservaron. Podés reintentar cuando quieras.")
-                    Button(onClick = onVolverAIntentar, modifier = Modifier.fillMaxWidth()) { Text("Volver a intentar") }
-                    TextButton(onClick = onAtras, modifier = Modifier.fillMaxWidth()) { Text("Atrás") }
+                    BotonPildora("Volver a intentar", onVolverAIntentar)
+                    BotonAtras(onAtras)
                 }
                 ResultadoUiFoto.SinConexion -> {
                     Titulo("Sin conexión a internet")
                     Text("Tu foto y descripción se conservaron. Reintentá cuando tengas señal.")
-                    Button(onClick = onVolverAIntentar, modifier = Modifier.fillMaxWidth()) { Text("Volver a intentar") }
-                    TextButton(onClick = onAtras, modifier = Modifier.fillMaxWidth()) { Text("Atrás") }
+                    BotonPildora("Volver a intentar", onVolverAIntentar)
+                    BotonAtras(onAtras)
                 }
                 is ResultadoUiFoto.Error -> {
                     Titulo("Algo no salió como esperábamos")
                     Text(resultado.mensaje)
-                    Button(onClick = onVolverAIntentar, modifier = Modifier.fillMaxWidth()) { Text("Volver a intentar") }
-                    TextButton(onClick = onAtras, modifier = Modifier.fillMaxWidth()) { Text("Atrás") }
+                    BotonPildora("Volver a intentar", onVolverAIntentar)
+                    BotonAtras(onAtras)
                 }
             }
         }
@@ -89,4 +94,16 @@ fun ResultadoVerificacionScreen(
 @Composable
 private fun Titulo(texto: String) {
     Text(text = texto, style = MaterialTheme.typography.titleLarge)
+}
+
+@Composable
+private fun BotonPildora(texto: String, onClick: () -> Unit) {
+    Button(onClick = onClick, shape = FormaBotonPildora, modifier = Modifier.fillMaxWidth()) { Text(texto) }
+}
+
+@Composable
+private fun BotonAtras(onClick: () -> Unit) {
+    TextButton(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
+        Text("Atrás", color = MaterialTheme.colorScheme.onBackground)
+    }
 }

@@ -8,6 +8,7 @@ import com.ecosmart.domain.valueobject.ContrasenaCifrada
 import com.ecosmart.domain.valueobject.UsuarioId
 import com.ecosmart.domain.valueobject.esContrasenaValida
 import com.ecosmart.domain.valueobject.esEmailValido
+import com.ecosmart.domain.valueobject.esTelefonoValido
 import com.ecosmart.infrastructure.security.CifradorContrasena
 import javax.inject.Inject
 
@@ -27,6 +28,10 @@ sealed class ResultadoRegistro {
     data object EmailInvalido : ResultadoRegistro()
     data object EmailYaRegistrado : ResultadoRegistro()
     data object ContrasenaInvalida : ResultadoRegistro()
+    /** Corrección post-QA (2026-09-23): nombre, apellido y nombre de usuario ahora son obligatorios. */
+    data object CamposObligatoriosIncompletos : ResultadoRegistro()
+    /** Corrección post-QA (2026-09-23): teléfono obligatorio, formato "+549" + 10 dígitos. */
+    data object TelefonoInvalido : ResultadoRegistro()
     data object SinCategoriasSeleccionadas : ResultadoRegistro()
 }
 
@@ -42,6 +47,10 @@ class RegistrarUsuario @Inject constructor(
         if (!esEmailValido(datos.email)) return ResultadoRegistro.EmailInvalido
         if (usuarioRepository.buscarPorEmail(datos.email) != null) return ResultadoRegistro.EmailYaRegistrado
         if (!esContrasenaValida(datos.contrasenaPlana)) return ResultadoRegistro.ContrasenaInvalida
+        if (datos.nombre.isBlank() || datos.apellido.isBlank() || datos.nombreUsuario.isBlank()) {
+            return ResultadoRegistro.CamposObligatoriosIncompletos
+        }
+        if (!esTelefonoValido(datos.telefono)) return ResultadoRegistro.TelefonoInvalido
         if (datos.categoriasDeInteres.isEmpty()) return ResultadoRegistro.SinCategoriasSeleccionadas
 
         val usuario = Usuario(

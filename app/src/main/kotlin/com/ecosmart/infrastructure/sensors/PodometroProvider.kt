@@ -9,9 +9,12 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.withTimeoutOrNull
 import javax.inject.Inject
 import javax.inject.Singleton
 
+private const val PLAZO_LECTURA_PUNTUAL_MS = 3_000L
 private const val PASOS_POR_SEGUNDO_MAXIMO_PLAUSIBLE = 10
 private const val NANOS_POR_SEGUNDO = 1_000_000_000.0
 
@@ -30,6 +33,16 @@ private const val NANOS_POR_SEGUNDO = 1_000_000_000.0
 class PodometroProvider @Inject constructor(
     @ApplicationContext private val context: Context,
 ) {
+    /** Corrección post-QA (2026-09-24): sin sensor el Flow se cerraba en silencio y los pasos quedaban en 0 sin explicación. */
+    fun hayPodometro(): Boolean {
+        val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
+        return sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER) != null
+    }
+
+    /** Lectura puntual del conteo acumulado; `null` si no hay sensor, permiso o lectura dentro del plazo. */
+    suspend fun leerPasosAcumuladosActual(): Int? =
+        withTimeoutOrNull(PLAZO_LECTURA_PUNTUAL_MS) { observarPasosAcumulados().firstOrNull() }
+
     fun observarPasosAcumulados(): Flow<Int> = callbackFlow {
         val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
         val sensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER)

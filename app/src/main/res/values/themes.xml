@@ -10,5 +10,11 @@
         este proyecto no agrega como dependencia por ser 100% Jetpack
         Compose) para no requerir una lib extra solo para este estilo previo.
     -->
-    <style name="Theme.EcoSmart" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.EcoSmart" parent="android:Theme.Material.Light.NoActionBar">
+        <!-- RF-083: mismo verde-crema que el fondo del mockup, para no ver un destello blanco al abrir. -->
+        <item name="android:windowBackground">#F1F4E5</item>
+        <item name="android:statusBarColor">#F1F4E5</item>
+        <item name="android:navigationBarColor">#E6EDDC</item>
+        <item name="android:windowLightStatusBar">true</item>
+    </style>
 </resources>

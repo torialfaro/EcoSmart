@@ -9,9 +9,10 @@ import javax.inject.Inject
 
 /**
  * `pasosBase`/`pasosActuales` en vez de un `PodometroProvider` inyectado:
- * el sensor emite un `Flow` de lectura continua que la ViewModel colecciona
- * durante la sesión de caminata (research.md §1.1 — "el caso de uso guarda
- * el valor base al iniciar y compara contra el actual"); este caso de uso
+ * el sensor emite un `Flow` de lectura continua que `CaminataService`
+ * (servicio en primer plano, RF-082) colecciona mientras la caminata está en
+ * curso (research.md §1.1 — "el caso de uso guarda el valor base al iniciar
+ * y compara contra el actual"); este caso de uso
  * solo recibe los dos valores ya resueltos, lo que lo mantiene puro y
  * testeable sin mockear un sensor.
  */

@@ -37,6 +37,8 @@ import com.ecosmart.application.auth.DatosRegistro
 import com.ecosmart.domain.model.Usuario
 import com.ecosmart.domain.valueobject.Barrio
 import com.ecosmart.domain.valueobject.CategoriaActividad
+import com.ecosmart.domain.valueobject.esTelefonoValido
+import com.ecosmart.presentation.theme.EncabezadoEcoSmart
 import com.ecosmart.presentation.theme.FormaBotonPildora
 
 /**
@@ -69,12 +71,15 @@ fun RegistroScreen(
     var telefono by remember { mutableStateOf("") }
     var categoriasSeleccionadas by remember { mutableStateOf(setOf<CategoriaActividad>()) }
 
-    Scaffold { padding ->
+    Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
+        topBar = { EncabezadoEcoSmart(inicialUsuario = "U") },
+    ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(padding)
-                .padding(24.dp)
+                .padding(horizontal = 20.dp)
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
@@ -118,18 +123,21 @@ fun RegistroScreen(
                     value = nombre,
                     onValueChange = { nombre = it },
                     label = { Text("Nombre") },
+                    isError = nombre.isBlank(),
                     modifier = Modifier.fillMaxWidth(),
                 )
                 OutlinedTextField(
                     value = apellido,
                     onValueChange = { apellido = it },
                     label = { Text("Apellido") },
+                    isError = apellido.isBlank(),
                     modifier = Modifier.fillMaxWidth(),
                 )
                 OutlinedTextField(
                     value = nombreUsuario,
                     onValueChange = { nombreUsuario = it },
                     label = { Text("Nombre de usuario") },
+                    isError = nombreUsuario.isBlank(),
                     modifier = Modifier.fillMaxWidth(),
                 )
                 SelectorBarrio(
@@ -141,6 +149,9 @@ fun RegistroScreen(
                     value = telefono,
                     onValueChange = { telefono = it },
                     label = { Text("Teléfono") },
+                    placeholder = { Text("+54911XXXXXXXX") },
+                    isError = telefono.isNotBlank() && !esTelefonoValido(telefono),
+                    supportingText = { Text("Formato: +54911XXXXXXXX") },
                     modifier = Modifier.fillMaxWidth(),
                 )
 
@@ -166,8 +177,14 @@ fun RegistroScreen(
                 Text(text = mensaje, color = MaterialTheme.colorScheme.tertiary)
             }
 
+            val formularioRegistroValido = barrio != null &&
+                nombre.isNotBlank() &&
+                apellido.isNotBlank() &&
+                nombreUsuario.isNotBlank() &&
+                esTelefonoValido(telefono)
+
             Button(
-                enabled = !uiState.enviando && (uiState.modoLogin || barrio != null),
+                enabled = !uiState.enviando && (uiState.modoLogin || formularioRegistroValido),
                 shape = FormaBotonPildora,
                 onClick = {
                     if (uiState.modoLogin) {

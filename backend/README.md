@@ -76,9 +76,18 @@ El plan free de Render "duerme" el servicio tras ~15 minutos sin tráfico.
 La primera request después de dormido puede tardar 30-50+ segundos en
 responder mientras el servicio arranca — pero el cliente Android tiene un
 `callTimeout` **fijo en 30 segundos** (RNF-008/SC-008, `NetworkModule.kt`),
-así que la primera verificación del día puede fallar con "Timeout" aunque
-el backend esté perfectamente sano, solo dormido. Mitigaciones posibles
-(no implementadas todavía, quedan a tu criterio):
+así que la primera verificación del día puede fallar con "Sin conexión"
+aunque el backend esté perfectamente sano, solo dormido.
+
+**Mitigación ya implementada del lado del cliente** (RF-079, sesión
+2026-09-23 continuación 2, sin costo adicional): `VerificacionFotoScreen`
+dispara un ping best-effort a `/health` apenas se abre, antes de que el
+usuario termine de sacar la foto (`EcoGptClient.ping()` /
+`VerificarFotoConIA.precalentarBackend()`), y si aun así el primer intento
+real falla por timeout/conexión, `VerificarFotoConIA` reintenta
+automáticamente UNA vez antes de mostrarle cualquier error al usuario.
+Esto reduce mucho el problema pero no lo elimina al 100%. Otras
+mitigaciones posibles (no implementadas, quedan a tu criterio):
 
 - Un ping periódico externo (p. ej. un cron gratuito tipo
   [cron-job.org](https://cron-job.org)) que golpee `/health` cada 10

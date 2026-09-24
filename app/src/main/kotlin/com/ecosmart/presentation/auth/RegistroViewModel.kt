@@ -55,6 +55,9 @@ class RegistroViewModel @Inject constructor(
                 ResultadoRegistro.EmailYaRegistrado -> mostrarError("Ese correo ya tiene una cuenta.")
                 ResultadoRegistro.ContrasenaInvalida ->
                     mostrarError("La contraseña necesita al menos 8 caracteres, con letras y números.")
+                ResultadoRegistro.CamposObligatoriosIncompletos ->
+                    mostrarError("Completá nombre, apellido y nombre de usuario.")
+                ResultadoRegistro.TelefonoInvalido -> mostrarError("Ingresá un teléfono válido, formato +54911XXXXXXXX.")
                 ResultadoRegistro.SinCategoriasSeleccionadas -> mostrarError("Elegí al menos una categoría.")
             }
         }

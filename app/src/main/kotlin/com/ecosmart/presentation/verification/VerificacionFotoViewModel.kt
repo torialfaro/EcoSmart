@@ -56,6 +56,12 @@ class VerificacionFotoViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(VerificacionFotoUiState())
     val uiState: StateFlow<VerificacionFotoUiState> = _uiState.asStateFlow()
 
+    init {
+        // Corrección post-QA (2026-09-23): empieza a despertar el backend de EcoGPT apenas
+        // se abre esta pantalla, no recién al tocar "Enviar" (research.md §2.1).
+        viewModelScope.launch { verificarFotoConIA.precalentarBackend() }
+    }
+
     fun actualizarDescripcion(texto: String) {
         _uiState.value = _uiState.value.copy(descripcion = texto)
     }

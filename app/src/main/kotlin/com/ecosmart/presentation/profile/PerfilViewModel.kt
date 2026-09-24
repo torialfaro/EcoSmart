@@ -44,6 +44,17 @@ class PerfilViewModel @Inject constructor(
     val uiState: StateFlow<PerfilUiState> = _uiState.asStateFlow()
 
     init {
+        refrescar()
+    }
+
+    /**
+     * Corrección post-QA (2026-09-23): esta pantalla queda en el back stack
+     * debajo de `PerfilEdicionScreen`, así que al volver de editar se reusa
+     * esta misma instancia de ViewModel — sin este refresco explícito, los
+     * cambios guardados nunca se reflejaban acá (`init` solo corre una vez
+     * por instancia). `PerfilScreen` llama a esto en cada `ON_RESUME`.
+     */
+    fun refrescar() {
         viewModelScope.launch {
             val usuarioId = sesionUsuario.usuarioActualId.value ?: return@launch
             val usuario = usuarioRepository.buscarPorId(usuarioId) ?: return@launch

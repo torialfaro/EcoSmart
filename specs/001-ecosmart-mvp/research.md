@@ -233,14 +233,33 @@ una sola llamada.
 de Render duerme el servicio tras ~15 min de inactividad; la primera
 request tras dormir puede tardar 30-50+ segundos en responder, mientras
 que el `callTimeout` del cliente Android está fijo en 30s (RNF-008/SC-008,
-no negociable sin reabrir ese requisito). Esto puede manifestarse como un
-falso "Timeout" en la primera verificación del día aunque el backend esté
-sano. Mitigación sugerida (no implementada): un ping externo periódico a
-`/health`, o migrar a un plan de Render sin sleep. Ver `backend/README.md`
-§3.
+no negociable sin reabrir ese requisito). Esto se manifestaba como un
+falso "Sin conexión a internet" en la primera verificación tras un rato
+de inactividad, aunque el dispositivo tuviera conexión real y el backend
+estuviera sano (CORRECCIÓN-015, sesión 2026-09-23 continuación 2).
+**Mitigación implementada** (RF-079, sin costo adicional ni servicios
+externos): (1) `EcoGptClient.ping()` dispara un `GET /health` best-effort
+apenas se abre `VerificacionFotoScreen`, dándole al backend minutos de
+ventaja para despertar antes de que el usuario termine de sacar la foto;
+(2) `VerificarFotoConIA.intentarConUnReintentoAutomatico` reintenta UNA
+vez, tras 3s, ante cualquier `IOException` del primer intento, de forma
+transparente para el usuario. Esto reduce mucho la probabilidad de que el
+cold-start sea visible, pero no la elimina al 100% (si el segundo intento
+también cae dentro de la ventana de arranque, el usuario sigue viendo el
+error real). Ver `backend/README.md` §3 para mitigaciones adicionales no
+implementadas (ping externo periódico, plan de Render sin sleep).
+
+Sobre el modelo en sí (`gemini-2.5-flash` → `gemini-3.6-flash`, corrección
+2026-09-23): Google discontinuó `gemini-2.5-flash` para cuentas nuevas de
+Google AI Studio ("This model is no longer available to new users"),
+devolviendo 404 en cada llamada — causa raíz real detrás del mismo
+síntoma visible (todo intento fallaba antes de llegar a mostrar un
+veredicto). Se migró al modelo que Google mismo recomienda en ese error,
+`gemini-3.6-flash`, verificado end-to-end (visión + salida estructurada)
+contra la key real del proyecto.
 
 **Riesgo documentado — calidad de verificación con un modelo gratuito**:
-`gemini-2.5-flash` es un modelo más liviano que Claude Sonnet; es
+`gemini-3.6-flash` es un modelo más liviano que Claude Sonnet; es
 razonablemente confiable para esta tarea (comparar una foto contra una
 descripción textual corta), pero puede tener más falsos
 Aprobado/Rechazado en casos ambiguos que un modelo de mayor capacidad. Se

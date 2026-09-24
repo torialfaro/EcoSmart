@@ -11,6 +11,7 @@ import com.ecosmart.infrastructure.di.EcoGptApiKey
 import com.ecosmart.infrastructure.network.EcoGptClient
 import com.ecosmart.infrastructure.network.EcoGptResponseMapper
 import com.ecosmart.infrastructure.security.CalculadorHuellaPerceptual
+import kotlinx.coroutines.delay
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
@@ -21,6 +22,8 @@ import java.io.IOException
 import java.net.SocketTimeoutException
 import java.time.LocalDate
 import javax.inject.Inject
+
+private const val ESPERA_ANTES_DE_REINTENTAR_MS = 3_000L
 
 data class DatosVerificacionFoto(
     val usuarioId: UsuarioId,
@@ -49,6 +52,15 @@ sealed class ResultadoVerificarFotoConIA {
  * exactamente 30s. Ese timeout se manifiesta como [SocketTimeoutException]
  * (una subclase de [IOException]), por eso se atrapa primero y por
  * separado de un [IOException] genérico ("sin conexión") — research.md §2.
+ *
+ * Corrección post-QA (2026-09-23): el backend real de EcoGPT corre en un
+ * hosting free-tier que "duerme" tras inactividad (research.md §2.1); su
+ * arranque en frío podía manifestarse como un falso Timeout/SinConexion en
+ * el primer intento aunque el dispositivo tuviera conexión real. Se agrega
+ * un único reintento automático transparente (sin que el usuario vea
+ * ningún error intermedio) antes de reportar una falla real, más
+ * [precalentarBackend] para que la pantalla de verificación empiece a
+ * despertar el backend apenas se abre, no recién al enviar.
  */
 class VerificarFotoConIA @Inject constructor(
     private val ecoGptClient: EcoGptClient,
@@ -74,20 +86,22 @@ class VerificarFotoConIA @Inject constructor(
         if (esDuplicadaLocalmente) return ResultadoVerificarFotoConIA.DuplicadaLocalmente
 
         val respuesta = try {
-            val imagenParte = MultipartBody.Part.createFormData(
-                "imagen",
-                datos.archivoFoto.name,
-                datos.archivoFoto.asRequestBody("image/*".toMediaType()),
-            )
-            ecoGptClient.verificarFotoActividad(
-                apiKey = apiKey,
-                imagen = imagenParte,
-                categoria = datos.categoria.name.toRequestBody("text/plain".toMediaType()),
-                resultadoEsperado = datos.resultadoEsperado.toRequestBody("text/plain".toMediaType()),
-                descripcionUsuario = datos.descripcionUsuario.toRequestBody("text/plain".toMediaType()),
-                huellasImagenesAprobadasPrevias = huellasPrevias.joinToString(",")
-                    .toRequestBody("text/plain".toMediaType()),
-            )
+            intentarConUnReintentoAutomatico {
+                val imagenParte = MultipartBody.Part.createFormData(
+                    "imagen",
+                    datos.archivoFoto.name,
+                    datos.archivoFoto.asRequestBody("image/*".toMediaType()),
+                )
+                ecoGptClient.verificarFotoActividad(
+                    apiKey = apiKey,
+                    imagen = imagenParte,
+                    categoria = datos.categoria.name.toRequestBody("text/plain".toMediaType()),
+                    resultadoEsperado = datos.resultadoEsperado.toRequestBody("text/plain".toMediaType()),
+                    descripcionUsuario = datos.descripcionUsuario.toRequestBody("text/plain".toMediaType()),
+                    huellasImagenesAprobadasPrevias = huellasPrevias.joinToString(",")
+                        .toRequestBody("text/plain".toMediaType()),
+                )
+            }
         } catch (timeout: SocketTimeoutException) {
             return ResultadoVerificarFotoConIA.Timeout
         } catch (sinConexion: IOException) {
@@ -111,6 +125,37 @@ class VerificarFotoConIA @Inject constructor(
         )
         return ResultadoVerificarFotoConIA.Completado(registro)
     }
+
+    /**
+     * Corrección post-QA (2026-09-23): "despertar" best-effort del backend
+     * ANTES de que el usuario termine de sacar la foto/escribir la
+     * descripción — la Screen la llama al entrar (research.md §2.1). Nunca
+     * propaga errores: es solo una optimización de latencia, la llamada
+     * real de todos modos hace su propio reintento si hace falta.
+     */
+    suspend fun precalentarBackend() {
+        try {
+            ecoGptClient.ping()
+        } catch (_: Exception) {
+            // best-effort, sin acción.
+        }
+    }
+
+    /**
+     * Reintenta UNA vez, tras una breve espera, ante cualquier
+     * [IOException] (incluye [SocketTimeoutException], su subclase) — el
+     * arranque en frío del backend free-tier (research.md §2.1) suele
+     * resolverse solo entre el primer intento y el segundo. Si el segundo
+     * intento también falla, la excepción se propaga tal cual para que
+     * `invoke` la distinga como Timeout/SinConexion normalmente.
+     */
+    private suspend fun <T> intentarConUnReintentoAutomatico(llamada: suspend () -> T): T =
+        try {
+            llamada()
+        } catch (primerError: IOException) {
+            delay(ESPERA_ANTES_DE_REINTENTAR_MS)
+            llamada()
+        }
 
     private fun registroCandidato(datos: DatosVerificacionFoto, huella: String) = RegistroVerificacion(
         id = RegistroVerificacionId.nuevo(),

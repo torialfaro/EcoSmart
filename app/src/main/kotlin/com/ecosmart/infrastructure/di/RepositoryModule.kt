@@ -1,6 +1,7 @@
 package com.ecosmart.infrastructure.di
 
 import com.ecosmart.domain.repository.ActividadRepository
+import com.ecosmart.domain.repository.PasosDelDiaRepository
 import com.ecosmart.domain.repository.PermisoRepository
 import com.ecosmart.domain.repository.PuntoVerdeRepository
 import com.ecosmart.domain.repository.RegistroVerificacionRepository
@@ -10,6 +11,7 @@ import com.ecosmart.infrastructure.persistence.PermisoRepositoryImpl
 import com.ecosmart.infrastructure.persistence.PuntoVerdeRepositoryImpl
 import com.ecosmart.infrastructure.persistence.RegistroVerificacionRepositoryImpl
 import com.ecosmart.infrastructure.persistence.UsuarioRepositoryImpl
+import com.ecosmart.infrastructure.sensors.PasosDelDiaRepositoryImpl
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -41,6 +43,10 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindPuntoVerdeRepository(impl: PuntoVerdeRepositoryImpl): PuntoVerdeRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindPasosDelDiaRepository(impl: PasosDelDiaRepositoryImpl): PasosDelDiaRepository
 
     @Binds
     @Singleton

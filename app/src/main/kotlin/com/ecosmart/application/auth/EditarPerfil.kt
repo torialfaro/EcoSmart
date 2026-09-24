@@ -5,11 +5,15 @@ import com.ecosmart.domain.repository.UsuarioRepository
 import com.ecosmart.domain.valueobject.Barrio
 import com.ecosmart.domain.valueobject.CategoriaActividad
 import com.ecosmart.domain.valueobject.UsuarioId
-import com.ecosmart.domain.valueobject.esEmailValido
+import com.ecosmart.domain.valueobject.esTelefonoValido
 import javax.inject.Inject
 
+/**
+ * Corrección post-QA (2026-09-23): `email` se saca de [DatosPerfil] — el
+ * correo NUNCA se edita desde esta pantalla (es la única excepción; el
+ * resto de los campos son editables y obligatorios).
+ */
 data class DatosPerfil(
-    val email: String,
     val nombre: String,
     val apellido: String,
     val nombreUsuario: String,
@@ -20,11 +24,13 @@ data class DatosPerfil(
 
 sealed class ResultadoEdicionPerfil {
     data class Exitoso(val usuario: Usuario) : ResultadoEdicionPerfil()
-    data object EmailInvalido : ResultadoEdicionPerfil()
-    data object EmailYaRegistrado : ResultadoEdicionPerfil()
+    /** Corrección post-QA (2026-09-23): nombre, apellido y nombre de usuario ahora son obligatorios. */
+    data object CamposObligatoriosIncompletos : ResultadoEdicionPerfil()
+    /** Corrección post-QA (2026-09-23): teléfono obligatorio, formato "+549" + 10 dígitos. */
+    data object TelefonoInvalido : ResultadoEdicionPerfil()
 }
 
-/** US3 — edición de datos de perfil, correo y categorías (RF-007 a RF-009). */
+/** US3 — edición de datos de perfil y categorías (RF-007 a RF-009). El correo NUNCA se edita acá. */
 class EditarPerfil @Inject constructor(
     private val usuarioRepository: UsuarioRepository,
 ) {
@@ -33,15 +39,12 @@ class EditarPerfil @Inject constructor(
             "Usuario $usuarioId no encontrado"
         }
 
-        if (datos.email != usuario.email) {
-            if (!esEmailValido(datos.email)) return ResultadoEdicionPerfil.EmailInvalido
-            if (usuarioRepository.buscarPorEmail(datos.email) != null) {
-                return ResultadoEdicionPerfil.EmailYaRegistrado
-            }
+        if (datos.nombre.isBlank() || datos.apellido.isBlank() || datos.nombreUsuario.isBlank()) {
+            return ResultadoEdicionPerfil.CamposObligatoriosIncompletos
         }
+        if (!esTelefonoValido(datos.telefono)) return ResultadoEdicionPerfil.TelefonoInvalido
 
         val actualizado = usuario.copy(
-            email = datos.email,
             nombre = datos.nombre,
             apellido = datos.apellido,
             nombreUsuario = datos.nombreUsuario,

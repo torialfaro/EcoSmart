@@ -3,6 +3,8 @@ package com.ecosmart.infrastructure.network
 import com.squareup.moshi.JsonClass
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
+import retrofit2.Response
+import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.Multipart
 import retrofit2.http.POST
@@ -26,6 +28,16 @@ interface EcoGptClient {
         @Part("descripcionUsuario") descripcionUsuario: RequestBody,
         @Part("huellasImagenesAprobadasPrevias") huellasImagenesAprobadasPrevias: RequestBody,
     ): VeredictoEcoGptDto
+
+    /**
+     * Corrección post-QA (2026-09-23): "despertar" best-effort del backend
+     * (`backend/app/main.py` → `/health`) antes del envío real — mitiga el
+     * cold start del hosting free-tier (research.md §2.1). `Void` evita que
+     * Retrofit intente convertir el body con Moshi; no nos importa la
+     * respuesta, solo que la request haya llegado.
+     */
+    @GET("health")
+    suspend fun ping(): Response<Void>
 }
 
 /**

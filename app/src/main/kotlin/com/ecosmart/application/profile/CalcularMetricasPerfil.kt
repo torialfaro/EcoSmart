@@ -1,5 +1,6 @@
 package com.ecosmart.application.profile
 
+import com.ecosmart.domain.repository.PasosDelDiaRepository
 import com.ecosmart.domain.repository.PermisoRepository
 import com.ecosmart.domain.repository.RegistroVerificacionRepository
 import com.ecosmart.domain.repository.UsuarioRepository
@@ -8,7 +9,6 @@ import com.ecosmart.domain.valueobject.EstadoPermiso
 import com.ecosmart.domain.valueobject.NivelUsuario
 import com.ecosmart.domain.valueobject.TipoPermiso
 import com.ecosmart.domain.valueobject.UsuarioId
-import java.time.LocalDate
 import javax.inject.Inject
 
 /**
@@ -31,6 +31,7 @@ class CalcularMetricasPerfil @Inject constructor(
     private val usuarioRepository: UsuarioRepository,
     private val registroVerificacionRepository: RegistroVerificacionRepository,
     private val permisoRepository: PermisoRepository,
+    private val pasosDelDiaRepository: PasosDelDiaRepository,
 ) {
     suspend operator fun invoke(usuarioId: UsuarioId): MetricasPerfil? {
         val usuario = usuarioRepository.buscarPorId(usuarioId) ?: return null
@@ -47,7 +48,7 @@ class CalcularMetricasPerfil @Inject constructor(
 
         val permisoPodometro = permisoRepository.obtenerTodos().find { it.tipo == TipoPermiso.PODOMETRO }
         val pasosHoy = if (permisoPodometro?.estado == EstadoPermiso.OTORGADO) {
-            registroVerificacionRepository.sumaPasosDelDia(usuarioId, LocalDate.now())
+            pasosDelDiaRepository.pasosDeHoy()
         } else {
             null
         }

@@ -4,13 +4,21 @@ import android.Manifest
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -20,11 +28,21 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.ecosmart.app.R
 import com.ecosmart.domain.valueobject.EstadoPermiso
 import com.ecosmart.domain.valueobject.TipoPermiso
+import com.ecosmart.presentation.theme.CremaTexto
+import com.ecosmart.presentation.theme.EncabezadoEcoSmart
+import com.ecosmart.presentation.theme.FormaBotonPildora
+import com.ecosmart.presentation.theme.TarjetaEcoSmart
+import com.ecosmart.presentation.theme.VerdeOscuro
 
 /** US13 — solicitud de permisos post-login (RF-043). */
 @Composable
@@ -58,39 +76,65 @@ fun SolicitudPermisosScreen(
         tiposSinPermisoRuntime.forEach { viewModel.registrarResultado(it, concedido = true) }
     }
 
-    Scaffold { padding ->
+    Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
+        topBar = { EncabezadoEcoSmart() },
+    ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(24.dp),
+                .padding(horizontal = 20.dp)
+                .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Text(text = "Necesitamos algunos permisos", style = MaterialTheme.typography.titleLarge)
+            Text(text = "Necesitamos algunos permisos", style = MaterialTheme.typography.headlineMedium)
             Text(
                 text = "Para verificar tus actividades automáticamente, EcoSmart necesita acceso " +
                     "a la cámara, la galería, tu ubicación y el podómetro del teléfono.",
+                style = MaterialTheme.typography.bodyMedium,
             )
 
             uiState.permisos.forEach { (tipo, estado) ->
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text(text = etiqueta(tipo))
-                    Text(text = etiquetaEstado(estado))
+                TarjetaEcoSmart {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        Box(
+                            modifier = Modifier.size(40.dp).clip(MaterialTheme.shapes.small).background(VerdeOscuro),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(iconoPermiso(tipo), contentDescription = null, tint = CremaTexto, modifier = Modifier.size(24.dp))
+                        }
+                        Text(text = etiqueta(tipo), style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
+                        Text(text = etiquetaEstado(estado), style = MaterialTheme.typography.bodySmall)
+                    }
                 }
             }
 
             Button(
                 onClick = { lanzadorPermisos.launch(permisosAndroidPorTipo.map { it.second }.toTypedArray()) },
+                shape = FormaBotonPildora,
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Text("Dar permisos")
             }
 
             TextButton(onClick = viewModel::continuar, modifier = Modifier.fillMaxWidth()) {
-                Text("Continuar")
+                Text("Continuar", color = MaterialTheme.colorScheme.onBackground)
             }
         }
     }
+}
+
+@Composable
+private fun iconoPermiso(tipo: TipoPermiso): ImageVector = when (tipo) {
+    TipoPermiso.CAMARA -> ImageVector.vectorResource(R.drawable.ic_camara)
+    TipoPermiso.GALERIA -> ImageVector.vectorResource(R.drawable.ic_galeria)
+    TipoPermiso.GPS -> Icons.Filled.Place
+    TipoPermiso.PODOMETRO -> ImageVector.vectorResource(R.drawable.ic_caminar)
 }
 
 /**
