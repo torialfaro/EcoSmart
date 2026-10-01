@@ -1,0 +1,75 @@
+// Reglas de Seguridad de Firestore — 002-firestore-datos-usuario
+//
+// Implementa directamente la tabla de permisos de `data-model.md` §6 y los
+// requisitos RF-D010/RF-D014 de `spec.md`. El backend de confianza usa el
+// Firebase Admin SDK, que IGNORA estas reglas por diseño (solo afectan al
+// SDK de cliente) — por eso son suficientes para bloquear al cliente
+// Android sin bloquear al backend.
+//
+// Regla general (RF-D010): un usuario autenticado solo puede leer/escribir
+// dentro de su propio `usuarios/{uid}`, nunca el de otro.
+//
+// Regla específica (RF-D014): dentro de su propio documento, el cliente
+// tiene prohibido escribir los campos que representan puntaje/resultado,
+// incluso de sí mismo — esos campos solo los escribe el backend de
+// confianza (Admin SDK, no sujeto a estas reglas).
+
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function esElPropioUsuario(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+
+    // Campos de usuarios/{uid} que el cliente NUNCA puede escribir (RF-D014).
+    function camposRestringidosDePerfil() {
+      return request.resource.data.diff(resource.data).affectedKeys()
+        .hasAny([
+          'puntosHistoricos', 'rachaActual', 'nivel',
+          'ultimaActividadAprobadaEn', 'pasosHoy', 'pasosHoyFecha'
+        ]);
+    }
+
+    match /usuarios/{uid} {
+      allow read: if esElPropioUsuario(uid);
+      // El cliente puede crear/editar su perfil, pero nunca tocar los
+      // campos restringidos — esos quedan en 0/null hasta que el backend
+      // de confianza los escriba en su primera transacción de puntos.
+      allow create: if esElPropioUsuario(uid) && !camposRestringidosDePerfil();
+      allow update: if esElPropioUsuario(uid) && !camposRestringidosDePerfil();
+      allow delete: if false; // la eliminación de cuenta (RF-D012) la hace el backend/Admin SDK, no el cliente.
+
+      // registrosVerificacion/{id}: el cliente solo puede CREAR el
+      // documento "pendiente" con campos de evidencia; nunca puede
+      // escribir resultado/puntosOtorgados/motivoIA (RF-D014), ni
+      // modificar o borrar un registro ya existente (historial inmutable
+      // desde el cliente).
+      match /registrosVerificacion/{registroId} {
+        allow read: if esElPropioUsuario(uid);
+        allow create: if esElPropioUsuario(uid)
+          && !('resultado' in request.resource.data)
+          && !('puntosOtorgados' in request.resource.data)
+          && !('motivoIA' in request.resource.data);
+        allow update, delete: if false;
+      }
+
+      // caminataEnCurso/actual: toda la escritura pasa por la transacción
+      // del backend de confianza (RF-D008) — el cliente solo lee.
+      match /caminataEnCurso/{documentoId} {
+        allow read: if esElPropioUsuario(uid);
+        allow write: if false;
+      }
+
+      // permisosDispositivo/{dispositivoId}_{tipo}: puramente informativo
+      // (RF-D009), el cliente sí puede escribir el suyo.
+      match /permisosDispositivo/{permisoId} {
+        allow read, write: if esElPropioUsuario(uid);
+      }
+    }
+
+    // Cualquier otra ruta no contemplada explícitamente queda denegada por
+    // defecto (comportamiento nativo de Firestore cuando no hay match).
+  }
+}

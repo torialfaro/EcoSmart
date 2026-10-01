@@ -1,0 +1,209 @@
+openapi: 3.0.3
+info:
+  title: EcoSmart — Backend de Confianza (Firestore)
+  description: >-
+    Contrato de los endpoints NUEVOS que extienden el backend propio de
+    EcoGPT (`backend/`, Python + FastAPI, Render) para cumplir RF-D014 y
+    RF-D015 de `002-firestore-datos-usuario/spec.md`: el cliente Android
+    NUNCA escribe directamente `puntosHistoricos`, `rachaActual`, `nivel`
+    ni el `resultado`/`puntosOtorgados` de un `registrosVerificacion` en
+    Firestore — estos endpoints son el único camino autorizado para
+    hacerlo (ver `data-model.md` §6 y `research.md` §1/§3/§4). El endpoint
+    `POST /verificaciones` de EcoGPT (ver
+    `001-ecosmart-mvp/contracts/openapi.yaml`) NO cambia y no se repite acá.
+  version: 1.0.0
+servers:
+  - url: https://ecosmart-backend.onrender.com/
+    description: >-
+      Mismo backend/despliegue que EcoGPT (ver backend/README.md); estos
+      endpoints se agregan al mismo servicio FastAPI, no a uno nuevo (ver
+      research.md §1).
+
+tags:
+  - name: Puntos
+    description: Otorgamiento de puntos/racha/nivel, único camino autorizado (RF-D014)
+  - name: Migracion
+    description: Subida única de datos locales de cuentas existentes de spec 001 (RF-D011)
+
+components:
+  securitySchemes:
+    firebaseIdToken:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: >-
+        ID Token de Firebase Authentication del usuario autenticado
+        (`FirebaseUser.getIdToken()`), verificado server-side con
+        `firebase_admin.auth.verify_id_token`. El backend SIEMPRE usa el
+        `uid` extraído del token verificado, nunca un `uid` enviado en el
+        body (ver research.md §3).
+
+  schemas:
+    CategoriaActividad:
+      type: string
+      enum: [RECICLAR, REUTILIZAR, CAMINAR]
+
+    ResultadoVerificacion:
+      type: string
+      enum: [APROBADO, RECHAZADO, INDETERMINADO]
+
+    RegistroVerificacionOtorgado:
+      type: object
+      description: Documento ya completo tal como queda escrito en Firestore tras procesar la solicitud.
+      properties:
+        id:
+          type: string
+        resultado:
+          $ref: '#/components/schemas/ResultadoVerificacion'
+        puntosOtorgados:
+          type: integer
+        puntosHistoricosActualizados:
+          type: integer
+        rachaActual:
+          type: integer
+        nivel:
+          type: string
+
+    ErrorBackendConfianza:
+      type: object
+      properties:
+        codigo:
+          type: string
+          example: TOPE_DIARIO_ALCANZADO
+        mensaje:
+          type: string
+
+security:
+  - firebaseIdToken: []
+
+paths:
+  /registros-verificacion/reciclar-reutilizar:
+    post:
+      tags: [Puntos]
+      operationId: otorgarPuntosReciclarReutilizar
+      summary: Registra el veredicto ya obtenido de EcoGPT y, si corresponde, otorga puntos
+      description: >-
+        El cliente llama primero a `POST /verificaciones` (EcoGPT, sin
+        cambios) y reenvía acá el veredicto recibido junto con la
+        evidencia de la foto (huella perceptual). Este endpoint es quien
+        verifica el tope diario (RF-032/033/035 de spec 001, sin cambios
+        en la regla), detecta duplicados (`esDuplicadoDe`, RF-058/059) y,
+        si el resultado es APROBADO, escribe `registrosVerificacion` y
+        actualiza `puntosHistoricos`/`rachaActual`/`nivel` en una única
+        transacción de Firestore (RF-D014).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [actividadId, categoria, fecha, resultado, huellaImagen]
+              properties:
+                actividadId:
+                  type: string
+                categoria:
+                  $ref: '#/components/schemas/CategoriaActividad'
+                fecha:
+                  type: string
+                  format: date
+                resultado:
+                  $ref: '#/components/schemas/ResultadoVerificacion'
+                motivoIA:
+                  type: string
+                  nullable: true
+                huellaImagen:
+                  type: string
+                  description: Huella perceptual de la foto (ver research.md de spec 001 §3), reenviada tal cual del paso anterior.
+      responses:
+        '200':
+          description: Procesado (el registro puede o no haber otorgado puntos según el resultado).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegistroVerificacionOtorgado'
+        '409':
+          description: Tope diario alcanzado, o foto duplicada de una ya aprobada previamente.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorBackendConfianza'
+        '401':
+          description: ID Token ausente, inválido o expirado.
+
+  /registros-verificacion/caminar:
+    post:
+      tags: [Puntos]
+      operationId: otorgarPuntosCaminar
+      summary: Registra y valida el resultado de comparar el podómetro contra la meta de una caminata
+      description: >-
+        Implementa RF-D015: extiende a Caminar la misma garantía
+        anti-manipulación que ya aplicaba naturalmente a Reciclar/Reutilizar
+        por depender de EcoGPT. Arbitra además `caminataEnCurso` y
+        `pasosHoy` mediante una transacción atómica (RF-D007/RF-D008):
+        rechaza iniciar una segunda caminata activa desde otro dispositivo
+        de la misma cuenta. Aplica la misma mitigación de cold-start que
+        EcoGPT (ping a `/health` + 1 reintento automático, RF-079 de spec
+        001, ya referenciado por RF-D015).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accion]
+              properties:
+                accion:
+                  type: string
+                  enum: [INICIAR, ACTUALIZAR_PROGRESO, COMPLETAR]
+                actividadId:
+                  type: string
+                metaPasos:
+                  type: integer
+                pasosLogrados:
+                  type: integer
+                dispositivoId:
+                  type: string
+      responses:
+        '200':
+          description: Acción procesada; incluye el estado resultante de `caminataEnCurso` y, si `accion == COMPLETAR` con meta alcanzada, el registro de puntos otorgado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegistroVerificacionOtorgado'
+        '409':
+          description: Ya existe una caminata activa iniciada desde otro dispositivo (RF-D008).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorBackendConfianza'
+
+  /migracion/subir-datos-locales:
+    post:
+      tags: [Migracion]
+      operationId: migrarDatosLocales
+      summary: Sube una única vez el perfil e historial local de Room de una cuenta de spec 001
+      description: >-
+        Implementa RF-D011. Idempotente: si ya existe un documento
+        `usuarios/{uid}` con datos migrados, responde `200` sin duplicar
+        nada (el cliente igualmente marca su bandera local como
+        completada y borra Room, ver research.md §6).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                perfil:
+                  type: object
+                  description: Campos editables de Usuario (ver data-model.md §2), tal como están en Room.
+                historial:
+                  type: array
+                  items:
+                    type: object
+                    description: Un RegistroVerificacion local por entrada (ver data-model.md §3).
+      responses:
+        '200':
+          description: Migración aplicada (o ya existente; ver idempotencia arriba).
+        '401':
+          description: ID Token ausente, inválido o expirado.

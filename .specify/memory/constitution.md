@@ -1,38 +1,49 @@
 <!--
   SYNC IMPACT REPORT
   ==================
-  Version change: (template) → 1.0.0
-  Reason: Initial population of constitution template with EcoSmart project-specific content.
+  Version change: 1.0.0 → 2.0.0 (MAJOR — redefinición incompatible de principio existente)
+  Reason: El proyecto incorpora un segundo módulo de trabajo (spec 002,
+  `specs/002-firestore-datos-usuario/`) que mueve la fuente de verdad de los
+  datos de usuario de "local-first" (Room/SharedPreferences, spec 001) a
+  "remoto-autoritativo" (Firebase/Firestore + Firebase Authentication), para
+  que la cuenta, el historial y el puntaje sobrevivan a la desinstalación y
+  se sincronicen entre dispositivos. Esto redefine, de forma incompatible
+  hacia atrás, el Principio IV (rol de la capa de Infraestructura) y la
+  sección "Stack Tecnológico" tal como estaban definidos en v1.0.0.
 
-  Modified principles: N/A — first-time population; all 9 principles created from scratch,
-  mapped 1:1 from the 9 principios provided by the project owner.
+  Modified principles:
+    - IV. Separación Estricta de Capas → bullet "Infraestructura" ampliado:
+      Firebase/Firestore y Firebase Authentication se suman como
+      integraciones de Infraestructura; Room/SharedPreferences dejan de ser
+      la fuente de verdad de datos de usuario y pasan a cumplir, a lo sumo,
+      un rol de caché/estado efímero de UI.
 
-  Added sections:
-    - Core Principles (9 principles)
-    - Stack Tecnológico y Restricciones
-    - Contexto del Producto y Reglas de Negocio
-    - Flujo de Desarrollo y Calidad
-    - Governance
+  Added sections/content:
+    - Stack Tecnológico: bullet "Persistencia" reescrito (reemplaza a
+      "Persistencia local") para declarar a Firestore como base de datos
+      autoritativa y remota de los datos de usuario.
+    - Stack Tecnológico: bullet "Autenticación" ampliado para delegar el
+      almacenamiento de contraseñas a Firebase Authentication (hash
+      unidireccional gestionado por el proveedor, nunca visible para
+      Firestore ni para la app), en reemplazo del esquema JWE reversible de
+      RNF-006/RNF-007 de spec 001 para este módulo en adelante.
 
-  Removed sections: None — all template placeholders replaced.
+  Removed sections: None.
 
   Templates requiring updates:
     ✅ .specify/memory/constitution.md — this file (updated)
-    ⚠  .specify/templates/plan-template.md — "Constitution Check" gate section is generic;
-         the next /speckit.plan invocation for any EcoSmart feature MUST fill it with
-         EcoSmart-specific gates (separación de capas, enums para valores cerrados,
-         cobertura de tests de reglas de puntaje, tono de UX no punitivo).
-    ✅ .specify/templates/spec-template.md — no structural change required; existing
-         scope/requirements section aligns with updated principles.
-    ✅ .specify/templates/tasks-template.md — task categories align with principle-driven
-         work types (domain, application, infrastructure, presentation, tests); no
-         structural update needed.
+    ⚠  .specify/templates/plan-template.md — el próximo `/speckit.plan` de
+         spec 002 DEBE completar el "Constitution Check" validando el nuevo
+         rol de Firestore/Firebase Auth como Infraestructura autoritativa.
+    ✅ .specify/templates/spec-template.md — sin cambio estructural necesario.
+    ✅ .specify/templates/tasks-template.md — sin cambio estructural necesario.
 
-  Known ambiguities to resolve via /speckit.specify or /speckit.clarify (do not implement
-  until resolved, per Principio I):
-    - Umbrales numéricos de "nivel de usuario" en la sección Perfil (D) no están definidos.
+  Known ambiguities: ninguna nueva introducida por esta enmienda; ver
+  `specs/002-firestore-datos-usuario/spec.md` → Clarifications para las
+  decisiones tomadas en este módulo (reemplazo de JWE por Firebase Auth,
+  manejo de datos device-bound, migración de datos locales existentes).
 
-  Follow-up TODOs: None. RATIFICATION_DATE set to the date of this initial adoption.
+  Follow-up TODOs: None.
 -->
 
 # EcoSmart Constitution
@@ -88,9 +99,12 @@ o Aplicación, nunca al revés):
 - **Aplicación / Servicios**: casos de uso de la aplicación (p. ej. `registrarCaminata`,
   `evaluarFotoConIA`, `actualizarPuntaje`, `calcularRacha`). Sin lógica de negocio propia;
   orquestan el dominio.
-- **Infraestructura**: Room, SharedPreferences, adaptadores a APIs nativas (Cámara,
-  Galería, GPS/Ubicación, Podómetro) e integración con el proveedor de IA (EcoGPT).
-  Sin lógica de negocio.
+- **Infraestructura**: Firebase/Firestore y Firebase Authentication (fuente de verdad
+  remota y autoritativa de los datos de usuario desde spec 002 — ver
+  `specs/002-firestore-datos-usuario/`), Room/SharedPreferences (reservados, a partir de
+  spec 002, a caché de lectura offline o estado efímero de UI — nunca la única copia de
+  un dato de negocio), adaptadores a APIs nativas (Cámara, Galería, GPS/Ubicación,
+  Podómetro) e integración con el proveedor de IA (EcoGPT). Sin lógica de negocio.
 - **Presentación / ViewModel**: expone estado a la UI y traduce eventos de UI a casos
   de uso. Sin lógica de negocio ni acceso directo a Room o a las APIs de sensores.
 - **Frontend (UI)**: pantallas nativas de Android. Sin lógica de negocio duplicada
@@ -165,9 +179,13 @@ punitivo desmotiva la adopción continua, que es la métrica de éxito real del 
   y presentación. Java permitido únicamente donde la arquitectura por capas lo requiera
   (p. ej. interoperabilidad con librerías existentes).
 - **Arquitectura**: Clean Architecture con las capas descritas en el Principio IV.
-- **Persistencia local**: Room para datos estructurados (usuarios, actividades,
-  historial, puntajes); SharedPreferences reservado a preferencias simples y flags de
-  configuración (no para datos de negocio con reglas asociadas).
+- **Persistencia**: Firestore (Firebase) es, a partir de spec 002, la base de datos
+  autoritativa y remota de todos los datos de usuario (perfil, preferencias, historial
+  de verificaciones, puntaje, racha). Ningún dato de negocio del usuario DEBE depender
+  únicamente de una copia local para sobrevivir: Room y SharedPreferences quedan
+  reservados a caché de lectura offline o estado efímero de UI, nunca como única fuente
+  de verdad. El catálogo estático de Actividades y el dataset de Puntos Verdes de CABA
+  (spec 001) no son "datos de usuario" y quedan fuera de este requisito.
 - **Sensores y hardware**: APIs nativas de Android para Cámara, Galería, GPS/Ubicación
   y Podómetro (Step Counter / Sensor API). Todo acceso a estas APIs se realiza desde la
   capa de Infraestructura, nunca desde la UI o el dominio.
@@ -177,7 +195,11 @@ punitivo desmotiva la adopción continua, que es la métrica de éxito real del 
   capa de Aplicación, de modo que el proveedor de IA pueda sustituirse sin afectar
   reglas de negocio.
 - **Autenticación**: registro con email/contraseña o acceso con Google. Las credenciales
-  y contraseñas NUNCA se almacenan ni transmiten en texto plano.
+  y contraseñas NUNCA se almacenan ni transmiten en texto plano. A partir de spec 002, el
+  almacenamiento de contraseñas se delega a Firebase Authentication (hash unidireccional
+  gestionado por el proveedor, fuera de Firestore): ni la base de datos ni la app conocen
+  ni pueden reconstruir la contraseña en texto plano. Esto reemplaza, para este módulo en
+  adelante, el esquema de cifrado reversible JWE/JWK de RNF-006/RNF-007 (spec 001).
 
 ## Contexto del Producto y Reglas de Negocio
 
@@ -289,4 +311,4 @@ iteración o feature. Las ambigüedades detectadas en el Sync Impact Report (al 
 de este archivo) DEBEN resolverse en `/speckit.specify` o `/speckit.clarify` antes de
 iniciar la implementación de la funcionalidad afectada.
 
-**Version**: 1.0.0 | **Ratified**: 2026-09-20 | **Last Amended**: 2026-09-20
+**Version**: 2.0.0 | **Ratified**: 2026-09-20 | **Last Amended**: 2026-10-01
