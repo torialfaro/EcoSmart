@@ -34,6 +34,7 @@ object DatabaseModule {
             .build()
 
     @Provides
+    @Suppress("DEPRECATION")
     fun provideUsuarioDao(appDatabase: AppDatabase): UsuarioDao = appDatabase.usuarioDao()
 
     @Provides
@@ -46,6 +47,7 @@ object DatabaseModule {
     fun providePuntoVerdeDao(appDatabase: AppDatabase): PuntoVerdeDao = appDatabase.puntoVerdeDao()
 
     @Provides
+    @Suppress("DEPRECATION")
     fun provideRegistroVerificacionDao(appDatabase: AppDatabase): RegistroVerificacionDao =
         appDatabase.registroVerificacionDao()
 }

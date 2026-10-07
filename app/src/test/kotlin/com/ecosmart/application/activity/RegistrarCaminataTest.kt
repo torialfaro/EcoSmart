@@ -1,9 +1,13 @@
 package com.ecosmart.application.activity
 
-import com.ecosmart.domain.repository.RegistroVerificacionRepository
-import com.ecosmart.domain.repository.UsuarioRepository
 import com.ecosmart.domain.valueobject.ActividadId
 import com.ecosmart.domain.valueobject.UsuarioId
+import com.ecosmart.infrastructure.firebase.DispositivoIdProvider
+import com.ecosmart.infrastructure.network.BackendConfianzaClient
+import com.ecosmart.infrastructure.network.EcoGptClient
+import com.ecosmart.infrastructure.network.RegistroVerificacionOtorgadoDto
+import io.mockk.coEvery
+import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -12,17 +16,30 @@ import org.junit.jupiter.api.Test
 
 class RegistrarCaminataTest {
 
-    private val registroVerificacionRepository = mockk<RegistroVerificacionRepository>(relaxed = true)
-    private val usuarioRepository = mockk<UsuarioRepository>(relaxed = true)
-    private val aplicarTopeDiario = AplicarTopeDiario(registroVerificacionRepository, usuarioRepository)
-    private val registrarCaminata = RegistrarCaminata(aplicarTopeDiario)
+    private val backendConfianzaClient = mockk<BackendConfianzaClient>()
+    private val dispositivoIdProvider = mockk<DispositivoIdProvider> { every { dispositivoId } returns "dispositivo-test" }
+    private val ecoGptClient = mockk<EcoGptClient>(relaxed = true)
+    private val registrarCaminata = RegistrarCaminata(backendConfianzaClient, dispositivoIdProvider, ecoGptClient)
 
     private val usuarioId = UsuarioId.nuevo()
     private val actividadId = ActividadId.nuevo()
 
+    private fun stubBackend(puntosOtorgados: Int) {
+        coEvery { backendConfianzaClient.otorgarPuntosCaminar(any()) } returns RegistroVerificacionOtorgadoDto(
+            id = "registro-1",
+            resultado = "APROBADO",
+            puntosOtorgados = puntosOtorgados,
+            puntosHistoricosActualizados = puntosOtorgados,
+            rachaActual = 1,
+            nivel = "SEMILLA",
+        )
+    }
+
     @Test
     fun `otorga 50 puntos por cada bloque completo de 133 pasos, sin fracciones`() = runTest {
         // 300 pasos caminados = 2 bloques completos de 133 (266) + 34 pasos remanentes sin puntos.
+        stubBackend(puntosOtorgados = 100)
+
         val resultado = registrarCaminata(
             DatosCaminata(
                 usuarioId = usuarioId,
@@ -39,6 +56,8 @@ class RegistrarCaminataTest {
 
     @Test
     fun `no otorga puntos por pasos que no completan un bloque de 133`() = runTest {
+        stubBackend(puntosOtorgados = 0)
+
         val resultado = registrarCaminata(
             DatosCaminata(
                 usuarioId = usuarioId,

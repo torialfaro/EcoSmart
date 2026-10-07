@@ -15,12 +15,16 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import com.ecosmart.domain.model.RegistroVerificacion
 import com.ecosmart.domain.valueobject.CategoriaActividad
 import com.ecosmart.domain.valueobject.ResultadoVerificacion
@@ -34,6 +38,17 @@ fun HistorialScreen(
     barraInferior: @Composable () -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsState()
+
+    // Sin listener en tiempo real de Firestore (RF-D017) — se refresca al volver a
+    // primer plano, mismo patrón que PerfilScreen usa para RF-077 de spec 001.
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observador = LifecycleEventObserver { _, evento ->
+            if (evento == Lifecycle.Event.ON_RESUME) viewModel.refrescar()
+        }
+        lifecycleOwner.lifecycle.addObserver(observador)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observador) }
+    }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,

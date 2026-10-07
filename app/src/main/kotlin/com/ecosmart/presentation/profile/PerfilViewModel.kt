@@ -7,6 +7,7 @@ import com.ecosmart.domain.model.Usuario
 import com.ecosmart.domain.repository.UsuarioRepository
 import com.ecosmart.domain.valueobject.CategoriaActividad
 import com.ecosmart.domain.valueobject.NivelUsuario
+import com.ecosmart.infrastructure.network.BackendConfianzaClient
 import com.ecosmart.infrastructure.session.SesionUsuario
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,6 +24,10 @@ data class PerfilUiState(
     val rachaActual: Int = 0,
     val porcentajePorCategoria: Map<CategoriaActividad, Double> = emptyMap(),
     val pasosHoy: Int? = null,
+    val mostrarConfirmacionEliminarCuenta: Boolean = false,
+    val eliminandoCuenta: Boolean = false,
+    val cuentaEliminada: Boolean = false,
+    val mensajeErrorEliminarCuenta: String? = null,
 )
 
 /**
@@ -38,6 +43,7 @@ class PerfilViewModel @Inject constructor(
     private val usuarioRepository: UsuarioRepository,
     private val calcularMetricasPerfil: CalcularMetricasPerfil,
     private val sesionUsuario: SesionUsuario,
+    private val backendConfianzaClient: BackendConfianzaClient,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(PerfilUiState())
@@ -74,5 +80,30 @@ class PerfilViewModel @Inject constructor(
     /** Corrección post-QA: con la sesión persistida (RF-010), hace falta un botón explícito para salir. */
     fun cerrarSesion() {
         sesionUsuario.cerrarSesion()
+    }
+
+    fun solicitarEliminarCuenta() {
+        _uiState.value = _uiState.value.copy(mostrarConfirmacionEliminarCuenta = true, mensajeErrorEliminarCuenta = null)
+    }
+
+    fun cancelarEliminarCuenta() {
+        _uiState.value = _uiState.value.copy(mostrarConfirmacionEliminarCuenta = false, mensajeErrorEliminarCuenta = null)
+    }
+
+    /** RF-D012: inmediato y definitivo — la confirmación previa es la única salvaguarda. */
+    fun confirmarEliminarCuenta() {
+        _uiState.value = _uiState.value.copy(eliminandoCuenta = true, mensajeErrorEliminarCuenta = null)
+        viewModelScope.launch {
+            try {
+                backendConfianzaClient.eliminarCuenta()
+                sesionUsuario.cerrarSesion()
+                _uiState.value = _uiState.value.copy(eliminandoCuenta = false, cuentaEliminada = true)
+            } catch (error: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    eliminandoCuenta = false,
+                    mensajeErrorEliminarCuenta = "No pudimos eliminar tu cuenta. Revisá tu conexión y volvé a intentar.",
+                )
+            }
+        }
     }
 }

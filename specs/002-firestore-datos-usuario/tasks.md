@@ -40,21 +40,21 @@ de prioridad (US1-US3 = P1, US4 = P2, US5 = P3).
 **Purpose**: Dependencias y configuración de proyecto para que Firebase esté disponible
 en ambos lados (cliente y backend), sin lógica de negocio todavía.
 
-- [ ] T001 Agregar `firebase-bom`, `firebase-auth-ktx`, `firebase-firestore-ktx` y
+- [X] T001 Agregar `firebase-bom`, `firebase-auth-ktx`, `firebase-firestore-ktx` y
       `play-services-auth` a `gradle/libs.versions.toml` (sección `[versions]`/`[libraries]`)
-- [ ] T002 Declarar el plugin `com.google.gms.google-services` en `build.gradle.kts`
+- [X] T002 Declarar el plugin `com.google.gms.google-services` en `build.gradle.kts`
       (raíz, `apply false`) y aplicarlo en `app/build.gradle.kts`, agregando las
       dependencias de T001
-- [ ] T003 [P] Agregar `app/google-services.json` a `.gitignore` (nunca se commitea, ver
+- [X] T003 [P] Agregar `app/google-services.json` a `.gitignore` (nunca se commitea, ver
       quickstart.md §2) y crear `app/google-services.json.example` como plantilla
       documentada
-- [ ] T004 [P] Agregar `firebase-admin` a `backend/requirements.txt`
-- [ ] T005 [P] Documentar las variables de entorno nuevas
+- [X] T004 [P] Agregar `firebase-admin` a `backend/requirements.txt`
+- [X] T005 [P] Documentar las variables de entorno nuevas
       (`FIREBASE_SERVICE_ACCOUNT_JSON`, `FIRESTORE_EMULATOR_HOST`) en `backend/README.md`,
       consistente con quickstart.md §5
-- [ ] T006 [P] Crear `firebase.json` en la raíz del repo configurando los emuladores de
+- [X] T006 [P] Crear `firebase.json` en la raíz del repo configurando los emuladores de
       Firestore y Authentication (quickstart.md §4)
-- [ ] T007 [P] Copiar `specs/002-firestore-datos-usuario/contracts/firestore.rules` a
+- [X] T007 [P] Copiar `specs/002-firestore-datos-usuario/contracts/firestore.rules` a
       `firestore.rules` en la raíz del repo (fuente real desplegable, quickstart.md §3)
 
 **Checkpoint**: proyecto compila con las dependencias de Firebase; emuladores arrancan
@@ -70,35 +70,54 @@ historia de usuario puede empezar hasta que esta fase esté completa.
 
 **⚠️ CRITICAL**: No continuar a la Fase 3 sin completar esta fase.
 
-- [ ] T008 [P] Implementar `FirebaseAuthModule` (Hilt, provee `FirebaseAuth`) en
+- [X] T008 [P] Implementar `FirebaseAuthModule` (Hilt, provee `FirebaseAuth`) en
       `app/src/main/kotlin/com/ecosmart/infrastructure/firebase/FirebaseAuthModule.kt`
-- [ ] T009 [P] Implementar `FirestoreModule` (Hilt, provee `FirebaseFirestore`) en
+- [X] T009 [P] Implementar `FirestoreModule` (Hilt, provee `FirebaseFirestore`) en
       `app/src/main/kotlin/com/ecosmart/infrastructure/firebase/FirestoreModule.kt`
-- [ ] T010 [P] Implementar `firebase_admin_setup.py` (inicialización del Admin SDK +
+- [X] T010 [P] Implementar `firebase_admin_setup.py` (inicialización del Admin SDK +
       dependencia FastAPI `verificar_id_token` que extrae el `uid` verificado) en
       `backend/app/firebase_admin_setup.py` (research.md §3)
-- [ ] T011 [US-foundation] Implementar los 3 endpoints nuevos de
+- [X] T011 [US-foundation] Montar el router de los 3 endpoints nuevos de
       `contracts/openapi.yaml` (`/registros-verificacion/reciclar-reutilizar`,
-      `/registros-verificacion/caminar`, `/migracion/subir-datos-locales`) en
-      `backend/app/puntos.py`, montados en `backend/app/main.py` (depende de T010)
-- [ ] T012 [P] Implementar `FirebaseIdTokenInterceptor` (adjunta
+      `/registros-verificacion/caminar`, `/migracion/subir-datos-locales`) como esqueleto
+      en `backend/app/puntos.py`, montado en `backend/app/main.py` (depende de T010)
+- [X] T011a [US-foundation] Reimplementar la regla de tope diario por categoría
+      (RF-032/033/035 de spec 001, equivalente a `AplicarTopeDiario`) en
+      `backend/app/puntos.py` (RF-D013) — depende de T011
+- [X] T011b [US-foundation] Reimplementar el cálculo de racha y nivel
+      (RF-038/039/040/046/047 de spec 001, equivalente a `Usuario.sumarPuntos()`/
+      `registrarActividadAprobadaHoy()`/`nivel()`) en `backend/app/puntos.py` (RF-D013) —
+      depende de T011
+- [X] T011c [US-foundation] Reimplementar la detección de fotos duplicadas por hash
+      perceptual (RF-058/059 de spec 001, equivalente a `RegistroVerificacion.esDuplicadoDe()`)
+      en `backend/app/puntos.py` (RF-D013) — depende de T011
+- [X] T011d [P] Test de paridad: los mismos casos de tope diario/racha/nivel/duplicado ya
+      cubiertos por los tests de dominio de `001-ecosmart-mvp` producen el mismo
+      resultado en la reimplementación Python (T011a-T011c), en
+      `backend/tests/test_paridad_reglas_negocio.py` — evita que las dos implementaciones
+      (Kotlin en spec 001, Python en este módulo) diverjan silenciosamente (Principio V)
+- [X] T011e [P] Implementar `DispositivoIdProvider` (identificador estable de
+      instalación, `Settings.Secure.ANDROID_ID` persistido una vez) en
+      `app/src/main/kotlin/com/ecosmart/infrastructure/firebase/DispositivoIdProvider.kt`
+      — usado por T037 (caminata) y T050 (permisos)
+- [X] T012 [P] Implementar `FirebaseIdTokenInterceptor` (adjunta
       `Authorization: Bearer <idToken>` a cada request) en
       `app/src/main/kotlin/com/ecosmart/infrastructure/firebase/FirebaseIdTokenInterceptor.kt`
       (depende de T008)
-- [ ] T013 Implementar `BackendConfianzaClient` (interfaz Retrofit de
+- [X] T013 Implementar `BackendConfianzaClient` (interfaz Retrofit de
       `contracts/openapi.yaml`) en
       `app/src/main/kotlin/com/ecosmart/infrastructure/network/BackendConfianzaClient.kt`
-- [ ] T014 Agregar el provider de `BackendConfianzaClient` (Retrofit + OkHttp con
+- [X] T014 Agregar el provider de `BackendConfianzaClient` (Retrofit + OkHttp con
       `FirebaseIdTokenInterceptor`) en
       `app/src/main/kotlin/com/ecosmart/infrastructure/di/NetworkModule.kt` (depende de
       T012, T013)
-- [ ] T015 [P] Implementar `UsuarioFirestoreMapper` (`usuarios/{uid}` ↔ `Usuario`,
+- [X] T015 [P] Implementar `UsuarioFirestoreMapper` (`usuarios/{uid}` ↔ `Usuario`,
       data-model.md §2) en
       `app/src/main/kotlin/com/ecosmart/infrastructure/persistence/firestore/UsuarioFirestoreMapper.kt`
-- [ ] T016 [P] Implementar `RegistroVerificacionFirestoreMapper` (subcolección ↔
+- [X] T016 [P] Implementar `RegistroVerificacionFirestoreMapper` (subcolección ↔
       `RegistroVerificacion`, data-model.md §3) en
       `app/src/main/kotlin/com/ecosmart/infrastructure/persistence/firestore/RegistroVerificacionFirestoreMapper.kt`
-- [ ] T017 [P] Rules unit tests de RF-D010/RF-D014 contra el emulador de Firestore
+- [X] T017 [P] Rules unit tests de RF-D010/RF-D014 contra el emulador de Firestore
       (usuario A no puede leer/escribir `usuarios/B`; ningún usuario puede escribir
       `puntosHistoricos`/`rachaActual`/`nivel`/`resultado`/`puntosOtorgados`; el Admin SDK
       sí puede) en `backend/tests/test_firestore_rules.py` (quickstart.md §7)
@@ -119,42 +138,58 @@ sesión → verificar que perfil/historial/puntaje coinciden (ver quickstart.md 
 
 ### Tests for User Story 1
 
-- [ ] T018 [P] [US1] Test de integración: `UsuarioRepositoryImpl` escribe y lee
+- [X] T018 [P] [US1] Test de integración: `UsuarioRepositoryImpl` escribe y lee
       `usuarios/{uid}` contra el emulador de Firestore, en
       `app/src/androidTest/kotlin/com/ecosmart/infrastructure/persistence/UsuarioRepositoryImplTest.kt`
-- [ ] T019 [P] [US1] Test de integración: `RegistroVerificacionRepositoryImpl` lee el
+- [X] T019 [P] [US1] Test de integración: `RegistroVerificacionRepositoryImpl` lee el
       historial completo de la subcolección `registrosVerificacion` contra el emulador,
       en
       `app/src/androidTest/kotlin/com/ecosmart/infrastructure/persistence/RegistroVerificacionRepositoryImplTest.kt`
 
 ### Implementation for User Story 1
 
-- [ ] T020 [US1] Reescribir `UsuarioRepositoryImpl` para leer/escribir
+- [X] T020 [US1] Reescribir `UsuarioRepositoryImpl` para leer/escribir
       `usuarios/{uid}` vía `FirebaseFirestore` + `UsuarioFirestoreMapper` (RF-D001,
-      RF-D005), eliminando la dependencia de `UsuarioDao`/Room para lectura de negocio, en
+      RF-D005), usando `FieldValue.serverTimestamp()` en `actualizadoEn` para que
+      ediciones concurrentes desde dos dispositivos se resuelvan por última escritura
+      según el reloj del servidor (Edge Case de spec.md), eliminando la dependencia de
+      `UsuarioDao`/Room para lectura de negocio, en
       `app/src/main/kotlin/com/ecosmart/infrastructure/persistence/UsuarioRepositoryImpl.kt`
       (depende de T009, T015)
-- [ ] T021 [US1] Reescribir `RegistroVerificacionRepositoryImpl` para leer
+- [X] T021 [US1] Reescribir `RegistroVerificacionRepositoryImpl` para leer
       `usuarios/{uid}/registrosVerificacion` ordenado por `creadoEn` descendente (RF-D003)
       vía `FirebaseFirestore` + `RegistroVerificacionFirestoreMapper`, en
       `app/src/main/kotlin/com/ecosmart/infrastructure/persistence/RegistroVerificacionRepositoryImpl.kt`
       (depende de T009, T016)
-- [ ] T022 [US1] Actualizar `SesionUsuario` para exponer el `uid` del usuario autenticado
+- [X] T022 [US1] Actualizar `SesionUsuario` para exponer el `uid` del usuario autenticado
       de `FirebaseAuth.currentUser` en vez de `SharedPreferences` propias, en
       `app/src/main/kotlin/com/ecosmart/infrastructure/session/SesionUsuario.kt` (depende
       de T008)
-- [ ] T023 [US1] Actualizar `RepositoryModule` (Hilt) para que `UsuarioRepository`/
+- [X] T023 [US1] Actualizar `RepositoryModule` (Hilt) para que `UsuarioRepository`/
       `RegistroVerificacionRepository` sigan resolviendo a las implementaciones de T020/T021
       sin cambios de firma, en
       `app/src/main/kotlin/com/ecosmart/infrastructure/di/RepositoryModule.kt`
-- [ ] T024 [US1] Actualizar `PerfilViewModel`/`HistorialViewModel` para refrescar al
+- [X] T024 [US1] Actualizar `PerfilViewModel`/`HistorialViewModel` para refrescar al
       volver a primer plano (ya exigido por RF-077 de spec 001, ahora respaldado por datos
       remotos) en
       `app/src/main/kotlin/com/ecosmart/presentation/profile/PerfilViewModel.kt` y
       `app/src/main/kotlin/com/ecosmart/presentation/profile/HistorialViewModel.kt`
+- [X] T024a [US1] Reescribir `VerificarFotoConIA` para que, tras recibir el veredicto de
+      EcoGPT, llame a `BackendConfianzaClient.otorgarPuntosReciclarReutilizar(...)` en vez
+      de `aplicarTopeDiario.registrarResultado(...)` local (RF-D014/RF-D015 — sin esto,
+      Reciclar/Reutilizar seguirían otorgando puntos localmente, bypasseando Firestore),
+      en `app/src/main/kotlin/com/ecosmart/application/activity/VerificarFotoConIA.kt`
+      (depende de T013, T014, T020)
+- [X] T024b [US1] Test de integración: `VerificarFotoConIA` con veredicto APROBADO
+      escribe el registro vía `BackendConfianzaClient` y nunca escribe
+      `puntosHistoricos`/`rachaActual` directamente desde el cliente, en
+      `app/src/androidTest/kotlin/com/ecosmart/application/activity/VerificarFotoConIATest.kt`
+      (depende de T024a)
 
 **Checkpoint**: la cuenta sobrevive a una desinstalación/reinstalación o a un dispositivo
-nuevo — US1 es demostrable de forma independiente (MVP de este módulo).
+nuevo, y las tres categorías (Caminar, Reciclar, Reutilizar) otorgan puntos exclusivamente
+vía el backend de confianza — US1 es demostrable de forma independiente (MVP de este
+módulo).
 
 ---
 
@@ -171,39 +206,39 @@ Console y confirmar que no existe ningún campo de contraseña (quickstart.md §
 
 ### Tests for User Story 3
 
-- [ ] T025 [P] [US3] Test unitario: `RegistrarUsuario`/`IniciarSesion` usan
+- [X] T025 [P] [US3] Test unitario: `RegistrarUsuario`/`IniciarSesion` usan
       `FirebaseAuth.createUserWithEmailAndPassword`/`signInWithEmailAndPassword` y nunca
       construyen un `ContrasenaCifrada`/JWE, en
       `app/src/test/kotlin/com/ecosmart/application/auth/RegistrarUsuarioTest.kt` y
       `app/src/test/kotlin/com/ecosmart/application/auth/IniciarSesionTest.kt`
-- [ ] T026 [P] [US3] Test de integración: un documento `usuarios/{uid}` recién creado no
+- [X] T026 [P] [US3] Test de integración: un documento `usuarios/{uid}` recién creado no
       contiene ningún campo de contraseña (SC-D003), en
       `app/src/androidTest/kotlin/com/ecosmart/infrastructure/persistence/UsuarioRepositoryImplTest.kt`
       (agregar caso a T018)
 
 ### Implementation for User Story 3
 
-- [ ] T027 [US3] Reescribir `RegistrarUsuario` para crear la cuenta vía
+- [X] T027 [US3] Reescribir `RegistrarUsuario` para crear la cuenta vía
       `FirebaseAuth.createUserWithEmailAndPassword` y el documento inicial `usuarios/{uid}`
       (sin `contrasenaCifradaJwe`, RF-D002) en
       `app/src/main/kotlin/com/ecosmart/application/auth/RegistrarUsuario.kt` (depende de
       T008, T020)
-- [ ] T028 [US3] Reescribir `IniciarSesion` para usar
+- [X] T028 [US3] Reescribir `IniciarSesion` para usar
       `FirebaseAuth.signInWithEmailAndPassword` en vez de
       `UsuarioRepository.autenticar`/`CifradorContrasena`, en
       `app/src/main/kotlin/com/ecosmart/application/auth/IniciarSesion.kt`
-- [ ] T029 [US3] Reescribir `IniciarSesionConGoogle` para canjear el token de Google
+- [X] T029 [US3] Reescribir `IniciarSesionConGoogle` para canjear el token de Google
       (vía `play-services-auth`) por una credencial de `GoogleAuthProvider` de Firebase
       Authentication (research.md §2), en
       `app/src/main/kotlin/com/ecosmart/application/auth/IniciarSesionConGoogle.kt`
-- [ ] T030 [US3] Reescribir `CambiarContrasena` para usar
+- [X] T030 [US3] Reescribir `CambiarContrasena` para usar
       `FirebaseUser.updatePassword`, eliminando el uso de `CifradorContrasena`/JWE para
       este flujo, en `app/src/main/kotlin/com/ecosmart/application/auth/CambiarContrasena.kt`
-- [ ] T031 [US3] Actualizar `RegistroViewModel` para invocar los casos de uso
+- [X] T031 [US3] Actualizar `RegistroViewModel` para invocar los casos de uso
       reescritos (T027-T029) y manejar los nuevos tipos de error de Firebase
       Authentication (p. ej. email ya en uso, credenciales inválidas) en tono no punitivo
       (Principio IX), en `app/src/main/kotlin/com/ecosmart/presentation/auth/RegistroViewModel.kt`
-- [ ] T032 [US3] Eliminar el uso de `CifradorContrasena`/`ContrasenaCifrada` del flujo de
+- [X] T032 [US3] Eliminar el uso de `CifradorContrasena`/`ContrasenaCifrada` del flujo de
       autenticación de este módulo (queda sin referencias vivas tras T027-T030); no se
       borra la clase en sí hasta confirmar que `001-ecosmart-mvp` no la necesita en otro
       lado
@@ -224,34 +259,38 @@ uno, verificar que el otro refleja el cambio al volver a primer plano o refresca
 
 ### Tests for User Story 2
 
-- [ ] T033 [P] [US2] Test de integración: dos instancias de `UsuarioRepositoryImpl`
+- [X] T033 [P] [US2] Test de integración: dos instancias de `UsuarioRepositoryImpl`
       (simulando 2 dispositivos) contra el mismo documento del emulador reflejan el mismo
       estado tras una recarga, en
       `app/src/androidTest/kotlin/com/ecosmart/infrastructure/persistence/UsuarioRepositoryImplTest.kt`
       (agregar caso)
-- [ ] T034 [P] [US2] Test de contrato: `POST /registros-verificacion/caminar` con
+- [X] T034 [P] [US2] Test de contrato: `POST /registros-verificacion/caminar` con
       `dispositivoId` distinto mientras ya hay una caminata activa responde `409`
       (RF-D008), en `backend/tests/test_puntos_endpoints.py`
 
 ### Implementation for User Story 2
 
-- [ ] T035 [US2] Implementar la recarga bajo demanda (al entrar/volver a primer plano,
+- [X] T035 [US2] Implementar la recarga bajo demanda (al entrar/volver a primer plano,
       sin listener permanente — RF-D017) en `HomeViewModel`/`PerfilViewModel` en
       `app/src/main/kotlin/com/ecosmart/presentation/home/HomeViewModel.kt` y
       `app/src/main/kotlin/com/ecosmart/presentation/profile/PerfilViewModel.kt`
-- [ ] T036 [US2] Implementar el arbitraje transaccional de `caminataEnCurso`/`pasosHoy`
+- [X] T036 [US2] Implementar el arbitraje transaccional de `caminataEnCurso`/`pasosHoy`
       (RF-D007/RF-D008) en el endpoint `/registros-verificacion/caminar` de
       `backend/app/puntos.py` (depende de T011)
-- [ ] T037 [US2] Reescribir `RegistrarCaminata` para enviar `INICIAR`/
+- [X] T036b [US2] Implementar `PATCH /pasos-del-dia` en `backend/app/puntos.py` (RF-D007)
+      — sincroniza el conteo diario de pasos de forma transaccional, independiente de
+      cualquier caminata puntual con meta (distinto del endpoint `/caminar` de T036) —
+      depende de T011
+- [X] T037 [US2] Reescribir `RegistrarCaminata` para enviar `INICIAR`/
       `ACTUALIZAR_PROGRESO`/`COMPLETAR` al `BackendConfianzaClient` en vez de escribir
       directamente en `CaminataEnCursoStore`, en
       `app/src/main/kotlin/com/ecosmart/application/activity/RegistrarCaminata.kt`
-      (depende de T013, T014)
-- [ ] T038 [US2] Implementar `CaminataEnCursoFirestoreMapper` (lectura de solo lectura del
+      (depende de T011e, T013, T014)
+- [X] T038 [US2] Implementar `CaminataEnCursoFirestoreMapper` (lectura de solo lectura del
       documento singleton `caminataEnCurso/actual` para reflejar el progreso en el
       dispositivo que no lo inició) en
       `app/src/main/kotlin/com/ecosmart/infrastructure/persistence/firestore/CaminataEnCursoFirestoreMapper.kt`
-- [ ] T039 [US2] Manejar el error `409` de caminata activa en otro dispositivo con un
+- [X] T039 [US2] Manejar el error `409` de caminata activa en otro dispositivo con un
       mensaje no punitivo (Principio IX) en
       `app/src/main/kotlin/com/ecosmart/presentation/verification/VerificacionCaminataScreen.kt`
 
@@ -270,24 +309,24 @@ iniciar sesión → verificar que Firestore queda poblado y Room se vacía (quic
 
 ### Tests for User Story 4
 
-- [ ] T040 [P] [US4] Test de contrato: `POST /migracion/subir-datos-locales` es
+- [X] T040 [P] [US4] Test de contrato: `POST /migracion/subir-datos-locales` es
       idempotente (una segunda llamada con los mismos datos no duplica el historial), en
       `backend/tests/test_puntos_endpoints.py`
-- [ ] T041 [P] [US4] Test unitario: el flujo de migración borra las tablas de Room
+- [X] T041 [P] [US4] Test unitario: el flujo de migración borra las tablas de Room
       únicamente después de una respuesta exitosa del backend, nunca antes, en
       `app/src/test/kotlin/com/ecosmart/infrastructure/migration/MigracionDatosLocalesTest.kt`
 
 ### Implementation for User Story 4
 
-- [ ] T042 [US4] Implementar el endpoint `/migracion/subir-datos-locales` (idempotente
+- [X] T042 [US4] Implementar el endpoint `/migracion/subir-datos-locales` (idempotente
       por `uid`, ver research.md §6) en `backend/app/puntos.py` (depende de T011)
-- [ ] T043 [US4] Implementar `MigracionDatosLocales` (lee Room vía los DAOs existentes,
+- [X] T043 [US4] Implementar `MigracionDatosLocales` (lee Room vía los DAOs existentes,
       llama al endpoint de migración, y solo si responde `200` marca la bandera
       `migracion_firestore_completada` en SharedPreferences y borra las tablas de Room —
       RF-D011) en
       `app/src/main/kotlin/com/ecosmart/infrastructure/migration/MigracionDatosLocales.kt`
       (depende de T013, T014)
-- [ ] T044 [US4] Disparar `MigracionDatosLocales` en el primer login posterior a esta
+- [X] T044 [US4] Disparar `MigracionDatosLocales` en el primer login posterior a esta
       actualización (punto de entrada único, antes de navegar a Home) en
       `app/src/main/kotlin/com/ecosmart/presentation/auth/RegistroViewModel.kt` (depende
       de T043)
@@ -308,16 +347,16 @@ documento, subcolecciones y la credencial de Authentication desaparecen dentro d
 
 ### Tests for User Story 5
 
-- [ ] T045 [P] [US5] Test de contrato: eliminar cuenta borra `usuarios/{uid}` y todas sus
+- [X] T045 [P] [US5] Test de contrato: eliminar cuenta borra `usuarios/{uid}` y todas sus
       subcolecciones (registrosVerificacion, caminataEnCurso, permisosDispositivo) y la
       credencial de Authentication, en `backend/tests/test_puntos_endpoints.py`
 
 ### Implementation for User Story 5
 
-- [ ] T046 [US5] Implementar el endpoint de eliminación de cuenta (borra documento +
+- [X] T046 [US5] Implementar el endpoint de eliminación de cuenta (borra documento +
       subcolecciones vía Admin SDK + `auth.delete_user(uid)`) en `backend/app/puntos.py`
       (depende de T010, T011)
-- [ ] T047 [US5] Agregar la opción "Eliminar cuenta" con pantalla de confirmación (única
+- [X] T047 [US5] Agregar la opción "Eliminar cuenta" con pantalla de confirmación (única
       salvaguarda, RF-D012) en
       `app/src/main/kotlin/com/ecosmart/presentation/profile/PerfilScreen.kt` y
       `app/src/main/kotlin/com/ecosmart/presentation/profile/PerfilViewModel.kt`
@@ -332,24 +371,32 @@ demostrables de forma independiente.
 
 **Purpose**: Mejoras transversales a todas las historias.
 
-- [ ] T048 [P] Implementar el manejo de fallas transitorias vs. no transitorias
+- [X] T048 [P] Implementar el manejo de fallas transitorias vs. no transitorias
       (RF-D016: 1 reintento automático, luego error explícito no punitivo) como un
       interceptor/wrapper reutilizable en
       `app/src/main/kotlin/com/ecosmart/infrastructure/network/BackendConfianzaClient.kt`
-- [ ] T049 [P] Agregar el ping best-effort de calentamiento (RF-079/RF-D015) a
+- [X] T049 [P] Agregar el ping best-effort de calentamiento (RF-079/RF-D015) a
       `/health` del backend antes de los flujos de Caminar, Reciclar y Reutilizar, en
       `app/src/main/kotlin/com/ecosmart/application/activity/RegistrarCaminata.kt` y
       `app/src/main/kotlin/com/ecosmart/application/activity/VerificarFotoConIA.kt`
-- [ ] T050 [P] Implementar la escritura informativa de `permisosDispositivo/{dispositivoId}_{tipo}`
+- [X] T050 [P] Implementar la escritura informativa de `permisosDispositivo/{dispositivoId}_{tipo}`
       (RF-D009, el cliente escribe directamente) en
       `app/src/main/kotlin/com/ecosmart/infrastructure/persistence/PermisoRepositoryImpl.kt`
-- [ ] T051 [P] Actualizar `PasosDelDiaRepositoryImpl` para sincronizar `pasosHoy` a
-      Firestore vía el `BackendConfianzaClient` en cada actualización (RF-D007),
-      conservando el cálculo de línea base del sensor como detalle 100% local, en
+      (depende de T011e)
+- [X] T051 [P] Actualizar `PasosDelDiaRepositoryImpl` para sincronizar `pasosHoy` a
+      Firestore llamando a `BackendConfianzaClient.actualizarPasosDelDia(...)` en cada
+      actualización (RF-D007), conservando el cálculo de línea base del sensor como
+      detalle 100% local, en
       `app/src/main/kotlin/com/ecosmart/infrastructure/sensors/PasosDelDiaRepositoryImpl.kt`
+      (depende de T036b)
 - [ ] T052 Ejecutar la guía completa de validación de `quickstart.md` (§6, §7, §8) de
       punta a punta contra el emulador antes de dar por cerrado el módulo
-- [ ] T053 [P] Actualizar `001-ecosmart-mvp/data-model.md` y
+- [X] T052a [P] Marcar `@Deprecated` `UsuarioDao`/`RegistroVerificacionDao` y actualizar
+      el comentario de `AppDatabase.kt` aclarando que quedan sin uso de negocio tras la
+      migración (RF-D006: Room nunca llegó a implementarse como caché activo en este
+      módulo, evitar código muerto sin señalizar — Principio V), en
+      `app/src/main/kotlin/com/ecosmart/infrastructure/persistence/room/AppDatabase.kt`
+- [X] T053 [P] Actualizar `001-ecosmart-mvp/data-model.md` y
       `001-ecosmart-mvp/research.md` con una nota de "Superado por spec 002" en las
       secciones de Room/JWE que este módulo reemplaza, para que no describan un
       comportamiento ya no vigente

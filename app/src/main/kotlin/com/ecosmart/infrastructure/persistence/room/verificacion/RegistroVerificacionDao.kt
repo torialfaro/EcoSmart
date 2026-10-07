@@ -4,6 +4,8 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
 
+/** @see com.ecosmart.infrastructure.persistence.room.AppDatabase para el porqué del `@Deprecated`. */
+@Deprecated("Sin uso de negocio tras spec 002-firestore-datos-usuario; solo lo lee MigracionDatosLocales (T043).")
 @Dao
 interface RegistroVerificacionDao {
 

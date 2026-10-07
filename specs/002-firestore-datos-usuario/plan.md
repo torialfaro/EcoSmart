@@ -81,7 +81,7 @@ Authentication como Infraestructura autoritativa, motivada por este mismo módul
 |---|-----------|--------|------------------------------|
 | I | La Especificación Manda (NON-NEGOTIABLE) | ✅ PASS | Cada decisión de este plan traza a un RF-D/SC-D/Clarification numerado de `spec.md`; ninguna pieza nueva (backend de confianza, Reglas de Seguridad, migración) carece de requisito que la respalde. |
 | II | Restricción Estricta de Fases (NON-NEGOTIABLE) | ✅ PASS | Este comando solo produce `plan.md`, `research.md`, `data-model.md`, `contracts/`, `quickstart.md`; no se escribió código fuente de la app ni del backend. |
-| III | Modelado de Dominio con POO Real | ✅ PASS | Las reglas de negocio ricas ya definidas en spec 001 (`Usuario.nivel()`, `sumarPuntos()`, `registrarActividadAprobadaHoy()`, `RegistroVerificacion.esDuplicadoDe()`) se **trasladan** al backend de confianza sin reescribirse como lógica anémica de endpoint — ver data-model.md §2 nota de "Reglas de negocio". |
+| III | Modelado de Dominio con POO Real | ⚠ REIMPLEMENTACIÓN CONTROLADA | Las reglas de negocio ricas ya definidas en spec 001 (`Usuario.nivel()`, `sumarPuntos()`, `registrarActividadAprobadaHoy()`, `RegistroVerificacion.esDuplicadoDe()`, `AplicarTopeDiario`) DEBEN **reimplementarse** en Python dentro del backend de confianza (`backend/app/puntos.py`) — el Kotlin de spec 001 no ejecuta dentro de FastAPI, por lo que no hay un "traslado sin reescritura" literal. Para evitar divergencia entre ambas implementaciones (Principio V, "lógica de negocio duplicada en más de un lugar"), T011d (`tasks.md`) exige un test de paridad que corra los mismos casos de tope diario/racha/nivel/duplicado contra el dominio Kotlin de spec 001 y la reimplementación Python de este módulo. |
 | IV | Separación Estricta de Capas | ✅ PASS | Firestore/Firebase Authentication son Infraestructura (constitution.md v2.0.0); el backend de confianza es también Infraestructura (adaptador externo), nunca Dominio. El cliente Android no gana ninguna lógica de negocio nueva: solo construye requests hacia el backend de confianza y lee Firestore. |
 | V | Calidad y Claridad de Código | ✅ PASS | Los 3 endpoints nuevos (`contracts/openapi.yaml`) tienen responsabilidad única cada uno (research.md §4); ninguno mezcla "hablar con Gemini" con "otorgar puntos". |
 | VI | Tipado y Valores Cerrados (Enums) | ✅ PASS | `data-model.md` reusa los mismos enums de spec 001 (`CategoriaActividad`, `ResultadoVerificacion`, `TipoPermiso`, `EstadoPermiso`) serializados como `string` en Firestore/JSON, sin introducir valores libres nuevos. |
@@ -98,7 +98,9 @@ efímero (RF-D006, research.md §6), consistente con el Principio IV enmendado.
 diseño de colecciones y Reglas de Seguridad (data-model.md §6, contracts/firestore.rules)
 no introdujo ninguna necesidad de lógica de negocio en el cliente ni en Firestore mismo
 (las reglas son control de acceso, no reglas de negocio); toda regla de negocio sigue
-viviendo en el backend de confianza, trasladada 1:1 desde el dominio de spec 001.
+viviendo en el backend de confianza, **reimplementada** a partir del dominio de spec 001
+y validada contra él mediante un test de paridad (T011d, ver corrección de Principio III
+arriba).
 
 ## Project Structure
 
@@ -134,6 +136,8 @@ app/src/main/kotlin/com/ecosmart/
 │   ├── firebase/                    # NUEVO paquete de este módulo
 │   │   ├── FirebaseAuthModule.kt      # Hilt: provee FirebaseAuth
 │   │   ├── FirestoreModule.kt         # Hilt: provee FirebaseFirestore
+│   │   └── DispositivoIdProvider.kt   # Identificador estable de instalación (RF-D009/caminar)
+│   ├── network/
 │   │   └── BackendConfianzaClient.kt  # Retrofit: consume contracts/openapi.yaml (este módulo)
 │   ├── persistence/room/            # Pasa a rol de caché reconstruible (RF-D006);
 │   │                                 #   sin nuevas entidades de negocio en este módulo

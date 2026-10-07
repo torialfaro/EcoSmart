@@ -32,8 +32,12 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ecosmart.application.activity.RegistrarCaminata
 import com.ecosmart.application.permission.EvaluarEstadoPermiso
 import com.ecosmart.domain.valueobject.TipoPermiso
+import com.ecosmart.infrastructure.firebase.DispositivoIdProvider
+import com.ecosmart.infrastructure.network.BackendConfianzaClient
+import com.ecosmart.infrastructure.network.SolicitudCaminarDto
 import com.ecosmart.infrastructure.sensors.CaminataEnCursoStore
 import com.ecosmart.infrastructure.sensors.CaminataService
 import com.ecosmart.infrastructure.sensors.EstadoCaminata
@@ -50,18 +54,28 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import retrofit2.HttpException
 import javax.inject.Inject
 
 private const val METROS_POR_PASO = 0.75
 private const val META_PASOS_POR_DEFECTO = 1000
+private const val MENSAJE_CAMINATA_ACTIVA_EN_OTRO_DISPOSITIVO =
+    "Ya tenés una caminata en curso en otro de tus dispositivos. Esperá a que termine o a que " +
+        "venza a medianoche para iniciar una nueva acá."
+private const val MENSAJE_ERROR_GENERICO_INICIAR = "No pudimos iniciar la caminata. Probá de nuevo en un momento."
 
-private data class EntradasLocales(val metaPasos: Int = META_PASOS_POR_DEFECTO, val sinPodometro: Boolean = false)
+private data class EntradasLocales(
+    val metaPasos: Int = META_PASOS_POR_DEFECTO,
+    val sinPodometro: Boolean = false,
+    val mensajeError: String? = null,
+)
 
 data class VerificacionCaminataUiState(
     val metaPasos: Int = META_PASOS_POR_DEFECTO,
     val sinPodometro: Boolean = false,
     val estado: EstadoCaminata = EstadoCaminata.Ninguna,
     val actividadId: String = "",
+    val mensajeError: String? = null,
 )
 
 /**
@@ -78,17 +92,22 @@ class VerificacionCaminataViewModel @Inject constructor(
     private val store: CaminataEnCursoStore,
     private val sesionUsuario: SesionUsuario,
     private val evaluarEstadoPermiso: EvaluarEstadoPermiso,
+    private val backendConfianzaClient: BackendConfianzaClient,
+    private val dispositivoIdProvider: DispositivoIdProvider,
+    private val registrarCaminata: RegistrarCaminata,
 ) : ViewModel() {
 
     private val actividadId = checkNotNull(savedStateHandle.get<String>("actividadId"))
     private val entradas = MutableStateFlow(EntradasLocales())
 
     val uiState: StateFlow<VerificacionCaminataUiState> = combine(store.estado, entradas) { estado, locales ->
-        VerificacionCaminataUiState(locales.metaPasos, locales.sinPodometro, estado, actividadId)
+        VerificacionCaminataUiState(locales.metaPasos, locales.sinPodometro, estado, actividadId, locales.mensajeError)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), VerificacionCaminataUiState(actividadId = actividadId))
 
     init {
         store.descartarSiVencio()
+        // RF-D015/RF-079: empieza a despertar el backend compartido apenas se abre esta pantalla.
+        viewModelScope.launch { registrarCaminata.precalentarBackend() }
     }
 
     fun ajustarMeta(nuevaMeta: Int) {
@@ -100,7 +119,12 @@ class VerificacionCaminataViewModel @Inject constructor(
         viewModelScope.launch { evaluarEstadoPermiso(TipoPermiso.PODOMETRO, concedido) }
     }
 
-    /** RF-021/RF-082 — al presionar "Realizar" la caminata sigue en segundo plano hasta llegar a la meta. */
+    /**
+     * RF-021/RF-082 — al presionar "Realizar" se avisa primero al backend de confianza
+     * (RF-D008: arbitra `caminataEnCurso` entre dispositivos de la misma cuenta) antes de
+     * arrancar el seguimiento local; si ya hay una caminata activa en otro dispositivo, el
+     * backend responde `409` y se lo comunicamos sin tono punitivo (Principio IX).
+     */
     fun iniciarCaminata() {
         if (!podometroProvider.hayPodometro()) {
             entradas.value = entradas.value.copy(sinPodometro = true)
@@ -109,7 +133,27 @@ class VerificacionCaminataViewModel @Inject constructor(
         val usuarioId = sesionUsuario.usuarioActualId.value?.valor ?: return
         val meta = entradas.value.metaPasos
         if (meta <= 0) return
-        if (store.iniciar(usuarioId, actividadId, meta)) CaminataService.iniciar(context)
+        entradas.value = entradas.value.copy(mensajeError = null)
+        viewModelScope.launch {
+            try {
+                backendConfianzaClient.iniciarOActualizarCaminata(
+                    SolicitudCaminarDto(
+                        accion = "INICIAR",
+                        actividadId = actividadId,
+                        metaPasos = meta,
+                        dispositivoId = dispositivoIdProvider.dispositivoId,
+                    ),
+                )
+                if (store.iniciar(usuarioId, actividadId, meta)) CaminataService.iniciar(context)
+            } catch (error: HttpException) {
+                val mensaje = if (error.code() == 409) {
+                    MENSAJE_CAMINATA_ACTIVA_EN_OTRO_DISPOSITIVO
+                } else {
+                    MENSAJE_ERROR_GENERICO_INICIAR
+                }
+                entradas.value = entradas.value.copy(mensajeError = mensaje)
+            }
+        }
     }
 
     /** Cierra el resultado ya mostrado ("Aprobado") para poder iniciar otra caminata. */
@@ -172,6 +216,9 @@ fun VerificacionCaminataScreen(
                     Text(text = "Meta: ${uiState.metaPasos} pasos", style = MaterialTheme.typography.titleLarge)
                     if (uiState.sinPodometro) {
                         Text("Este dispositivo no tiene podómetro, así que no podemos contar tus pasos.")
+                    }
+                    uiState.mensajeError?.let { mensajeError ->
+                        Text(mensajeError, color = MaterialTheme.colorScheme.error)
                     }
                     OutlinedTextField(
                         value = uiState.metaPasos.toString(),

@@ -5,7 +5,9 @@ import com.ecosmart.domain.repository.UsuarioRepository
 import com.ecosmart.domain.valueobject.ActividadId
 import com.ecosmart.domain.valueobject.CategoriaActividad
 import com.ecosmart.domain.valueobject.UsuarioId
+import com.ecosmart.infrastructure.network.BackendConfianzaClient
 import com.ecosmart.infrastructure.network.EcoGptClient
+import com.ecosmart.infrastructure.network.RegistroVerificacionOtorgadoDto
 import com.ecosmart.infrastructure.network.VeredictoEcoGptDto
 import com.ecosmart.infrastructure.security.CalculadorHuellaPerceptual
 import io.mockk.coEvery
@@ -19,12 +21,14 @@ import java.net.SocketTimeoutException
 class VerificarFotoConIATest {
 
     private val ecoGptClient = mockk<EcoGptClient>()
+    private val backendConfianzaClient = mockk<BackendConfianzaClient>()
     private val registroVerificacionRepository = mockk<RegistroVerificacionRepository>(relaxed = true)
     private val usuarioRepository = mockk<UsuarioRepository>(relaxed = true)
     private val aplicarTopeDiario = AplicarTopeDiario(registroVerificacionRepository, usuarioRepository)
     private val calculadorHuellaPerceptual = mockk<CalculadorHuellaPerceptual>()
     private val verificarFotoConIA = VerificarFotoConIA(
         ecoGptClient = ecoGptClient,
+        backendConfianzaClient = backendConfianzaClient,
         aplicarTopeDiario = aplicarTopeDiario,
         calculadorHuellaPerceptual = calculadorHuellaPerceptual,
         registroVerificacionRepository = registroVerificacionRepository,
@@ -62,6 +66,14 @@ class VerificarFotoConIATest {
         coEvery {
             ecoGptClient.verificarFotoActividad(any(), any(), any(), any(), any(), any())
         } throws SocketTimeoutException() andThen VeredictoEcoGptDto(veredicto = "APROBADO", motivo = null)
+        coEvery { backendConfianzaClient.otorgarPuntosReciclarReutilizar(any()) } returns RegistroVerificacionOtorgadoDto(
+            id = "registro-1",
+            resultado = "APROBADO",
+            puntosOtorgados = 50,
+            puntosHistoricosActualizados = 150,
+            rachaActual = 2,
+            nivel = "SEMILLA",
+        )
 
         val resultado = verificarFotoConIA(datos)
 

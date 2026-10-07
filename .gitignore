@@ -32,3 +32,7 @@ backend/.venv/
 backend/__pycache__/
 backend/**/__pycache__/
 backend/.env
+
+# Firebase (spec 002-firestore-datos-usuario) — credenciales reales del proyecto,
+# nunca se commitean (ver quickstart.md §2 de ese módulo; usar google-services.json.example)
+app/google-services.json

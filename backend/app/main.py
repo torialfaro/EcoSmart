@@ -19,12 +19,14 @@ from fastapi.responses import JSONResponse
 
 from .ecogpt import GeminiVeredictoInvalidoError, verificar_con_ia
 from .imagenes import ImagenNoSoportadaError, preparar_imagen
+from .puntos import router as puntos_router
 from .schemas import ErrorEcoGpt, VeredictoEcoGpt
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("ecogpt")
 
 app = FastAPI(title="EcoGPT", version="1.0.0")
+app.include_router(puntos_router)  # T011, spec 002-firestore-datos-usuario
 
 CATEGORIAS_VALIDAS = {"RECICLAR", "REUTILIZAR"}
 

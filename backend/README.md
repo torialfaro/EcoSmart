@@ -70,6 +70,18 @@ empieza a devolver error 429.
 4. Verificar que está vivo: `curl https://ecosmart-ecogpt.onrender.com/health`
    → `{"estado":"ok"}`.
 
+## 3.1. Variables de entorno nuevas (spec 002-firestore-datos-usuario)
+
+El backend se extiende con endpoints que escriben en Firestore a nombre del usuario
+autenticado (ver `../specs/002-firestore-datos-usuario/research.md` §1/§3 y
+`quickstart.md` §2/§5). Requieren 2 variables adicionales en `.env` (desarrollo local) o
+en las Environment Variables de Render (producción):
+
+| Variable | Desarrollo local | Producción (Render) |
+|---|---|---|
+| `FIREBASE_SERVICE_ACCOUNT_JSON` | Ruta al JSON de la cuenta de servicio descargado de Firebase Console (Project Settings → Service Accounts) | Mismo contenido, cargado como variable/secret file de Render — nunca commiteado |
+| `FIRESTORE_EMULATOR_HOST` | `localhost:8080` (apunta al emulador, ver quickstart.md §4) | **Ausente** — producción usa el Firestore real del proyecto |
+
 ### ⚠️ Riesgo del free tier de Render: cold start vs. timeout de 30s
 
 El plan free de Render "duerme" el servicio tras ~15 minutos sin tráfico.

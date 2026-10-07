@@ -12,6 +12,7 @@ plugins {
     alias(libs.plugins.hilt)
     alias(libs.plugins.ktlint)
     alias(libs.plugins.detekt)
+    alias(libs.plugins.google.services) // T002, spec 002-firestore-datos-usuario — requiere app/google-services.json
 }
 
 // T003 — secretos locales leídos de local.properties (NUNCA committeado,
@@ -168,6 +169,16 @@ dependencies {
     implementation(libs.nimbus.jose.jwt)
     implementation(libs.androidx.security.crypto)
 
+    // Firebase (T002, spec 002-firestore-datos-usuario) — Firestore + Authentication,
+    // ver 002-firestore-datos-usuario/research.md §0/§2
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.auth.ktx)
+    implementation(libs.firebase.firestore.ktx)
+    implementation(libs.play.services.auth)
+    // Ver nota de "guava" en gradle/libs.versions.toml — gana la resolución de conflictos
+    // frente al jar vacío que gRPC (dependencia de Firestore) deja en su lugar.
+    implementation(libs.guava)
+
     // Tests unitarios (dominio/aplicación — sin Android)
     testImplementation(libs.junit5.api)
     testRuntimeOnly(libs.junit5.engine)
@@ -185,6 +196,16 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     androidTestImplementation(libs.androidx.room.testing)
     androidTestImplementation(libs.okhttp.mockwebserver)
+}
+
+// Fuerza la variante Android real de Guava en todo el árbol de dependencias — sin esto,
+// gRPC (traído por Firestore) puede ganar la resolución de conflictos y dejar el jar vacío
+// `com.google.guava:listenablefuture:1.0` en su lugar, rompiendo a CameraX (ver nota en
+// gradle/libs.versions.toml).
+configurations.all {
+    resolutionStrategy {
+        force(libs.guava.get())
+    }
 }
 
 // T004 — ktlint/detekt aplicados a este módulo

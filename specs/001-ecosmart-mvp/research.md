@@ -10,6 +10,14 @@ Alternatives considered, según exige la Fase 0 de `/speckit.plan`.
 
 ## 0. Decisión de Arquitectura: ¿EcoSmart necesita un backend propio?
 
+> **Superado por spec 002** (`002-firestore-datos-usuario`): esta sección documenta la
+> decisión original "100% local-first" del MVP. Spec 002 la revirtió deliberadamente para
+> datos de usuario (perfil/historial/puntaje): hoy Firestore es la fuente de verdad y un
+> backend de confianza (extensión de este mismo servicio EcoGPT) otorga los puntos — ver
+> `002-firestore-datos-usuario/research.md` §0 y §1 para el razonamiento de ese cambio.
+> Room queda relegado a catálogos de solo lectura (Actividades, Puntos Verdes) y al
+> puente de migración única de cuentas pre-Firestore (RF-D011).
+
 **Decision**: No. EcoSmart MVP es una arquitectura **local-first**: Room es
 la única base de datos, y el dispositivo es la única fuente de verdad de
 los datos del usuario. Las únicas dependencias de red son servicios de
@@ -323,6 +331,12 @@ resolverse localmente).
 ---
 
 ## 4. Cifrado Reversible de Contraseñas (JWK/JWE) y Gestión de Claves
+
+> **Superado por spec 002** (`002-firestore-datos-usuario`, RF-D002): las contraseñas ya
+> no se cifran ni se guardan en ningún lado controlado por la app — se delegan
+> íntegramente a Firebase Authentication. El esquema JWK/JWE + Android Keystore
+> documentado en esta sección describe el diseño original de spec 001 y ya no está
+> vigente en el código (`ContrasenaCifrada` queda con un valor centinela vacío).
 
 **Decision**: librería **Nimbus JOSE+JWT** (`com.nimbusds:nimbus-jose-jwt`,
 pura JVM/Kotlin, funciona sin cambios en Android) para representar la clave

@@ -1,6 +1,9 @@
 package com.ecosmart.infrastructure.di
 
 import com.ecosmart.app.BuildConfig
+import com.ecosmart.infrastructure.firebase.FirebaseIdTokenInterceptor
+import com.ecosmart.infrastructure.network.BackendConfianzaClient
+import com.ecosmart.infrastructure.network.BackendConfianzaClientConReintento
 import com.ecosmart.infrastructure.network.EcoGptClient
 import com.squareup.moshi.Moshi
 import dagger.Module
@@ -53,7 +56,7 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideEcoGptOkHttpClient(): OkHttpClient {
+    fun provideEcoGptOkHttpClient(firebaseIdTokenInterceptor: FirebaseIdTokenInterceptor): OkHttpClient {
         val loggingInterceptor = HttpLoggingInterceptor().apply {
             level = if (BuildConfig.DEBUG) {
                 HttpLoggingInterceptor.Level.BASIC
@@ -66,6 +69,10 @@ object NetworkModule {
             .connectTimeout(ECOGPT_TIMEOUT)
             .readTimeout(ECOGPT_TIMEOUT)
             .writeTimeout(ECOGPT_TIMEOUT)
+            // T012/T014, spec 002-firestore-datos-usuario — agrega Authorization: Bearer
+            // <idToken> para los endpoints nuevos del mismo backend (BackendConfianzaClient);
+            // no afecta a EcoGptClient, que sigue autenticando con X-EcoGPT-Api-Key.
+            .addInterceptor(firebaseIdTokenInterceptor)
             .addInterceptor(loggingInterceptor)
             .build()
     }
@@ -83,4 +90,15 @@ object NetworkModule {
     @Singleton
     fun provideEcoGptClient(retrofit: Retrofit): EcoGptClient =
         retrofit.create(EcoGptClient::class.java)
+
+    /**
+     * T014 — mismo backend/base URL que EcoGPT (research.md §1 de spec
+     * 002-firestore-datos-usuario: se extiende el servicio ya existente, no uno nuevo),
+     * por eso reutiliza el mismo [Retrofit] en vez de un módulo/qualifier separado como
+     * [PuntosVerdesNetworkModule].
+     */
+    @Provides
+    @Singleton
+    fun provideBackendConfianzaClient(retrofit: Retrofit): BackendConfianzaClient =
+        BackendConfianzaClientConReintento(retrofit.create(BackendConfianzaClient::class.java))
 }

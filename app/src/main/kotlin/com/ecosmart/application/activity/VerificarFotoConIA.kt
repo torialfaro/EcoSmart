@@ -8,8 +8,10 @@ import com.ecosmart.domain.valueobject.RegistroVerificacionId
 import com.ecosmart.domain.valueobject.ResultadoVerificacion
 import com.ecosmart.domain.valueobject.UsuarioId
 import com.ecosmart.infrastructure.di.EcoGptApiKey
+import com.ecosmart.infrastructure.network.BackendConfianzaClient
 import com.ecosmart.infrastructure.network.EcoGptClient
 import com.ecosmart.infrastructure.network.EcoGptResponseMapper
+import com.ecosmart.infrastructure.network.SolicitudRegistroReciclarReutilizarDto
 import com.ecosmart.infrastructure.security.CalculadorHuellaPerceptual
 import kotlinx.coroutines.delay
 import okhttp3.MediaType.Companion.toMediaType
@@ -64,6 +66,7 @@ sealed class ResultadoVerificarFotoConIA {
  */
 class VerificarFotoConIA @Inject constructor(
     private val ecoGptClient: EcoGptClient,
+    private val backendConfianzaClient: BackendConfianzaClient,
     private val aplicarTopeDiario: AplicarTopeDiario,
     private val calculadorHuellaPerceptual: CalculadorHuellaPerceptual,
     private val registroVerificacionRepository: RegistroVerificacionRepository,
@@ -113,15 +116,42 @@ class VerificarFotoConIA @Inject constructor(
         }
 
         val resultado = EcoGptResponseMapper.desde(respuesta)
-        val registro = aplicarTopeDiario.registrarResultado(
+
+        // RF-D014/RF-D015 (spec 002-firestore-datos-usuario): el cliente NUNCA escribe
+        // puntosHistoricos/rachaActual/resultado directamente — el backend de confianza
+        // es el único autorizado, tras revalidar tope diario y duplicados del lado del
+        // servidor (reimplementación en backend/app/puntos.py, ver T011a/T011c).
+        val otorgado = try {
+            backendConfianzaClient.otorgarPuntosReciclarReutilizar(
+                SolicitudRegistroReciclarReutilizarDto(
+                    actividadId = datos.actividadId.valor,
+                    categoria = datos.categoria.name,
+                    fecha = LocalDate.now().toString(),
+                    resultado = resultado.name,
+                    motivoIA = respuesta.motivo,
+                    huellaImagen = huellaNueva,
+                ),
+            )
+        } catch (errorHttp: HttpException) {
+            // 409 cubre tanto tope diario como foto duplicada revalidados server-side
+            // (el pre-filtro local de arriba ya descartó la mayoría de estos casos;
+            // esto solo dispara ante una carrera entre dos dispositivos de la misma
+            // cuenta). Se reutiliza TopeDiarioAlcanzado como resultado más cercano ya
+            // modelado — no penaliza al usuario, que es lo que importa (Principio IX).
+            if (errorHttp.code() == 409) return ResultadoVerificarFotoConIA.TopeDiarioAlcanzado
+            return ResultadoVerificarFotoConIA.ErrorEcoGpt(errorHttp.message() ?: "Error del servidor al otorgar puntos.")
+        }
+
+        val registro = RegistroVerificacion(
+            id = RegistroVerificacionId(otorgado.id),
             usuarioId = datos.usuarioId,
             actividadId = datos.actividadId,
             categoria = datos.categoria,
+            fecha = LocalDate.now(),
             resultado = resultado,
             motivoIA = respuesta.motivo,
+            puntosOtorgados = otorgado.puntosOtorgados,
             huellaImagen = huellaNueva,
-            pasosRegistrados = null,
-            cantidadParaPuntaje = 1,
         )
         return ResultadoVerificarFotoConIA.Completado(registro)
     }

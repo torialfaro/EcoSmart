@@ -197,6 +197,15 @@ enum class NivelUsuario(val puntosMinimos: Int) {
 
 ## 4. Mapeo a Room
 
+> **Superado por spec 002** (`002-firestore-datos-usuario`): `UsuarioRoomEntity`
+> (incluida la columna `contrasenaCifradaJwe`) y `RegistroVerificacionRoomEntity`,
+> junto con sus DAOs (`UsuarioDao`, `RegistroVerificacionDao`, hoy `@Deprecated` en
+> código), ya no son la fuente de verdad de perfil/historial/puntaje — eso vive en
+> Firestore. Quedan en el código únicamente como puente de lectura de
+> `MigracionDatosLocales` (subida única de cuentas pre-Firestore, RF-D011 de spec 002).
+> `ActividadRoomEntity`, `PuntoVerdeRoomEntity` y `PermisoDispositivoRoomEntity` NO están
+> afectadas: siguen vigentes tal cual se documentan abajo.
+
 Cada entidad de dominio tiene su contraparte `@Entity` en
 `infrastructure/persistence/room`, más un `*Mapper` (`toDomain()` /
 `toRoomEntity()`) — el dominio nunca importa `androidx.room.*`.

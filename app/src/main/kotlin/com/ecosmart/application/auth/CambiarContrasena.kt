@@ -1,10 +1,11 @@
 package com.ecosmart.application.auth
 
-import com.ecosmart.domain.repository.UsuarioRepository
-import com.ecosmart.domain.valueobject.ContrasenaCifrada
 import com.ecosmart.domain.valueobject.UsuarioId
 import com.ecosmart.domain.valueobject.esContrasenaValida
-import com.ecosmart.infrastructure.security.CifradorContrasena
+import com.google.firebase.auth.EmailAuthProvider
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
+import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 sealed class ResultadoCambioContrasena {
@@ -13,28 +14,35 @@ sealed class ResultadoCambioContrasena {
     data object NuevaContrasenaInvalida : ResultadoCambioContrasena()
 }
 
-/** US3 — cambio de contraseña exigiendo la actual (RF-008, RNF-006). */
+/**
+ * US3 — cambio de contraseña exigiendo la actual (RF-008). RF-D002 (spec
+ * 002-firestore-datos-usuario): delega íntegramente en Firebase Authentication —
+ * reautentica con la contraseña actual (reemplaza a `CifradorContrasena.coincide`) y
+ * actualiza con `FirebaseUser.updatePassword`, sin que Firestore vea ninguna forma de
+ * la contraseña en ningún momento.
+ */
 class CambiarContrasena @Inject constructor(
-    private val usuarioRepository: UsuarioRepository,
-    private val cifradorContrasena: CifradorContrasena,
+    private val firebaseAuth: FirebaseAuth,
 ) {
     suspend operator fun invoke(
         usuarioId: UsuarioId,
         contrasenaActual: String,
         contrasenaNueva: String,
     ): ResultadoCambioContrasena {
-        val usuario = requireNotNull(usuarioRepository.buscarPorId(usuarioId)) {
-            "Usuario $usuarioId no encontrado"
-        }
-
-        val coincide = cifradorContrasena.coincide(contrasenaActual, usuario.contrasenaCifrada.jweCompacto)
-        if (!coincide) return ResultadoCambioContrasena.ContrasenaActualIncorrecta
         if (!esContrasenaValida(contrasenaNueva)) return ResultadoCambioContrasena.NuevaContrasenaInvalida
 
-        val actualizado = usuario.copy(
-            contrasenaCifrada = ContrasenaCifrada(cifradorContrasena.cifrar(contrasenaNueva)),
-        )
-        usuarioRepository.guardar(actualizado)
+        val usuarioFirebase = firebaseAuth.currentUser
+            ?: return ResultadoCambioContrasena.ContrasenaActualIncorrecta
+        val email = usuarioFirebase.email ?: return ResultadoCambioContrasena.ContrasenaActualIncorrecta
+
+        try {
+            usuarioFirebase.reauthenticate(EmailAuthProvider.getCredential(email, contrasenaActual)).await()
+        } catch (credencialesInvalidas: FirebaseAuthInvalidCredentialsException) {
+            return ResultadoCambioContrasena.ContrasenaActualIncorrecta
+        }
+
+        usuarioFirebase.updatePassword(contrasenaNueva).await()
         return ResultadoCambioContrasena.Exitoso
     }
 }
+

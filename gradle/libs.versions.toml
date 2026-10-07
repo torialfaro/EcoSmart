@@ -31,6 +31,16 @@ osmdroid = "6.1.20"
 nimbusJoseJwt = "9.40"
 securityCrypto = "1.1.0-alpha06"
 
+# Firebase (T001, spec 002-firestore-datos-usuario) — ver research.md §2 de ese módulo
+firebaseBom = "33.5.1"
+playServicesAuth = "21.3.0"
+# Forzada explícitamente (no solo transitiva): Firestore trae gRPC, que en resolución de
+# conflictos puede ganarle a CameraX y dejar el jar vacío `listenablefuture:1.0` en vez del
+# Guava real que CameraX necesita ("Cannot access class ListenableFuture" / "Unresolved
+# reference 'addListener'/'get'" en VerificacionFotoScreen.kt). La variante `-android` es la
+# que corresponde a un proyecto Android (no `-jre`).
+guava = "33.3.1-android"
+
 junit5 = "5.11.0"
 mockk = "1.13.12"
 turbine = "1.1.0"
@@ -43,6 +53,7 @@ espresso = "3.6.1"
 
 ktlint = "12.1.1"
 detekt = "1.23.6"
+googleServices = "4.4.2"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -91,6 +102,15 @@ play-services-location = { group = "com.google.android.gms", name = "play-servic
 kotlinx-coroutines-play-services = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-play-services", version.ref = "kotlinxCoroutines" }
 osmdroid-android = { group = "org.osmdroid", name = "osmdroid-android", version.ref = "osmdroid" }
 
+# Firebase (T001, spec 002-firestore-datos-usuario) — BoM gestiona las versiones de los
+# módulos de abajo, por eso no tienen version.ref propio (mismo patrón que composeBom).
+firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
+firebase-auth-ktx = { group = "com.google.firebase", name = "firebase-auth-ktx" }
+firebase-firestore-ktx = { group = "com.google.firebase", name = "firebase-firestore-ktx" }
+play-services-auth = { group = "com.google.android.gms", name = "play-services-auth", version.ref = "playServicesAuth" }
+# Ver nota de "guava" en [versions] — resuelve el conflicto Guava/CameraX vs Firestore/gRPC.
+guava = { group = "com.google.guava", name = "guava", version.ref = "guava" }
+
 nimbus-jose-jwt = { group = "com.nimbusds", name = "nimbus-jose-jwt", version.ref = "nimbusJoseJwt" }
 androidx-security-crypto = { group = "androidx.security", name = "security-crypto", version.ref = "securityCrypto" }
 
@@ -111,3 +131,4 @@ ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint" }
 detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
+google-services = { id = "com.google.gms.google-services", version.ref = "googleServices" }

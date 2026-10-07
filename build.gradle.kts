@@ -9,6 +9,7 @@ plugins {
     alias(libs.plugins.hilt) apply false
     alias(libs.plugins.ktlint) apply false
     alias(libs.plugins.detekt) apply false
+    alias(libs.plugins.google.services) apply false // T002, spec 002-firestore-datos-usuario
 }
 
 tasks.register("clean", Delete::class) {

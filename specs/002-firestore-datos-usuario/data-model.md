@@ -57,23 +57,24 @@ Equivalente remoto de `RegistroVerificacion` (`001-ecosmart-mvp/data-model.md` �
 
 | Campo | Tipo Firestore | Quién escribe | Notas |
 |---|---|---|---|
-| `actividadId` | `string` | Cliente Android (al crear) | referencia al catálogo estático de Actividades (fuera de alcance, sigue local/empaquetado) |
-| `categoria` | `string` | Cliente Android | nombre del enum `CategoriaActividad` |
-| `fecha` | `string` | Cliente Android | ISO-8601 `LocalDate`, fecha local del dispositivo (RF-057 de spec 001, sin cambios) |
+| `actividadId` | `string` | Cliente Android (vía endpoint, nunca escritura directa de Firestore) | referencia al catálogo estático de Actividades (fuera de alcance, sigue local/empaquetado) |
+| `categoria` | `string` | Cliente Android (vía endpoint) | nombre del enum `CategoriaActividad` |
+| `fecha` | `string` | Cliente Android (vía endpoint) | ISO-8601 `LocalDate`, fecha local del dispositivo (RF-057 de spec 001, sin cambios) |
 | `resultado` | `string` | **Solo backend de confianza** (RF-D014) | nombre del enum `ResultadoVerificacion` |
 | `motivoIA` | `string \| null` | **Solo backend de confianza** | motivo devuelto por EcoGPT, reenviado por el cliente al endpoint nuevo |
 | `puntosOtorgados` | `number` (int) | **Solo backend de confianza** (RF-D014) | 0 salvo `resultado == APROBADO` |
-| `huellaImagen` | `string \| null` | Cliente Android (al crear) | hash perceptual, usado por el backend para `esDuplicadoDe()` antes de otorgar puntos |
-| `pasosRegistrados` | `number \| null` | Cliente Android (al crear) | solo para `categoria == CAMINAR` |
+| `huellaImagen` | `string \| null` | Cliente Android (vía endpoint) | hash perceptual, usado por el backend para `esDuplicadoDe()` antes de otorgar puntos |
+| `pasosRegistrados` | `number \| null` | Cliente Android (vía endpoint) | solo para `categoria == CAMINAR` |
 | `creadoEn` | `timestamp` (servidor) | Firestore (`serverTimestamp()`) | usado para ordenar "últimos 3" (RF-041/042 de spec 001, ver RF-D003) |
 
-**Nota de escritura en dos pasos**: el documento se crea en estado "pendiente" por el
-cliente (campos de evidencia: `actividadId`, `categoria`, `fecha`, `huellaImagen`,
-`pasosRegistrados`) y el backend de confianza lo completa (`resultado`,
-`puntosOtorgados`, `motivoIA`) en la misma operación en la que actualiza
-`puntosHistoricos`/`rachaActual`/`nivel` del documento padre — ambas escrituras ocurren
-en una única transacción de Firestore para que nunca quede un registro con puntos
-otorgados sin el incremento correspondiente en el perfil, ni viceversa.
+**Nota de escritura**: el cliente **nunca** crea el documento `registrosVerificacion`
+directamente en Firestore — envía toda la evidencia (`actividadId`, `categoria`,
+`fecha`, `huellaImagen`, `pasosRegistrados`) al endpoint correspondiente del backend de
+confianza (`contracts/openapi.yaml`), que crea el documento completo (incluyendo
+`resultado`/`puntosOtorgados`/`motivoIA`) y actualiza
+`puntosHistoricos`/`rachaActual`/`nivel` del documento padre en una única transacción de
+Firestore. Esto simplifica las Reglas de Seguridad (`contracts/firestore.rules` ya no
+necesita permitir ninguna escritura de cliente sobre esta subcolección, ver §6).
 
 **Índices compuestos requeridos**: `usuarioId` (impl. por la subcolección) + `categoria` +
 `fecha` (para `contarAprobadosDelDia`, tope diario RF-032/033/035 de spec 001) y
@@ -129,8 +130,7 @@ por el backend de confianza.
 |---|---|---|
 | `usuarios/{uid}` — campos de perfil editable (nombre, barrio, teléfono, categorías) | ✅ solo su propio `uid` | ✅ |
 | `usuarios/{uid}` — `puntosHistoricos`, `rachaActual`, `nivel`, `pasosHoy`, `pasosHoyFecha`, `ultimaActividadAprobadaEn` | ❌ (RF-D014) | ✅ |
-| `registrosVerificacion/{id}` — campos de evidencia (`actividadId`, `categoria`, `fecha`, `huellaImagen`, `pasosRegistrados`) | ✅ solo creación, solo su propio `uid` | ✅ |
-| `registrosVerificacion/{id}` — `resultado`, `puntosOtorgados`, `motivoIA` | ❌ (RF-D014) | ✅ |
+| `registrosVerificacion/{id}` — todos los campos (`actividadId`, `categoria`, `fecha`, `huellaImagen`, `pasosRegistrados`, `resultado`, `puntosOtorgados`, `motivoIA`) | ❌ (el cliente envía la evidencia vía endpoint; nunca escribe el documento directamente, ver §3) | ✅ |
 | `caminataEnCurso/actual` | ❌ (RF-D008: toda la escritura pasa por transacción del backend) | ✅ |
 | `permisosDispositivo/{id}` | ✅ solo su propio `uid` | ✅ |
 | Cualquier documento bajo `usuarios/{otroUid}` | ❌ siempre (RF-D010) | ✅ (Admin SDK bypassa las reglas) |

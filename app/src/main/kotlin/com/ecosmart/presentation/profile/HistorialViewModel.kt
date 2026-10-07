@@ -30,11 +30,23 @@ class HistorialViewModel @Inject constructor(
     val uiState: StateFlow<HistorialUiState> = _uiState.asStateFlow()
 
     init {
+        refrescar()
+    }
+
+    /**
+     * RF-D017 (spec 002-firestore-datos-usuario): sin listener en tiempo real de
+     * Firestore, el historial se recarga bajo demanda al volver a primer plano
+     * (`HistorialScreen`, ON_RESUME) — mismo patrón que `PerfilViewModel.refrescar()`
+     * ya usaba para RF-077 de spec 001.
+     */
+    fun refrescar() {
         viewModelScope.launch {
             val usuarioId = sesionUsuario.usuarioActualId.value ?: return@launch
+            val mostrandoCompleto = _uiState.value.mostrandoCompleto
             _uiState.value = _uiState.value.copy(
                 cargando = false,
                 recientes = obtenerHistorial.recientes(usuarioId),
+                completo = if (mostrandoCompleto) obtenerHistorial.completo(usuarioId) else _uiState.value.completo,
             )
         }
     }

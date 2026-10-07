@@ -10,7 +10,9 @@ import com.ecosmart.application.auth.RegistrarUsuario
 import com.ecosmart.application.auth.ResultadoInicioSesion
 import com.ecosmart.application.auth.ResultadoRegistro
 import com.ecosmart.domain.model.Usuario
+import com.ecosmart.infrastructure.migration.MigracionDatosLocales
 import com.ecosmart.infrastructure.session.SesionUsuario
+import com.google.firebase.FirebaseException
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -38,6 +40,7 @@ class RegistroViewModel @Inject constructor(
     private val iniciarSesionUseCase: IniciarSesion,
     private val iniciarSesionConGoogle: IniciarSesionConGoogle,
     private val sesionUsuario: SesionUsuario,
+    private val migracionDatosLocales: MigracionDatosLocales,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(RegistroUiState())
@@ -78,11 +81,24 @@ class RegistroViewModel @Inject constructor(
 
     private fun enviar(accion: suspend () -> Unit) {
         _uiState.value = _uiState.value.copy(enviando = true, mensajeError = null)
-        viewModelScope.launch { accion() }
+        viewModelScope.launch {
+            try {
+                accion()
+            } catch (errorFirebase: FirebaseException) {
+                // RF-D002 (spec 002-firestore-datos-usuario): errores de Firebase
+                // Authentication no mapeados a un caso puntual de los sealed class de
+                // arriba (sin conexión, demasiados intentos, etc.) — tono no punitivo
+                // (Principio IX), sin exponer detalles técnicos ni crashear el ViewModel.
+                mostrarError("No pudimos completar la acción. Revisá tu conexión y volvé a intentar.")
+            }
+        }
     }
 
-    private fun autenticarEnSesion(usuario: Usuario) {
+    private suspend fun autenticarEnSesion(usuario: Usuario) {
         sesionUsuario.iniciarSesion(usuario.id)
+        // RF-D011: punto de entrada único antes de navegar a Home; una falla acá no debe
+        // bloquear el login, Room queda intacto y se reintenta en el próximo (T043).
+        runCatching { migracionDatosLocales.ejecutarSiCorresponde() }
         _uiState.value = _uiState.value.copy(enviando = false, usuarioAutenticado = usuario)
     }
 

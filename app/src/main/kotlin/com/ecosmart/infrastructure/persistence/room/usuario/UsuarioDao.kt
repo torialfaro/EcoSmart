@@ -6,6 +6,8 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import kotlinx.coroutines.flow.Flow
 
+/** @see com.ecosmart.infrastructure.persistence.room.AppDatabase para el porqué del `@Deprecated`. */
+@Deprecated("Sin uso de negocio tras spec 002-firestore-datos-usuario; solo lo lee MigracionDatosLocales (T043).")
 @Dao
 interface UsuarioDao {
 

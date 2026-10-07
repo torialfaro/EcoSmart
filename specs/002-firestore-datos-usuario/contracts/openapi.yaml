@@ -24,6 +24,8 @@ tags:
     description: Otorgamiento de puntos/racha/nivel, único camino autorizado (RF-D014)
   - name: Migracion
     description: Subida única de datos locales de cuentas existentes de spec 001 (RF-D011)
+  - name: Cuenta
+    description: Eliminación de cuenta y sus datos, inmediata y definitiva (RF-D012)
 
 components:
   securitySchemes:
@@ -138,12 +140,14 @@ paths:
       description: >-
         Implementa RF-D015: extiende a Caminar la misma garantía
         anti-manipulación que ya aplicaba naturalmente a Reciclar/Reutilizar
-        por depender de EcoGPT. Arbitra además `caminataEnCurso` y
-        `pasosHoy` mediante una transacción atómica (RF-D007/RF-D008):
-        rechaza iniciar una segunda caminata activa desde otro dispositivo
-        de la misma cuenta. Aplica la misma mitigación de cold-start que
-        EcoGPT (ping a `/health` + 1 reintento automático, RF-079 de spec
-        001, ya referenciado por RF-D015).
+        por depender de EcoGPT. Arbitra `caminataEnCurso` mediante una
+        transacción atómica (RF-D008): rechaza iniciar una segunda caminata
+        activa desde otro dispositivo de la misma cuenta. El conteo diario
+        de pasos (`pasosHoy`, RF-D007) es un mecanismo distinto — ver
+        `PATCH /pasos-del-dia` más abajo — y no se actualiza desde este
+        endpoint. Aplica la misma mitigación de cold-start que EcoGPT (ping
+        a `/health` + 1 reintento automático, RF-079 de spec 001, ya
+        referenciado por RF-D015).
       requestBody:
         required: true
         content:
@@ -177,6 +181,39 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorBackendConfianza'
 
+  /pasos-del-dia:
+    patch:
+      tags: [Puntos]
+      operationId: actualizarPasosDelDia
+      summary: Sincroniza el conteo diario de pasos del podómetro (telemetría, no otorga puntos)
+      description: >-
+        Implementa RF-D007: el cliente envía el valor de "pasos de hoy" ya
+        calculado localmente (línea base del sensor, detalle 100% local,
+        ver research.md §6) en cada actualización; el backend lo escribe de
+        forma transaccional en `usuarios/{uid}.pasosHoy`/`pasosHoyFecha`
+        para que actualizaciones casi simultáneas desde dos dispositivos no
+        se pisen entre sí. Este endpoint es puramente informativo — nunca
+        otorga puntos por sí solo (eso lo hace `POST /registros-verificacion/caminar`
+        al completar una caminata con meta, RF-D015).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [pasosHoy, fecha]
+              properties:
+                pasosHoy:
+                  type: integer
+                fecha:
+                  type: string
+                  format: date
+      responses:
+        '200':
+          description: Conteo actualizado.
+        '401':
+          description: ID Token ausente, inválido o expirado.
+
   /migracion/subir-datos-locales:
     post:
       tags: [Migracion]
@@ -205,5 +242,22 @@ paths:
       responses:
         '200':
           description: Migración aplicada (o ya existente; ver idempotencia arriba).
+        '401':
+          description: ID Token ausente, inválido o expirado.
+
+  /cuenta:
+    delete:
+      tags: [Cuenta]
+      operationId: eliminarCuenta
+      summary: Elimina la cuenta del usuario autenticado, de forma inmediata y definitiva
+      description: >-
+        Implementa RF-D012. Borra el documento `usuarios/{uid}`, todas sus
+        subcolecciones (registrosVerificacion, caminataEnCurso,
+        permisosDispositivo) y la credencial de Firebase Authentication. Sin
+        período de gracia: la pantalla de confirmación del cliente es la
+        única salvaguarda contra un borrado accidental.
+      responses:
+        '200':
+          description: Cuenta eliminada.
         '401':
           description: ID Token ausente, inválido o expirado.

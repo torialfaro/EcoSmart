@@ -14,22 +14,14 @@ import com.ecosmart.infrastructure.persistence.room.verificacion.RegistroVerific
 import com.ecosmart.infrastructure.persistence.room.verificacion.RegistroVerificacionRoomEntity
 
 /**
- * Base de datos Room de EcoSmart (arquitectura local-first — ver
- * research.md §0: no hay backend propio, Room es la única base de datos).
- *
- * El `entities` se completa incrementalmente a medida que cada Módulo
- * implementa su propia entidad y DAO, per tasks.md:
- *   - Módulo 1 (Login):        UsuarioRoomEntity + UsuarioDao               (T023/T024) ✅
- *   - Módulo 2 (Permisos):     PermisoDispositivoRoomEntity + PermisoDao    (T038) ✅
- *   - Módulo 3 (Home):         ActividadRoomEntity + ActividadDao,
- *                              PuntoVerdeRoomEntity + PuntoVerdeDao         (T047/T057) ✅
- *   - Módulo 4 (Verificación): RegistroVerificacionRoomEntity + RegistroVerificacionDao (T067) ✅
- *
- * Ver data-model.md §4 para el esquema completo de cada entidad. Versión 1
- * sin migraciones todavía (sin release previa publicada — ver
- * data-model.md § Migraciones: cualquier cambio de esquema posterior a la
- * primera release DEBE ir acompañado de una `Migration` explícita, nunca
- * `fallbackToDestructiveMigration` en producción).
+ * Base de datos Room de EcoSmart. Nacida como arquitectura local-first (spec 001,
+ * research.md §0), pero **superada por spec 002-firestore-datos-usuario**: Firestore es
+ * ahora la fuente de verdad de los datos de usuario (perfil, historial, puntaje) y Room
+ * nunca llegó a reimplementarse como caché activo de ese módulo (RF-D006). Quedan:
+ *   - `UsuarioDao`/`RegistroVerificacionDao` (`@Deprecated`): sin uso de negocio, solo
+ *     los lee `MigracionDatosLocales` (T043) para la subida única de cuentas de spec 001.
+ *   - `ActividadDao`/`PuntoVerdeDao`/`PermisoDao`: siguen vigentes (catálogos de solo
+ *     lectura y gating local de permisos, fuera de alcance de spec 002).
  */
 @Database(
     entities = [
@@ -43,9 +35,11 @@ import com.ecosmart.infrastructure.persistence.room.verificacion.RegistroVerific
     exportSchema = true,
 )
 abstract class AppDatabase : RoomDatabase() {
+    @Suppress("DEPRECATION")
     abstract fun usuarioDao(): UsuarioDao
     abstract fun permisoDao(): PermisoDao
     abstract fun actividadDao(): ActividadDao
     abstract fun puntoVerdeDao(): PuntoVerdeDao
+    @Suppress("DEPRECATION")
     abstract fun registroVerificacionDao(): RegistroVerificacionDao
 }

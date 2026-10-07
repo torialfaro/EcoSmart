@@ -18,6 +18,7 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -26,8 +27,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -71,6 +74,11 @@ fun PerfilScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val usuario = uiState.usuario
+
+    // RF-D012: la cuenta eliminada ya no tiene sesión válida, se navega igual que al cerrar sesión.
+    LaunchedEffect(uiState.cuentaEliminada) {
+        if (uiState.cuentaEliminada) onCerrarSesion()
+    }
 
     // Esta pantalla queda viva en el back stack mientras se edita el perfil: se refresca al volver (RF-077).
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -209,8 +217,38 @@ fun PerfilScreen(
             ) {
                 Text("Cerrar sesión")
             }
+            OutlinedButton(
+                onClick = viewModel::solicitarEliminarCuenta,
+                shape = FormaBotonPildora,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text("Eliminar cuenta")
+            }
             Box(modifier = Modifier.size(8.dp))
         }
+    }
+
+    if (uiState.mostrarConfirmacionEliminarCuenta) {
+        AlertDialog(
+            onDismissRequest = viewModel::cancelarEliminarCuenta,
+            title = { Text("¿Eliminar tu cuenta?") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Se borra de inmediato tu perfil, tu historial y tu acceso. No hay forma de deshacerlo.")
+                    uiState.mensajeErrorEliminarCuenta?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = viewModel::confirmarEliminarCuenta, enabled = !uiState.eliminandoCuenta) {
+                    Text("Eliminar")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = viewModel::cancelarEliminarCuenta, enabled = !uiState.eliminandoCuenta) {
+                    Text("Cancelar")
+                }
+            },
+        )
     }
 }
 

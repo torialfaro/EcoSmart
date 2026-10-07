@@ -1,46 +1,41 @@
 package com.ecosmart.infrastructure.session
 
-import android.content.Context
-import androidx.core.content.edit
 import com.ecosmart.domain.valueobject.UsuarioId
-import dagger.hilt.android.qualifiers.ApplicationContext
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
 import javax.inject.Singleton
 
-private const val PREFERENCIAS_SESION = "ecosmart_sesion"
-private const val CLAVE_USUARIO_ID = "usuario_id"
-
 /**
- * Mantiene el ID del usuario autenticado, persistido en SharedPreferences
- * (constitution.md § Stack Tecnológico: "Persistencia Local: Room /
- * SharedPreferences") para que la sesión sobreviva a reinicios de la app —
- * corrección post-QA: antes era solo en memoria y se perdía cada vez que
- * el proceso moría, obligando a un login en cada apertura pese a que
- * RF-010 pide "autenticado hasta que cierre sesión explícitamente", no
- * hasta que el proceso muera.
+ * Expone el `uid` del usuario autenticado (spec 002-firestore-datos-usuario, RF-D005),
+ * reemplazando a las `SharedPreferences` propias de spec 001: `FirebaseAuth` ya persiste
+ * la sesión entre reinicios de la app por sí solo (RF-010/RF-061 quedan satisfechos sin
+ * código adicional acá).
  */
 @Singleton
 class SesionUsuario @Inject constructor(
-    @ApplicationContext context: Context,
+    private val firebaseAuth: FirebaseAuth,
 ) {
-    private val preferencias = context.getSharedPreferences(PREFERENCIAS_SESION, Context.MODE_PRIVATE)
-
-    private val _usuarioActualId = MutableStateFlow(cargarUsuarioIdGuardado())
+    private val _usuarioActualId = MutableStateFlow(firebaseAuth.currentUser?.uid?.let(::UsuarioId))
     val usuarioActualId: StateFlow<UsuarioId?> = _usuarioActualId.asStateFlow()
 
+    init {
+        firebaseAuth.addAuthStateListener { auth ->
+            _usuarioActualId.value = auth.currentUser?.uid?.let(::UsuarioId)
+        }
+    }
+
+    @Deprecated(
+        "FirebaseAuth ya actualiza el uid actual automáticamente tras un login exitoso " +
+            "(ver T027/T028); este método queda como no-op hasta que esos callers se actualicen.",
+    )
     fun iniciarSesion(usuarioId: UsuarioId) {
-        _usuarioActualId.value = usuarioId
-        preferencias.edit { putString(CLAVE_USUARIO_ID, usuarioId.valor) }
+        // No-op intencional — ver @Deprecated.
     }
 
     fun cerrarSesion() {
-        _usuarioActualId.value = null
-        preferencias.edit { remove(CLAVE_USUARIO_ID) }
+        firebaseAuth.signOut()
     }
-
-    private fun cargarUsuarioIdGuardado(): UsuarioId? =
-        preferencias.getString(CLAVE_USUARIO_ID, null)?.let(::UsuarioId)
 }

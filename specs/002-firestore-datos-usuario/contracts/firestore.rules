@@ -24,12 +24,11 @@ service cloud.firestore {
     }
 
     // Campos de usuarios/{uid} que el cliente NUNCA puede escribir (RF-D014).
-    function camposRestringidosDePerfil() {
-      return request.resource.data.diff(resource.data).affectedKeys()
-        .hasAny([
-          'puntosHistoricos', 'rachaActual', 'nivel',
-          'ultimaActividadAprobadaEn', 'pasosHoy', 'pasosHoyFecha'
-        ]);
+    function campoRestringidos() {
+      return [
+        'puntosHistoricos', 'rachaActual', 'nivel',
+        'ultimaActividadAprobadaEn', 'pasosHoy', 'pasosHoyFecha'
+      ];
     }
 
     match /usuarios/{uid} {
@@ -37,22 +36,25 @@ service cloud.firestore {
       // El cliente puede crear/editar su perfil, pero nunca tocar los
       // campos restringidos — esos quedan en 0/null hasta que el backend
       // de confianza los escriba en su primera transacción de puntos.
-      allow create: if esElPropioUsuario(uid) && !camposRestringidosDePerfil();
-      allow update: if esElPropioUsuario(uid) && !camposRestringidosDePerfil();
+      // En `create` NO existe `resource` todavía (el documento se está creando
+      // recién acá) — usar `.diff(resource.data)` ahí revienta la evaluación de
+      // la regla y Firestore lo trata como denegado. Por eso `create` chequea
+      // las claves directamente y `update` sí puede usar `diff()` (el documento
+      // previo ya existe).
+      allow create: if esElPropioUsuario(uid) &&
+        !request.resource.data.keys().hasAny(campoRestringidos());
+      allow update: if esElPropioUsuario(uid) &&
+        !request.resource.data.diff(resource.data).affectedKeys().hasAny(campoRestringidos());
       allow delete: if false; // la eliminación de cuenta (RF-D012) la hace el backend/Admin SDK, no el cliente.
 
-      // registrosVerificacion/{id}: el cliente solo puede CREAR el
-      // documento "pendiente" con campos de evidencia; nunca puede
-      // escribir resultado/puntosOtorgados/motivoIA (RF-D014), ni
-      // modificar o borrar un registro ya existente (historial inmutable
-      // desde el cliente).
+      // registrosVerificacion/{id}: el cliente NUNCA escribe este documento
+      // directamente — envía la evidencia (foto, pasos, etc.) al endpoint del
+      // backend de confianza, que crea el documento completo y otorga los
+      // puntos en una única transacción (RF-D014, ver data-model.md §3). Solo
+      // el Admin SDK escribe acá; el cliente solo lee su propio historial.
       match /registrosVerificacion/{registroId} {
         allow read: if esElPropioUsuario(uid);
-        allow create: if esElPropioUsuario(uid)
-          && !('resultado' in request.resource.data)
-          && !('puntosOtorgados' in request.resource.data)
-          && !('motivoIA' in request.resource.data);
-        allow update, delete: if false;
+        allow create, update, delete: if false;
       }
 
       // caminataEnCurso/actual: toda la escritura pasa por la transacción
