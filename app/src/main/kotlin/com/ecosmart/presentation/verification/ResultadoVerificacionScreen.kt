@@ -30,7 +30,7 @@ fun ResultadoVerificacionScreen(
 ) {
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
-        topBar = { EncabezadoConUsuario() },
+        topBar = { EncabezadoConUsuario(onVolver = onAtras) },
     ) { padding ->
         Column(
             modifier = Modifier

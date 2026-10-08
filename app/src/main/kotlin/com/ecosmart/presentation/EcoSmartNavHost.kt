@@ -100,13 +100,14 @@ fun EcoSmartNavHost(
                     }
                     navController.navigate(destino)
                 },
+                onVolver = { navController.popBackStack() },
             )
         }
         composable(EcoSmartRoute.PuntosVerdes.ruta) {
-            PuntosVerdesScreen()
+            PuntosVerdesScreen(onVolver = { navController.popBackStack() })
         }
         composable(EcoSmartRoute.ContenidoEducativo.ruta) {
-            ContenidoEducativoScreen()
+            ContenidoEducativoScreen(onVolver = { navController.popBackStack() })
         }
         composable(EcoSmartRoute.VerificacionCaminata.ruta, arguments = EcoSmartRoute.VerificacionCaminata.argumentos) {
             VerificacionCaminataScreen(

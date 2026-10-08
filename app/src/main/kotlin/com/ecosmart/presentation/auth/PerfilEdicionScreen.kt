@@ -14,7 +14,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -86,7 +85,7 @@ private fun CamposDePerfil(
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
-        topBar = { EncabezadoEcoSmart(inicialUsuario = usuario.nombreUsuario.ifBlank { "U" }) },
+        topBar = { EncabezadoEcoSmart(inicialUsuario = usuario.nombreUsuario.ifBlank { "U" }, onVolver = onVolver) },
     ) { padding ->
         Column(
             modifier = Modifier
@@ -96,8 +95,6 @@ private fun CamposDePerfil(
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            TextButton(onClick = onVolver) { Text("← Volver") }
-
             Text(text = "Editar perfil", style = MaterialTheme.typography.titleLarge)
 
             // Corrección post-QA (2026-09-23): el correo NUNCA se edita desde acá (única excepción).

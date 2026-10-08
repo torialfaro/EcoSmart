@@ -88,12 +88,12 @@ class PuntosVerdesViewModel @Inject constructor(
 
 /** US7 — mapa + listado de Puntos Verdes del barrio del usuario (RF-018, RF-020, RF-065). */
 @Composable
-fun PuntosVerdesScreen(viewModel: PuntosVerdesViewModel = hiltViewModel()) {
+fun PuntosVerdesScreen(viewModel: PuntosVerdesViewModel = hiltViewModel(), onVolver: () -> Unit = {}) {
     val uiState by viewModel.uiState.collectAsState()
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
-        topBar = { EncabezadoConUsuario() },
+        topBar = { EncabezadoConUsuario(onVolver = onVolver) },
     ) { padding ->
         when {
             uiState.cargando -> Box(

@@ -21,6 +21,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import com.ecosmart.domain.valueobject.CategoriaActividad
 import com.ecosmart.presentation.comun.EncabezadoConUsuario
+import com.ecosmart.presentation.comun.etiquetaCategoria
 import com.ecosmart.presentation.theme.TarjetaEcoSmart
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -63,7 +64,7 @@ class ContenidoEducativoViewModel @Inject constructor() : ViewModel() {
 
 /** US6 — artículos y videos filtrables por categoría (RF-016/RF-017). */
 @Composable
-fun ContenidoEducativoScreen(viewModel: ContenidoEducativoViewModel = hiltViewModel()) {
+fun ContenidoEducativoScreen(viewModel: ContenidoEducativoViewModel = hiltViewModel(), onVolver: () -> Unit = {}) {
     val categoriaSeleccionada by viewModel.categoriaSeleccionada.collectAsState()
     val contenidoFiltrado = if (categoriaSeleccionada == null) {
         CATALOGO_CONTENIDO
@@ -73,7 +74,7 @@ fun ContenidoEducativoScreen(viewModel: ContenidoEducativoViewModel = hiltViewMo
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
-        topBar = { EncabezadoConUsuario() },
+        topBar = { EncabezadoConUsuario(onVolver = onVolver) },
     ) { padding ->
         Column(
             modifier = Modifier
@@ -81,17 +82,22 @@ fun ContenidoEducativoScreen(viewModel: ContenidoEducativoViewModel = hiltViewMo
                 .padding(padding)
                 .padding(horizontal = 20.dp),
         ) {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
                 FilterChip(
                     selected = categoriaSeleccionada == null,
                     onClick = { viewModel.seleccionarCategoria(null) },
-                    label = { Text("Todas") },
+                    label = { Text("Todas", maxLines = 1, softWrap = false) },
+                    modifier = Modifier.weight(1f),
                 )
                 CategoriaActividad.entries.forEach { categoria ->
                     FilterChip(
                         selected = categoriaSeleccionada == categoria,
                         onClick = { viewModel.seleccionarCategoria(categoria) },
-                        label = { Text(categoria.name) },
+                        label = { Text(etiquetaCategoria(categoria), maxLines = 1, softWrap = false) },
+                        modifier = Modifier.weight(1f),
                     )
                 }
             }

@@ -12,11 +12,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -35,13 +37,19 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ecosmart.app.R
 
-/** Encabezado de todas las pantallas (RF-083): isotipo del logo + "ecosmart" a la izquierda, avatar circular a la derecha. */
+/**
+ * Encabezado de todas las pantallas (RF-083): isotipo del logo + "ecosmart" a la
+ * izquierda, avatar circular a la derecha. `onVolver` agrega una flecha atrás antes del
+ * logo (toda pantalla que no sea una pestaña de la barra inferior la necesita); se omite
+ * en Home/Historial/Perfil, que son raíces de navegación sin "pantalla anterior" real.
+ */
 @Composable
 fun EncabezadoEcoSmart(
     inicialUsuario: String = "U",
     modifier: Modifier = Modifier,
     saludo: String? = null,
     onAvatar: (() -> Unit)? = null,
+    onVolver: (() -> Unit)? = null,
 ) {
     Row(
         modifier = modifier
@@ -49,6 +57,12 @@ fun EncabezadoEcoSmart(
             .padding(horizontal = 20.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        onVolver?.let {
+            IconButton(onClick = it, modifier = Modifier.size(32.dp)) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+            }
+            Box(modifier = Modifier.padding(start = 4.dp))
+        }
         Image(
             painter = painterResource(R.drawable.logo_ecosmart_icono),
             contentDescription = "EcoSmart",

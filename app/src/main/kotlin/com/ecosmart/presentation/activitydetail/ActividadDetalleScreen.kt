@@ -50,6 +50,7 @@ import com.ecosmart.presentation.theme.VerdeBoton
 fun ActividadDetalleScreen(
     viewModel: ActividadDetalleViewModel = hiltViewModel(),
     onRealizarla: (ActividadId, CategoriaActividad) -> Unit,
+    onVolver: () -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val actividad = uiState.actividad
@@ -65,7 +66,7 @@ fun ActividadDetalleScreen(
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
-        topBar = { EncabezadoConUsuario() },
+        topBar = { EncabezadoConUsuario(onVolver = onVolver) },
     ) { padding ->
         Column(
             modifier = Modifier

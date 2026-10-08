@@ -34,10 +34,10 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
-import com.ecosmart.app.R
 import com.ecosmart.domain.model.Actividad
 import com.ecosmart.domain.valueobject.ActividadId
 import com.ecosmart.domain.valueobject.CategoriaActividad
+import com.ecosmart.presentation.comun.iconoCategoria
 import com.ecosmart.presentation.theme.EncabezadoEcoSmart
 import com.ecosmart.presentation.theme.FormaBotonPildora
 import com.ecosmart.presentation.theme.TarjetaEcoSmart
@@ -145,7 +145,7 @@ private fun TarjetaActividad(actividad: Actividad, onClick: () -> Unit) {
                 contentAlignment = Alignment.Center,
             ) {
                 Image(
-                    painter = painterResource(R.drawable.logo_ecosmart_icono),
+                    painter = painterResource(iconoCategoria(actividad.categoria)),
                     contentDescription = null,
                     modifier = Modifier.size(34.dp),
                 )

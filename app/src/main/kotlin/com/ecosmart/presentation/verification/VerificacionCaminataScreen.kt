@@ -202,7 +202,7 @@ fun VerificacionCaminataScreen(
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
-        topBar = { EncabezadoConUsuario() },
+        topBar = { EncabezadoConUsuario(onVolver = onVolver) },
     ) { padding ->
         Column(
             modifier = Modifier

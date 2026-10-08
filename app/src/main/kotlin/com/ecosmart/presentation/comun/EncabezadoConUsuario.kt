@@ -39,6 +39,7 @@ fun EncabezadoConUsuario(
     modifier: Modifier = Modifier,
     conSaludo: Boolean = false,
     onAvatar: (() -> Unit)? = null,
+    onVolver: (() -> Unit)? = null,
     viewModel: EncabezadoViewModel = hiltViewModel(),
 ) {
     val nombre by viewModel.nombreUsuario.collectAsState()
@@ -47,5 +48,6 @@ fun EncabezadoConUsuario(
         modifier = modifier,
         saludo = if (conSaludo && nombre.isNotBlank()) "Hola, $nombre" else null,
         onAvatar = onAvatar,
+        onVolver = onVolver,
     )
 }
