@@ -13,6 +13,7 @@ import com.ecosmart.presentation.activitydetail.ActividadDetalleScreen
 import com.ecosmart.presentation.auth.PerfilEdicionScreen
 import com.ecosmart.presentation.auth.RegistroScreen
 import com.ecosmart.presentation.home.ContenidoEducativoScreen
+import com.ecosmart.presentation.home.ContenidoEducativoDetalleScreen
 import com.ecosmart.presentation.home.HomeScreen
 import com.ecosmart.presentation.home.PuntosVerdesScreen
 import com.ecosmart.presentation.permissions.SolicitudPermisosScreen
@@ -50,6 +51,10 @@ sealed class EcoSmartRoute(val ruta: String) {
     }
     data object PuntosVerdes : EcoSmartRoute("puntos-verdes")
     data object ContenidoEducativo : EcoSmartRoute("contenido-educativo")
+    data object ContenidoEducativoDetalle : EcoSmartRoute("contenido-educativo/{id}") {
+        val argumentos: List<NamedNavArgument> = listOf(navArgument("id") { type = NavType.StringType })
+        fun crearRuta(id: String): String = "contenido-educativo/$id"
+    }
     data object Perfil : EcoSmartRoute("perfil")
     data object PerfilEdicion : EcoSmartRoute("perfil-edicion")
     data object Historial : EcoSmartRoute("historial")
@@ -107,7 +112,16 @@ fun EcoSmartNavHost(
             PuntosVerdesScreen(onVolver = { navController.popBackStack() })
         }
         composable(EcoSmartRoute.ContenidoEducativo.ruta) {
-            ContenidoEducativoScreen(onVolver = { navController.popBackStack() })
+            ContenidoEducativoScreen(
+                onSeleccionarContenido = { id -> navController.navigate(EcoSmartRoute.ContenidoEducativoDetalle.crearRuta(id)) },
+                onVolver = { navController.popBackStack() },
+            )
+        }
+        composable(EcoSmartRoute.ContenidoEducativoDetalle.ruta, arguments = EcoSmartRoute.ContenidoEducativoDetalle.argumentos) { entrada ->
+            ContenidoEducativoDetalleScreen(
+                id = checkNotNull(entrada.arguments?.getString("id")),
+                onVolver = { navController.popBackStack() },
+            )
         }
         composable(EcoSmartRoute.VerificacionCaminata.ruta, arguments = EcoSmartRoute.VerificacionCaminata.argumentos) {
             VerificacionCaminataScreen(
