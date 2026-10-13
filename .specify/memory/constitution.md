@@ -1,49 +1,54 @@
 <!--
   SYNC IMPACT REPORT
   ==================
-  Version change: 1.0.0 → 2.0.0 (MAJOR — redefinición incompatible de principio existente)
-  Reason: El proyecto incorpora un segundo módulo de trabajo (spec 002,
-  `specs/002-firestore-datos-usuario/`) que mueve la fuente de verdad de los
-  datos de usuario de "local-first" (Room/SharedPreferences, spec 001) a
-  "remoto-autoritativo" (Firebase/Firestore + Firebase Authentication), para
-  que la cuenta, el historial y el puntaje sobrevivan a la desinstalación y
-  se sincronicen entre dispositivos. Esto redefine, de forma incompatible
-  hacia atrás, el Principio IV (rol de la capa de Infraestructura) y la
-  sección "Stack Tecnológico" tal como estaban definidos en v1.0.0.
+  Version change: 2.0.0 → 2.1.0 (MINOR — nuevo principio agregado, sin
+  redefinir ni eliminar principios existentes)
+  Reason: Arranca un tercer módulo de trabajo dedicado exclusivamente a
+  reconstruir la interfaz visual de la app a partir de
+  `especificacion-ui-app-eco.md` (tokens de diseño, componentes globales
+  C-xx, pantallas Sxx-x y criterios de aceptación AC-xx). Este módulo NO
+  toca lógica de negocio, cálculo de puntaje, topes diarios, reglas de
+  verificación por IA ni persistencia: ese comportamiento se mantiene
+  exactamente igual. Se formaliza esta restricción de alcance como un
+  nuevo principio para que `/speckit.specify` y `/speckit.plan` del nuevo
+  módulo lo validen de forma explícita.
 
-  Modified principles:
-    - IV. Separación Estricta de Capas → bullet "Infraestructura" ampliado:
-      Firebase/Firestore y Firebase Authentication se suman como
-      integraciones de Infraestructura; Room/SharedPreferences dejan de ser
-      la fuente de verdad de datos de usuario y pasan a cumplir, a lo sumo,
-      un rol de caché/estado efímero de UI.
+  Modified principles: Ninguno redefinido. (Principio IV se referencia,
+  no se modifica: la nueva iniciativa de UI debe respetar sus capas tal
+  como ya estaban definidas.)
 
   Added sections/content:
-    - Stack Tecnológico: bullet "Persistencia" reescrito (reemplaza a
-      "Persistencia local") para declarar a Firestore como base de datos
-      autoritativa y remota de los datos de usuario.
-    - Stack Tecnológico: bullet "Autenticación" ampliado para delegar el
-      almacenamiento de contraseñas a Firebase Authentication (hash
-      unidireccional gestionado por el proveedor, nunca visible para
-      Firestore ni para la app), en reemplazo del esquema JWE reversible de
-      RNF-006/RNF-007 de spec 001 para este módulo en adelante.
+    - Nuevo Principio X. "Reconstrucción de UI Basada en Especificación de
+      Diseño (NON-NEGOTIABLE)": fija `especificacion-ui-app-eco.md` como
+      única fuente de verdad visual y limita el alcance de esta iniciativa
+      a las capas Frontend (UI) y, en lo estrictamente necesario,
+      Presentación/ViewModel, prohibiendo cambios de Dominio, Aplicación o
+      Infraestructura.
+    - "Proceso de trabajo con SpecKit": referencia a "9 principios"
+      actualizada a "10 principios" para reflejar el nuevo total.
 
   Removed sections: None.
 
   Templates requiring updates:
     ✅ .specify/memory/constitution.md — this file (updated)
-    ⚠  .specify/templates/plan-template.md — el próximo `/speckit.plan` de
-         spec 002 DEBE completar el "Constitution Check" validando el nuevo
-         rol de Firestore/Firebase Auth como Infraestructura autoritativa.
-    ✅ .specify/templates/spec-template.md — sin cambio estructural necesario.
-    ✅ .specify/templates/tasks-template.md — sin cambio estructural necesario.
+    ✅ .specify/templates/plan-template.md — genérico, sin cambio
+         estructural necesario; el Constitution Check del nuevo módulo de
+         UI deberá citar el Principio X explícitamente.
+    ✅ .specify/templates/spec-template.md — sin cambio estructural
+         necesario.
+    ✅ .specify/templates/tasks-template.md — sin cambio estructural
+         necesario.
 
-  Known ambiguities: ninguna nueva introducida por esta enmienda; ver
-  `specs/002-firestore-datos-usuario/spec.md` → Clarifications para las
-  decisiones tomadas en este módulo (reemplazo de JWE por Firebase Auth,
-  manejo de datos device-bound, migración de datos locales existentes).
+  Known ambiguities: las secciones 10 y 13 de
+  `especificacion-ui-app-eco.md` están marcadas por el propio documento
+  como "propuesta" o "a confirmar" (estados de error/vacío, navegación de
+  la tarjeta de puntos, pestañas Artículos/IA, detalle de recompensa,
+  etc.). El Principio X prohíbe implementarlas hasta que se resuelvan en
+  `/speckit.clarify` del nuevo módulo.
 
-  Follow-up TODOs: None.
+  Follow-up TODOs: Crear el nuevo módulo con `/speckit.specify` (p. ej.
+  `specs/003-reconstruccion-ui/`) referenciando este principio y el
+  documento de diseño.
 -->
 
 # EcoSmart Constitution
@@ -171,6 +176,27 @@ mecánica de puntos DEBE valorar la acción realizada por sobre la recompensa en
 **Rationale**: EcoSmart busca fomentar hábitos sostenibles a largo plazo; un tono
 punitivo desmotiva la adopción continua, que es la métrica de éxito real del producto.
 
+### X. Reconstrucción de UI Basada en Especificación de Diseño (NON-NEGOTIABLE)
+
+Todo módulo dedicado a reconstruir o rediseñar la interfaz visual DEBE basarse
+exclusivamente en `especificacion-ui-app-eco.md` (o el documento de diseño vigente que
+lo reemplace) como única fuente de verdad gráfica: tokens de la sección 2, componentes
+globales (`C-xx`), especificación de pantalla (`Sxx-x`) y criterios de aceptación
+(`AC-xx`). Esta iniciativa DEBE limitarse a la capa Frontend (UI) y, solo en la medida
+estrictamente necesaria para exponer el nuevo estado visual, a Presentación/ViewModel;
+está prohibido modificar contratos o comportamiento de Dominio, Aplicación o
+Infraestructura (Principio IV), así como el cálculo de puntaje, los topes diarios, las
+reglas de verificación por IA o cualquier otra regla de negocio descrita en la sección
+"Contexto del Producto y Reglas de Negocio": esa lógica se mantiene exactamente igual.
+Lo marcado como «propuesta» o «a confirmar» en las secciones 10 y 13 de
+`especificacion-ui-app-eco.md` NO DEBE implementarse hasta resolverse explícitamente en
+`/speckit.clarify`.
+
+**Rationale**: separar el esfuerzo de reconstruir la UI del esfuerzo de cambiar reglas
+de negocio reduce el riesgo de regresiones funcionales, permite auditar el cambio
+visual de forma aislada, y mantiene una única fuente de verdad gráfica en lugar de
+decisiones de diseño dispersas o reinterpretadas en el código.
+
 ## Stack Tecnológico y Restricciones
 
 - **Plataforma**: Android Nativo. Prohibido introducir frameworks multiplataforma
@@ -275,7 +301,7 @@ del Principio IX).
    actualiza `spec.md`.
 4. `/speckit.checklist` — genera checklist de calidad de la especificación.
 5. `/speckit.plan` — produce `plan.md` y documentos de diseño técnico, incluyendo el
-   Constitution Check contra los 9 principios de este documento.
+   Constitution Check contra los 10 principios de este documento.
 6. `/speckit.tasks` — produce `tasks.md` con tareas por historia de usuario y capa.
 7. `/speckit.implement` — única fase en la que se produce código fuente.
 8. `/speckit.analyze` — análisis de consistencia entre spec, plan y tareas.
@@ -311,4 +337,4 @@ iteración o feature. Las ambigüedades detectadas en el Sync Impact Report (al 
 de este archivo) DEBEN resolverse en `/speckit.specify` o `/speckit.clarify` antes de
 iniciar la implementación de la funcionalidad afectada.
 
-**Version**: 2.0.0 | **Ratified**: 2026-09-20 | **Last Amended**: 2026-10-01
+**Version**: 2.1.0 | **Ratified**: 2026-09-20 | **Last Amended**: 2026-10-12
