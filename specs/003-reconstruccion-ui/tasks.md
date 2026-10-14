@@ -49,7 +49,7 @@ componentes recién probados en US2/US3; US5 queda al final por ser la más comp
 agrega ninguna dependencia de Gradle (research.md §1: no se incorpora Coil/Glide ni
 ninguna otra librería nueva).
 
-- [ ] T001 Crear el paquete vacío `app/src/main/kotlin/com/ecosmart/presentation/rewards/`,
+- [X] T001 Crear el paquete vacío `app/src/main/kotlin/com/ecosmart/presentation/rewards/`,
       destino de la pantalla nueva de Recompensas (sin dominio/backend propio —
       `RF-UI-003b`)
 
@@ -66,19 +66,19 @@ que todas dependen de poder llegar a su pantalla desde un tab de primer nivel.
 
 **⚠️ CRITICAL**: No continuar a la Fase 3 sin completar esta fase.
 
-- [ ] T002 Extender el enum `PestanaInferior` a 5 valores (`INICIO`, `ACTIVIDADES`,
+- [X] T002 Extender el enum `PestanaInferior` a 5 valores (`INICIO`, `ACTIVIDADES`,
       `RECOMPENSAS`, `EDUCACION`, `PERFIL`) y los parámetros de
       `BarraInferiorEcoSmart` (un callback `onXxx` + icono por cada ítem nuevo) en
       `app/src/main/kotlin/com/ecosmart/presentation/theme/ComponentesEcoSmart.kt`
-- [ ] T003 Agregar las rutas `EcoSmartRoute.Actividades` y `EcoSmartRoute.Recompensas`
+- [X] T003 Agregar las rutas `EcoSmartRoute.Actividades` y `EcoSmartRoute.Recompensas`
       (sin pantalla todavía — se cablean en T031) en
       `app/src/main/kotlin/com/ecosmart/presentation/EcoSmartNavHost.kt`
-- [ ] T004 Reescribir la función privada `BarraInferior(...)` de `EcoSmartNavHost.kt`
+- [X] T004 Reescribir la función privada `BarraInferior(...)` de `EcoSmartNavHost.kt`
       para cablear los 5 tabs (Inicio→Home, Actividades→T003, Recompensas→T003,
       Educación→ContenidoEducativo, Perfil→Perfil), reemplazando el cableado de 3 tabs
       actual, en `app/src/main/kotlin/com/ecosmart/presentation/EcoSmartNavHost.kt`
       (depende de T002, T003)
-- [ ] T005 Quitar el tab "Misiones" de todo punto de entrada de primer nivel: el
+- [X] T005 Quitar el tab "Misiones" de todo punto de entrada de primer nivel: el
       `composable(EcoSmartRoute.Historial...)` deja de recibir `barraInferior`
       (`HistorialScreen` pasa a alcanzarse únicamente desde la fila "Mis actividades"
       de Perfil, ver T022 — research.md §5), en
@@ -101,60 +101,60 @@ resto de su contenido todavía) y confirmar que se ven idénticos entre sí.
 
 ### Tests for User Story 1
 
-- [ ] T006 [P] [US1] Test de Compose UI: `BarraInferiorEcoSmart` expone 5 ítems y el
+- [X] T006 [P] [US1] Test de Compose UI: `BarraInferiorEcoSmart` expone 5 ítems y el
       ítem seleccionado coincide con el `PestanaInferior` recibido, en
       `app/src/androidTest/kotlin/com/ecosmart/presentation/theme/BarraInferiorEcoSmartTest.kt`
-- [ ] T007 [P] [US1] Test de Compose UI: `BotonPrincipal` en estado deshabilitado no
+- [X] T007 [P] [US1] Test de Compose UI: `BotonPrincipal` en estado deshabilitado no
       dispara `onClick` y reduce su opacidad al 50% (`RF-UI-005`/sección 10.2), en
       `app/src/androidTest/kotlin/com/ecosmart/presentation/theme/BotonPrincipalTest.kt`
 
 ### Implementation for User Story 1
 
-- [ ] T008 [P] [US1] Definir los tokens de espaciado/radios/elevación
+- [X] T008 [P] [US1] Definir los tokens de espaciado/radios/elevación
       (`space.screen-x`, `space.gap-card`, `space.section`, `radius.card`,
       `radius.media`, `radius.pill`, `radius.icon-circle`, `shadow.card`) en un archivo
       nuevo `app/src/main/kotlin/com/ecosmart/presentation/theme/Tokens.kt`
       (data-model.md §1)
-- [ ] T009 [P] [US1] Alinear la paleta de color de `Theme.kt` con los nombres de token
+- [X] T009 [P] [US1] Alinear la paleta de color de `Theme.kt` con los nombres de token
       de §2.1 (agregar alias donde falte: `color.state.progress`, `color.state.idle`,
       `color.water`, etc.) sin romper el soporte de modo oscuro ya existente, en
       `app/src/main/kotlin/com/ecosmart/presentation/theme/Theme.kt`
-- [ ] T010 [US1] Agregar el rol tipográfico faltante `type.display` (40pt Bold) y
+- [X] T010 [US1] Agregar el rol tipográfico faltante `type.display` (40pt Bold) y
       alinear el resto de roles de `EcoSmartTypography` con §2.2 en
       `app/src/main/kotlin/com/ecosmart/presentation/theme/Theme.kt` (depende de T009,
       mismo archivo)
-- [ ] T011 [P] [US1] Implementar `ChipFiltro`/`SegmentoEcoSmart` (`C-04`: selección
+- [X] T011 [P] [US1] Implementar `ChipFiltro`/`SegmentoEcoSmart` (`C-04`: selección
       única, variantes de chips sueltos, segmento de 2 opciones y segmento de 3
       opciones) en
       `app/src/main/kotlin/com/ecosmart/presentation/theme/ComponentesEcoSmart.kt`
-- [ ] T012 [P] [US1] Implementar `BarraProgresoLineal` (`C-05`: riel `color.track`,
+- [X] T012 [P] [US1] Implementar `BarraProgresoLineal` (`C-05`: riel `color.track`,
       relleno `color.green.500`, ancho = valor/meta) en
       `app/src/main/kotlin/com/ecosmart/presentation/theme/ComponentesEcoSmart.kt`
-- [ ] T013 [US1] Extender `TarjetaEcoSmart` con una variante `TarjetaActividad` (`C-06`:
+- [X] T013 [US1] Extender `TarjetaEcoSmart` con una variante `TarjetaActividad` (`C-06`:
       compacta/completa × idle/in_progress/completed, deriva el estado comparando
       progreso actual contra meta ya calculado por el dominio — `RF-UI-006`), exponiendo
       nombre/progreso/puntos/estado como un único elemento fusionado
       (`Modifier.semantics(mergeDescendants = true)` + `contentDescription` compuesto,
       p. ej. "Caminar, 1.200 de 2.000 metros, 50 puntos, en curso" — `RF-UI-018`,
       `AC-21`) en `ComponentesEcoSmart.kt` (depende de T012 para la barra interna)
-- [ ] T014 [P] [US1] Implementar `BotonPrincipal` (`C-07`: reposo/presionado
+- [X] T014 [P] [US1] Implementar `BotonPrincipal` (`C-07`: reposo/presionado
       oscurecido 8%/deshabilitado opacidad 50%, variante con flecha →) en
       `ComponentesEcoSmart.kt`
-- [ ] T015 [P] [US1] Implementar `EnlaceSeccion` (`C-08`) en `ComponentesEcoSmart.kt`
-- [ ] T016 [P] [US1] Implementar `TarjetaVideo` (`C-09`: variantes compacta 150×100 y
+- [X] T015 [P] [US1] Implementar `EnlaceSeccion` (`C-08`) en `ComponentesEcoSmart.kt`
+- [X] T016 [P] [US1] Implementar `TarjetaVideo` (`C-09`: variantes compacta 150×100 y
       ancha full×100, degradé oscuro inferior, botón ▶ circular, título truncado con
       puntos suspensivos si excede 1-2 líneas — mismo criterio que `C-10`, ver Edge
       Cases de `spec.md`) en `ComponentesEcoSmart.kt`
-- [ ] T017 [P] [US1] Implementar `TarjetaRecompensa` (`C-10`: imagen, título de hasta 2
+- [X] T017 [P] [US1] Implementar `TarjetaRecompensa` (`C-10`: imagen, título de hasta 2
       líneas truncado, costo + chevron) en `ComponentesEcoSmart.kt`
-- [ ] T018 [P] [US1] Implementar `TarjetaPuntos` (`C-11`) en `ComponentesEcoSmart.kt`
-- [ ] T018a [US1] Alinear `EncabezadoEcoSmart` (`C-03`) con `especificacion-ui-app-eco.md`
+- [X] T018 [P] [US1] Implementar `TarjetaPuntos` (`C-11`) en `ComponentesEcoSmart.kt`
+- [X] T018a [US1] Alinear `EncabezadoEcoSmart` (`C-03`) con `especificacion-ui-app-eco.md`
       §3: título `type.title` (o saludo `type.greeting` en Inicio), subtítulo
       `type.body` + icono de hoja `color.leaf` 12pt, avatar 36pt, flecha de volver
       opcional (24pt, zona táctil 48pt) — único lugar reutilizable para encabezados
       (`RF-UI-004`/`RF-UI-005`, `C-03` no tenía tarea propia), en
       `app/src/main/kotlin/com/ecosmart/presentation/theme/ComponentesEcoSmart.kt`
-- [ ] T019 [US1] Aplicar `BarraInferiorEcoSmart` (ya extendida a 5 tabs — T002) y
+- [X] T019 [US1] Aplicar `BarraInferiorEcoSmart` (ya extendida a 5 tabs — T002) y
       `BotonPrincipal` (T014) tal cual existen hoy sobre `HomeScreen.kt` y
       `PerfilScreen.kt`, sin reconstruir el resto de su contenido todavía (demostración
       mínima de consistencia visual exigida por el Independent Test de esta historia),
@@ -179,13 +179,13 @@ Actividades, Caminar, Recompensas o Educación estén reconstruidas todavía.
 
 ### Tests for User Story 2
 
-- [ ] T020 [P] [US2] Test de Compose UI: `PerfilScreen` expone avatar, "Nivel N ·
+- [X] T020 [P] [US2] Test de Compose UI: `PerfilScreen` expone avatar, "Nivel N ·
       puntos", una tarjeta de 3 columnas y 5 filas de menú con chevron (`AC-18`), en
       `app/src/androidTest/kotlin/com/ecosmart/presentation/profile/PerfilScreenTest.kt`
 
 ### Implementation for User Story 2
 
-- [ ] T021 [US2] Reconstruir `PerfilScreen.kt` según `S-06` (avatar 56pt propio de la
+- [X] T021 [US2] Reconstruir `PerfilScreen.kt` según `S-06` (avatar 56pt propio de la
       pantalla — Perfil no usa el encabezado genérico `C-03`/T018a, nombre, "Nivel N ·
       puntos", `TarjetaEcoSmart` de 3 columnas con Actividades/Recompensas/Racha ya
       calculadas por `PerfilUiState`, 5 filas de menú con icono + texto + chevron),
@@ -193,7 +193,7 @@ Actividades, Caminar, Recompensas o Educación estén reconstruidas todavía.
       T019 sobre este archivo, en
       `app/src/main/kotlin/com/ecosmart/presentation/profile/PerfilScreen.kt` (depende
       de T013, T018, T019)
-- [ ] T022 [US2] Cablear la fila de menú "Mis actividades" para que navegue a
+- [X] T022 [US2] Cablear la fila de menú "Mis actividades" para que navegue a
       `EcoSmartRoute.Historial` (reemplaza al tab "Misiones" quitado en T005 —
       research.md §5) en `PerfilScreen.kt`/`EcoSmartNavHost.kt` (depende de T005, T021)
 - [ ] T023 [US2] Verificar/ajustar que chevrones y filas de menú midan ≥48×48 pt

@@ -20,19 +20,36 @@ import androidx.compose.ui.unit.sp
 import com.ecosmart.app.R
 
 /*
- * Rediseño 2026-09-24 (RF-083): paleta muestreada píxel a píxel de la imagen
- * de referencia del usuario (mockup de 9 pantallas + logo).
+ * Rediseño 2026-09-24 (RF-083) y Reconstrucción UI 2026-10 (especificacion-ui-app-eco.md §2.1):
+ * Paleta de colores y tokens canónicos.
  */
-val VerdeBoton = Color(0xFF215D41)
-val VerdeOscuro = Color(0xFF193F34)
+// Colores canónicos de diseño (especificacion-ui-app-eco.md §2.1)
+val ColorBgScreen = Color(0xFFFBF8F0)
+val ColorSurfaceCard = Color(0xFFFFFFFF)
+val ColorGreen700 = Color(0xFF1F5E34)
+val ColorGreen900 = Color(0xFF0F4D2E)
+val ColorGreen500 = Color(0xFF2E7D3E)
+val ColorGreen100 = Color(0xFFE6F2DF)
+val ColorLeaf = Color(0xFF4FA24A)
+val ColorStateProgress = Color(0xFFE3F1EE)
+val ColorStateProgressBorder = Color(0xFFCFE5E0)
+val ColorStateIdle = Color(0xFFEAF0F2)
+val ColorTextPrimary = Color(0xFF1B2B1F)
+val ColorTextSecondary = Color(0xFF6B6F68)
+val ColorTrack = Color(0xFFE3E5DF)
+val ColorWater = Color(0xFF3E9BD6)
+
+// Compatibilidad con paleta histórica y nombres ya usados en la app
+val VerdeBoton = ColorGreen700
+val VerdeOscuro = ColorGreen900
 val VerdeLogo = Color(0xFF2C6742)
 val VerdeMedio = Color(0xFF49875B)
 val VerdeClaroLogo = Color(0xFF7EAA77)
 val VerdeTarjetaOscura = Color(0xFF286B4B)
-val VerdeTarjeta = Color(0xFFDFEBD8)
-val VerdeBarra = Color(0xFFBACFBA)
-val FondoPagina = Color(0xFFE6EDDC)
-val FondoPantalla = Color(0xFFF1F4E5)
+val VerdeTarjeta = ColorGreen100
+val VerdeBarra = ColorTrack
+val FondoPagina = ColorBgScreen
+val FondoPantalla = ColorBgScreen
 val CremaTexto = Color(0xFFF6F7EA)
 val AmbarPasos = Color(0xFFF2B855)
 
@@ -86,17 +103,32 @@ val Nunito = FontFamily(
     },
 )
 
+// Roles tipográficos explícitos de especificacion-ui-app-eco.md §2.2
+val TypeDisplay = TextStyle(fontFamily = Nunito, fontWeight = FontWeight.Bold, fontSize = 40.sp)
+val TypePoints = TextStyle(fontFamily = Nunito, fontWeight = FontWeight.Bold, fontSize = 32.sp)
+val TypeTitle = TextStyle(fontFamily = Nunito, fontWeight = FontWeight.Bold, fontSize = 24.sp)
+val TypeGreeting = TextStyle(fontFamily = Nunito, fontWeight = FontWeight.Bold, fontSize = 20.sp)
+val TypeSection = TextStyle(fontFamily = Nunito, fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
+val TypeCardTitle = TextStyle(fontFamily = Nunito, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+val TypeBody = TextStyle(fontFamily = Nunito, fontWeight = FontWeight.Normal, fontSize = 12.sp)
+val TypeMeta = TextStyle(fontFamily = Nunito, fontWeight = FontWeight.Normal, fontSize = 11.sp)
+val TypeChip = TextStyle(fontFamily = Nunito, fontWeight = FontWeight.Medium, fontSize = 12.sp)
+val TypeTab = TextStyle(fontFamily = Nunito, fontWeight = FontWeight.Medium, fontSize = 10.sp)
+val TypeLink = TextStyle(fontFamily = Nunito, fontWeight = FontWeight.SemiBold, fontSize = 12.sp)
+
 val EcoSmartTypography = Typography(
-    headlineMedium = TextStyle(fontFamily = Nunito, fontWeight = FontWeight.ExtraBold, fontSize = 30.sp),
-    titleLarge = TextStyle(fontFamily = Nunito, fontWeight = FontWeight.ExtraBold, fontSize = 26.sp),
-    titleMedium = TextStyle(fontFamily = Nunito, fontWeight = FontWeight.Bold, fontSize = 18.sp),
-    titleSmall = TextStyle(fontFamily = Nunito, fontWeight = FontWeight.Bold, fontSize = 15.sp),
-    bodyLarge = TextStyle(fontFamily = Nunito, fontWeight = FontWeight.Normal, fontSize = 16.sp),
-    bodyMedium = TextStyle(fontFamily = Nunito, fontWeight = FontWeight.Normal, fontSize = 14.sp),
-    bodySmall = TextStyle(fontFamily = Nunito, fontWeight = FontWeight.Normal, fontSize = 12.sp),
-    labelLarge = TextStyle(fontFamily = Nunito, fontWeight = FontWeight.Bold, fontSize = 16.sp),
-    labelMedium = TextStyle(fontFamily = Nunito, fontWeight = FontWeight.SemiBold, fontSize = 13.sp),
-    labelSmall = TextStyle(fontFamily = Nunito, fontWeight = FontWeight.SemiBold, fontSize = 11.sp),
+    displayLarge = TypeDisplay,
+    displayMedium = TypePoints,
+    headlineMedium = TypeTitle,
+    titleLarge = TypeGreeting,
+    titleMedium = TypeSection,
+    titleSmall = TypeCardTitle,
+    bodyLarge = TextStyle(fontFamily = Nunito, fontWeight = FontWeight.Normal, fontSize = 14.sp),
+    bodyMedium = TypeBody,
+    bodySmall = TypeMeta,
+    labelLarge = TypeChip,
+    labelMedium = TypeLink,
+    labelSmall = TypeTab,
 )
 
 val EcoSmartShapes = Shapes(

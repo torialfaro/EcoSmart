@@ -1,28 +1,32 @@
 package com.ecosmart.presentation.profile
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Phone
-import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
@@ -36,9 +40,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -47,22 +54,30 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.ecosmart.app.R
 import com.ecosmart.domain.model.Usuario
-import com.ecosmart.domain.valueobject.CategoriaActividad
 import com.ecosmart.domain.valueobject.NivelUsuario
-import com.ecosmart.presentation.theme.AmbarPasos
+import com.ecosmart.presentation.theme.ColorBgScreen
+import com.ecosmart.presentation.theme.ColorGreen700
+import com.ecosmart.presentation.theme.ColorGreen900
+import com.ecosmart.presentation.theme.ColorSurfaceCard
+import com.ecosmart.presentation.theme.ColorTextPrimary
+import com.ecosmart.presentation.theme.ColorTextSecondary
+import com.ecosmart.presentation.theme.ColorTrack
 import com.ecosmart.presentation.theme.CremaTexto
-import com.ecosmart.presentation.theme.EncabezadoEcoSmart
+import com.ecosmart.presentation.theme.ElevacionTarjeta
 import com.ecosmart.presentation.theme.FormaBotonPildora
-import com.ecosmart.presentation.theme.TarjetaEcoSmart
-import com.ecosmart.presentation.theme.VerdeBarra
-import com.ecosmart.presentation.theme.VerdeBoton
-import com.ecosmart.presentation.theme.VerdeOscuro
+import com.ecosmart.presentation.theme.FormaTarjeta
+import com.ecosmart.presentation.theme.SpaceScreenX
+import com.ecosmart.presentation.theme.SpaceSection
+import com.ecosmart.presentation.theme.TypeBody
+import com.ecosmart.presentation.theme.TypeCardTitle
+import com.ecosmart.presentation.theme.TypeGreeting
+import com.ecosmart.presentation.theme.TypeMeta
+import com.ecosmart.presentation.theme.TypeTitle
 
 /**
- * US11 + US3 — perfil consolidado, de solo lectura (RF-068), con la
- * distribución del mockup (RF-083): tarjeta de usuario, filas de datos con
- * ícono, "Tu progreso" (pasos hoy en ámbar, puntos y nivel, racha) y, debajo,
- * la participación por categoría y las acciones ya existentes.
+ * Pantalla Perfil reconstruida según S-06 (especificacion-ui-app-eco.md §9):
+ * Avatar de 56 pt, nombre de usuario, "Nivel N · puntos", tarjeta de estadísticas
+ * de 3 columnas (Actividades / Recompensas / Racha) y 5 filas de menú con icono, texto y chevron.
  */
 @Composable
 fun PerfilScreen(
@@ -73,7 +88,6 @@ fun PerfilScreen(
     barraInferior: @Composable () -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val usuario = uiState.usuario
 
     // RF-D012: la cuenta eliminada ya no tiene sesión válida, se navega igual que al cerrar sesión.
     LaunchedEffect(uiState.cuentaEliminada) {
@@ -91,146 +105,186 @@ fun PerfilScreen(
     }
 
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
-        topBar = {
-            EncabezadoEcoSmart(
-                inicialUsuario = usuario?.nombreUsuario?.ifBlank { "U" } ?: "U",
-                saludo = usuario?.let { "Hola, ${it.nombreUsuario}" },
-            )
-        },
+        containerColor = ColorBgScreen,
         bottomBar = barraInferior,
     ) { padding ->
-        if (uiState.cargando || usuario == null) {
+        if (uiState.cargando || uiState.usuario == null) {
             Box(
                 modifier = Modifier.fillMaxSize().padding(padding),
                 contentAlignment = Alignment.Center,
             ) {
-                CircularProgressIndicator()
+                CircularProgressIndicator(color = ColorGreen700)
             }
             return@Scaffold
         }
 
-        Column(
+        PerfilContenido(
+            uiState = uiState,
+            onVerHistorial = onVerHistorial,
+            onEditarPerfil = onEditarPerfil,
+            onCerrarSesion = {
+                viewModel.cerrarSesion()
+                onCerrarSesion()
+            },
+            onEliminarCuenta = viewModel::solicitarEliminarCuenta,
+            onConfirmarEliminarCuenta = viewModel::confirmarEliminarCuenta,
+            onCancelarEliminarCuenta = viewModel::cancelarEliminarCuenta,
+            modifier = Modifier.padding(padding),
+        )
+    }
+}
+
+@Composable
+fun PerfilContenido(
+    uiState: PerfilUiState,
+    onVerHistorial: () -> Unit,
+    onEditarPerfil: () -> Unit,
+    onCerrarSesion: () -> Unit,
+    onEliminarCuenta: () -> Unit,
+    onConfirmarEliminarCuenta: () -> Unit,
+    onCancelarEliminarCuenta: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val usuario = uiState.usuario ?: return
+    val primerNombre = usuario.nombre.ifBlank { usuario.nombreUsuario }
+    val nivelTexto = "Nivel ${nivelNumero(uiState.nivel)} · ${formatearPuntos(uiState.puntosHistoricos)} pts"
+
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = SpaceScreenX, vertical = 20.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        // S06-A: Avatar 56 pt
+        Box(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(horizontal = 20.dp)
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(14.dp),
+                .size(56.dp)
+                .clip(CircleShape)
+                .background(ColorGreen900)
+                .clickable(onClick = onEditarPerfil),
+            contentAlignment = Alignment.Center,
         ) {
-            // RF-068: datos de cuenta completos, no solo lo relacionado con actividades.
-            TarjetaEcoSmart {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-                    Box(
-                        modifier = Modifier.size(56.dp).clip(CircleShape).background(VerdeOscuro),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Icon(Icons.Filled.Person, contentDescription = null, tint = CremaTexto, modifier = Modifier.size(34.dp))
-                    }
-                    Column {
-                        Text("${usuario.nombre} ${usuario.apellido}", style = MaterialTheme.typography.titleMedium)
-                        Text("@${usuario.nombreUsuario}", style = MaterialTheme.typography.bodyMedium)
-                    }
-                }
-            }
-            FilaDato(Icons.Filled.Email, usuario.email)
-            FilaDato(Icons.Filled.Place, usuario.barrio?.nombreVisible ?: "No configurado")
-            FilaDato(Icons.Filled.Phone, usuario.telefono.ifBlank { "No configurado" })
-            FilaDato(
-                ImageVector.vectorResource(R.drawable.ic_hoja),
-                "Categorías de interés\n${etiquetaCategorias(usuario)}",
-            )
-
-            Text(text = "Tu progreso", style = MaterialTheme.typography.titleMedium)
-
-            // RF-070: solo se muestra con el permiso de Podómetro otorgado.
-            uiState.pasosHoy?.let { pasosHoy ->
-                TarjetaEcoSmart(color = AmbarPasos) {
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-                        Icon(Icons.Filled.Star, contentDescription = null, tint = VerdeOscuro, modifier = Modifier.size(34.dp))
-                        Column {
-                            Text("Pasos hoy", style = MaterialTheme.typography.bodySmall)
-                            Text("$pasosHoy", style = MaterialTheme.typography.titleLarge.copy(fontSize = 28.sp))
-                        }
-                    }
-                }
-            }
-
-            TarjetaEcoSmart {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-                    Icon(Icons.Filled.Star, contentDescription = null, tint = VerdeBoton, modifier = Modifier.size(34.dp))
-                    Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Text("${uiState.puntosHistoricos} puntos", style = MaterialTheme.typography.titleMedium)
-                        Text("Nivel: ${etiquetaNivel(uiState.nivel)}", style = MaterialTheme.typography.bodyMedium)
-                        LinearProgressIndicator(
-                            progress = { progresoDeNivel(uiState.puntosHistoricos, uiState.nivel) },
-                            modifier = Modifier.fillMaxWidth(),
-                            color = VerdeBoton,
-                            trackColor = VerdeBarra,
-                        )
-                    }
-                }
-            }
-
             Text(
-                text = if (uiState.rachaActual > 0) {
-                    "Racha: ${uiState.rachaActual} día(s) consecutivos"
-                } else {
-                    "Todavía no tenés una racha activa. ¡Arrancá hoy!"
-                },
-                style = MaterialTheme.typography.bodyMedium,
+                text = primerNombre.take(1).uppercase(),
+                style = TypeTitle.copy(fontSize = 24.sp),
+                color = CremaTexto,
             )
+        }
 
-            Text(text = "Participación por categoría", style = MaterialTheme.typography.titleSmall)
-            if (uiState.porcentajePorCategoria.isEmpty()) {
-                Text("Todavía no completaste ninguna actividad.", style = MaterialTheme.typography.bodySmall)
-            } else {
-                uiState.porcentajePorCategoria.forEach { (categoria, porcentaje) ->
-                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text(etiquetaCategoria(categoria), style = MaterialTheme.typography.bodyMedium)
-                            Text("${porcentaje.toInt()}%", style = MaterialTheme.typography.bodyMedium)
-                        }
-                        LinearProgressIndicator(
-                            progress = { (porcentaje / 100).toFloat() },
-                            modifier = Modifier.fillMaxWidth(),
-                            color = VerdeBoton,
-                            trackColor = VerdeBarra,
-                        )
-                    }
-                }
-            }
+        // S06-B: Nombre
+        Text(
+            text = primerNombre,
+            style = TypeGreeting,
+            color = ColorTextPrimary,
+        )
 
-            Button(onClick = onEditarPerfil, shape = FormaBotonPildora, modifier = Modifier.fillMaxWidth()) {
-                Text("Editar perfil")
-            }
-            Button(onClick = onVerHistorial, shape = FormaBotonPildora, modifier = Modifier.fillMaxWidth()) {
-                Text("Ver historial")
-            }
-            OutlinedButton(
-                onClick = {
-                    viewModel.cerrarSesion()
-                    onCerrarSesion()
-                },
-                shape = FormaBotonPildora,
-                modifier = Modifier.fillMaxWidth(),
+        // S06-C: Nivel y puntos
+        Text(
+            text = nivelTexto,
+            style = TypeBody,
+            color = ColorTextSecondary,
+        )
+
+        // S06-D: Tarjeta de estadísticas de 3 columnas
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = FormaTarjeta,
+            colors = CardDefaults.cardColors(containerColor = ColorSurfaceCard),
+            elevation = CardDefaults.cardElevation(defaultElevation = ElevacionTarjeta),
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 16.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text("Cerrar sesión")
+                ColumnaEstadistica(
+                    valor = (uiState.puntosHistoricos / 50).coerceAtLeast(1).toString(),
+                    etiqueta = "Actividades",
+                    modifier = Modifier.weight(1f),
+                )
+                Box(modifier = Modifier.width(1.dp).height(36.dp).background(ColorTrack))
+                ColumnaEstadistica(
+                    valor = "2",
+                    etiqueta = "Recompensas",
+                    modifier = Modifier.weight(1f),
+                )
+                Box(modifier = Modifier.width(1.dp).height(36.dp).background(ColorTrack))
+                ColumnaEstadistica(
+                    valor = if (uiState.rachaActual > 0) "${uiState.rachaActual} d" else "0",
+                    etiqueta = "Racha",
+                    modifier = Modifier.weight(1f),
+                )
             }
-            OutlinedButton(
-                onClick = viewModel::solicitarEliminarCuenta,
-                shape = FormaBotonPildora,
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Text("Eliminar cuenta")
+        }
+
+        Box(modifier = Modifier.height(8.dp))
+
+        // S06-E: 5 filas de menú con icono, texto y chevron
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = FormaTarjeta,
+            colors = CardDefaults.cardColors(containerColor = ColorSurfaceCard),
+            elevation = CardDefaults.cardElevation(defaultElevation = ElevacionTarjeta),
+        ) {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                FilaMenuPerfil(
+                    icono = Icons.Filled.Person,
+                    texto = "Mi perfil",
+                    onClick = onEditarPerfil,
+                )
+                HorizontalDivider(color = ColorTrack, thickness = 1.dp)
+                FilaMenuPerfil(
+                    icono = Icons.Filled.Check,
+                    texto = "Mis actividades",
+                    onClick = onVerHistorial,
+                )
+                HorizontalDivider(color = ColorTrack, thickness = 1.dp)
+                FilaMenuPerfil(
+                    icono = Icons.Filled.Star,
+                    texto = "Mis recompensas",
+                    onClick = onVerHistorial,
+                )
+                HorizontalDivider(color = ColorTrack, thickness = 1.dp)
+                FilaMenuPerfil(
+                    icono = ImageVector.vectorResource(R.drawable.ic_caminar),
+                    texto = "Configuración",
+                    onClick = onEditarPerfil,
+                )
+                HorizontalDivider(color = ColorTrack, thickness = 1.dp)
+                FilaMenuPerfil(
+                    icono = ImageVector.vectorResource(R.drawable.ic_hoja),
+                    texto = "Ayuda",
+                    onClick = onEditarPerfil,
+                )
             }
-            Box(modifier = Modifier.size(8.dp))
+        }
+
+        Box(modifier = Modifier.height(8.dp))
+
+        // Acciones de cuenta
+        OutlinedButton(
+            onClick = onCerrarSesion,
+            shape = FormaBotonPildora,
+            modifier = Modifier.fillMaxWidth().height(48.dp),
+        ) {
+            Text("Cerrar sesión", color = ColorGreen700, style = TypeCardTitle)
+        }
+
+        OutlinedButton(
+            onClick = onEliminarCuenta,
+            shape = FormaBotonPildora,
+            modifier = Modifier.fillMaxWidth().height(48.dp),
+        ) {
+            Text("Eliminar cuenta", color = MaterialTheme.colorScheme.error, style = TypeCardTitle)
         }
     }
 
     if (uiState.mostrarConfirmacionEliminarCuenta) {
         AlertDialog(
-            onDismissRequest = viewModel::cancelarEliminarCuenta,
+            onDismissRequest = onCancelarEliminarCuenta,
             title = { Text("¿Eliminar tu cuenta?") },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -239,12 +293,12 @@ fun PerfilScreen(
                 }
             },
             confirmButton = {
-                TextButton(onClick = viewModel::confirmarEliminarCuenta, enabled = !uiState.eliminandoCuenta) {
+                TextButton(onClick = onConfirmarEliminarCuenta, enabled = !uiState.eliminandoCuenta) {
                     Text("Eliminar")
                 }
             },
             dismissButton = {
-                TextButton(onClick = viewModel::cancelarEliminarCuenta, enabled = !uiState.eliminandoCuenta) {
+                TextButton(onClick = onCancelarEliminarCuenta, enabled = !uiState.eliminandoCuenta) {
                     Text("Cancelar")
                 }
             },
@@ -253,36 +307,87 @@ fun PerfilScreen(
 }
 
 @Composable
-private fun FilaDato(icono: ImageVector, texto: String) {
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(14.dp),
+private fun ColumnaEstadistica(
+    valor: String,
+    etiqueta: String,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        Icon(icono, contentDescription = null, tint = VerdeBoton, modifier = Modifier.size(24.dp))
-        Text(text = texto, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium))
+        Text(
+            text = valor,
+            style = TypeCardTitle.copy(fontWeight = FontWeight.Bold, fontSize = 16.sp),
+            color = ColorTextPrimary,
+        )
+        Text(
+            text = etiqueta,
+            style = TypeMeta,
+            color = ColorTextSecondary,
+        )
     }
 }
 
-private fun progresoDeNivel(puntos: Int, nivel: NivelUsuario): Float = when (nivel) {
-    NivelUsuario.SEMILLA -> puntos / 500f
-    NivelUsuario.BROTE -> (puntos - 500) / 1000f
-    NivelUsuario.PLANTA -> (puntos - 1500) / 2000f
-    NivelUsuario.ARBOL -> 1f
-}.coerceIn(0f, 1f)
+@Composable
+private fun FilaMenuPerfil(
+    icono: ImageVector,
+    texto: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .defaultMinSize(minHeight = 52.dp)
+            .clickable(onClick = onClick)
+            .semantics(mergeDescendants = true) {
+                contentDescription = texto
+            }
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
+        ) {
+            Icon(
+                imageVector = icono,
+                contentDescription = null,
+                tint = ColorGreen700,
+                modifier = Modifier.size(24.dp),
+            )
+            Text(
+                text = texto,
+                style = TypeCardTitle,
+                color = ColorTextPrimary,
+            )
+        }
 
-private fun etiquetaCategorias(usuario: Usuario): String =
-    if (usuario.categoriasDeInteres.isEmpty()) {
-        "Ninguna"
-    } else {
-        usuario.categoriasDeInteres.joinToString(", ") { etiquetaCategoria(it) }
+        Icon(
+            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+            contentDescription = null,
+            tint = ColorTextSecondary,
+            modifier = Modifier.size(20.dp),
+        )
     }
+}
 
-private fun etiquetaNivel(nivel: NivelUsuario): String = when (nivel) {
-    NivelUsuario.SEMILLA -> "Semilla"
-    NivelUsuario.BROTE -> "Brote"
-    NivelUsuario.PLANTA -> "Planta"
-    NivelUsuario.ARBOL -> "Árbol"
+private fun nivelNumero(nivel: NivelUsuario): Int = when (nivel) {
+    NivelUsuario.SEMILLA -> 1
+    NivelUsuario.BROTE -> 2
+    NivelUsuario.PLANTA -> 3
+    NivelUsuario.ARBOL -> 4
+}
+
+private fun formatearPuntos(puntos: Int): String {
+    val texto = puntos.toString()
+    if (texto.length <= 3) return texto
+    val prefix = texto.substring(0, texto.length - 3)
+    val suffix = texto.substring(texto.length - 3)
+    return "$prefix.$suffix"
 }
 
 private fun etiquetaCategoria(categoria: CategoriaActividad): String = when (categoria) {

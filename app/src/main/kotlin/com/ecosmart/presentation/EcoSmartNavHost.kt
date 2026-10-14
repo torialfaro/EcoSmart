@@ -37,6 +37,8 @@ sealed class EcoSmartRoute(val ruta: String) {
     data object Registro : EcoSmartRoute("registro")
     data object SolicitudPermisos : EcoSmartRoute("solicitud-permisos")
     data object Home : EcoSmartRoute("home")
+    data object Actividades : EcoSmartRoute("actividades")
+    data object Recompensas : EcoSmartRoute("recompensas")
     data object ActividadDetalle : EcoSmartRoute("actividad-detalle/{actividadId}") {
         val argumentos: List<NamedNavArgument> = listOf(navArgument("actividadId") { type = NavType.StringType })
         fun crearRuta(actividadId: String): String = "actividad-detalle/$actividadId"
@@ -151,15 +153,14 @@ fun EcoSmartNavHost(
             PerfilEdicionScreen(onVolver = { navController.popBackStack() })
         }
         composable(EcoSmartRoute.Historial.ruta) {
-            HistorialScreen(barraInferior = { BarraInferior(navController, PestanaInferior.MISIONES) })
+            HistorialScreen()
         }
     }
 }
 
 /**
- * Barra inferior del mockup (RF-083): Inicio → Home, Misiones → historial de
- * misiones realizadas, Perfil → Perfil. Solo se muestra en estas 3 pantallas
- * de nivel superior; las de detalle/verificación llevan solo el encabezado.
+ * Barra inferior del mockup (RF-UI-002b): Inicio → Home, Actividades → Actividades,
+ * Recompensas → Recompensas, Educación → ContenidoEducativo, Perfil → Perfil.
  */
 @Composable
 private fun BarraInferior(navController: NavHostController, seleccion: PestanaInferior) {
@@ -170,7 +171,9 @@ private fun BarraInferior(navController: NavHostController, seleccion: PestanaIn
     BarraInferiorEcoSmart(
         seleccion = seleccion,
         onInicio = { ir(EcoSmartRoute.Home.ruta) },
-        onMisiones = { ir(EcoSmartRoute.Historial.ruta) },
+        onActividades = { ir(EcoSmartRoute.Actividades.ruta) },
+        onRecompensas = { ir(EcoSmartRoute.Recompensas.ruta) },
+        onEducacion = { ir(EcoSmartRoute.ContenidoEducativo.ruta) },
         onPerfil = { ir(EcoSmartRoute.Perfil.ruta) },
     )
 }
