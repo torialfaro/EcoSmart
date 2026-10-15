@@ -29,6 +29,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Star
@@ -204,7 +205,7 @@ fun EncabezadoEcoSmart(
     }
 }
 
-enum class PestanaInferior { INICIO, ACTIVIDADES, RECOMPENSAS, EDUCACION, PERFIL }
+enum class PestanaInferior { INICIO, ACTIVIDADES, RECOMPENSAS, EDUCACION, PUNTOS_VERDES, PERFIL }
 
 @Composable
 private fun iconoHoja(): ImageVector = ImageVector.vectorResource(R.drawable.ic_hoja)
@@ -212,7 +213,7 @@ private fun iconoHoja(): ImageVector = ImageVector.vectorResource(R.drawable.ic_
 @Composable
 private fun iconoCaminar(): ImageVector = ImageVector.vectorResource(R.drawable.ic_caminar)
 
-/** Barra inferior Inicio / Actividades / Recompensas / Educación / Perfil del mockup (RF-UI-002b). Solo iconos, sin etiqueta de texto (feedback post-QA). */
+/** Barra inferior Inicio / Actividades / Recompensas / Educación / Puntos Verdes / Perfil del mockup (RF-UI-002b, RF-UI-002c). Solo iconos, sin etiqueta de texto (feedback post-QA). */
 @Composable
 fun BarraInferiorEcoSmart(
     seleccion: PestanaInferior,
@@ -220,6 +221,7 @@ fun BarraInferiorEcoSmart(
     onActividades: () -> Unit,
     onRecompensas: () -> Unit,
     onEducacion: () -> Unit,
+    onPuntosVerdes: () -> Unit,
     onPerfil: () -> Unit,
 ) {
     NavigationBar(containerColor = FondoPagina, tonalElevation = 0.dp) {
@@ -252,6 +254,12 @@ fun BarraInferiorEcoSmart(
             selected = seleccion == PestanaInferior.EDUCACION,
             onClick = onEducacion,
             icon = { Icon(iconoHoja(), contentDescription = "Educación") },
+            colors = colores,
+        )
+        NavigationBarItem(
+            selected = seleccion == PestanaInferior.PUNTOS_VERDES,
+            onClick = onPuntosVerdes,
+            icon = { Icon(Icons.Filled.LocationOn, contentDescription = "Puntos Verdes") },
             colors = colores,
         )
         NavigationBarItem(

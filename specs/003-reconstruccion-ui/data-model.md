@@ -29,7 +29,7 @@ las variantes visuales que debe soportar.
 | ID | Composable (nombre propuesto) | Estados/variantes | Pantallas que lo usan |
 |---|---|---|---|
 | C-01 | *(dibujado por el SO, no aplica)* | — | Todas |
-| C-02 | `BarraInferiorEcoSmart` (`PestanaInferior`: 5 valores) | seleccionado/no seleccionado | Inicio, Actividades, Recompensas, Educación, Perfil |
+| C-02 | `BarraInferiorEcoSmart` (`PestanaInferior`: 6 valores, incluye `PUNTOS_VERDES` — `RF-UI-002c`) | seleccionado/no seleccionado | Inicio, Actividades, Recompensas, Educación, Puntos Verdes, Perfil |
 | C-03 | `EncabezadoEcoSmart` | con/sin avatar, con/sin flecha de volver | Todas |
 | C-04 | `ChipFiltro`/`SegmentoEcoSmart` (nuevo) | seleccionado, no seleccionado, deshabilitado | Actividades, Recompensas, Educación |
 | C-05 | `BarraProgresoLineal` (nuevo) | 0–100% | Inicio (progreso general), tarjeta de actividad medible |
@@ -39,6 +39,12 @@ las variantes visuales que debe soportar.
 | C-09 | `TarjetaVideo` (nuevo) | compacta (150×100), ancha (full×100) | Inicio, Educación |
 | C-10 | `TarjetaRecompensa` (nuevo) | costo habilitado/deshabilitado (visual, no funcional) | Recompensas |
 | C-11 | `TarjetaPuntos` (nuevo) | — | Inicio |
+
+**Puntos Verdes y `C-02`** (`RF-UI-002c`, research.md §9): "Puntos Verdes" usa `C-02`
+(la barra inferior) igual que las otras 5 pantallas, pero `PuntosVerdesScreen` en sí
+misma **no** adopta ningún otro componente (`C-03` a `C-11`) ni los tokens de la
+sección 1: conserva su implementación visual actual, fuera del alcance de rediseño de
+este spec (`RF-UI-002`).
 
 ## 3. Muestra estática de Recompensas (Presentación — `rewards/RecompensaEjemplo.kt`)
 

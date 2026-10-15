@@ -96,7 +96,6 @@ fun EcoSmartNavHost(
                 onVerTodasLasActividades = {
                     navController.navigate(EcoSmartRoute.Actividades.ruta)
                 },
-                onVerPuntosVerdes = { navController.navigate(EcoSmartRoute.PuntosVerdes.ruta) },
                 onVerContenidoEducativo = { navController.navigate(EcoSmartRoute.ContenidoEducativo.ruta) },
                 onVerPerfil = { navController.navigate(EcoSmartRoute.Perfil.ruta) },
                 barraInferior = { BarraInferior(navController, PestanaInferior.INICIO) },
@@ -132,7 +131,10 @@ fun EcoSmartNavHost(
             )
         }
         composable(EcoSmartRoute.PuntosVerdes.ruta) {
-            PuntosVerdesScreen(onVolver = { navController.popBackStack() })
+            PuntosVerdesScreen(
+                onVolver = { navController.popBackStack() },
+                barraInferior = { BarraInferior(navController, PestanaInferior.PUNTOS_VERDES) },
+            )
         }
         composable(EcoSmartRoute.ContenidoEducativo.ruta) {
             ContenidoEducativoScreen(
@@ -190,8 +192,9 @@ fun EcoSmartNavHost(
 }
 
 /**
- * Barra inferior del mockup (RF-UI-002b): Inicio → Home, Actividades → Actividades,
- * Recompensas → Recompensas, Educación → ContenidoEducativo, Perfil → Perfil.
+ * Barra inferior del mockup (RF-UI-002b, RF-UI-002c): Inicio → Home, Actividades →
+ * Actividades, Recompensas → Recompensas, Educación → ContenidoEducativo,
+ * Puntos Verdes → PuntosVerdes, Perfil → Perfil.
  */
 @Composable
 private fun BarraInferior(navController: NavHostController, seleccion: PestanaInferior) {
@@ -205,6 +208,7 @@ private fun BarraInferior(navController: NavHostController, seleccion: PestanaIn
         onActividades = { ir(EcoSmartRoute.Actividades.ruta) },
         onRecompensas = { ir(EcoSmartRoute.Recompensas.ruta) },
         onEducacion = { ir(EcoSmartRoute.ContenidoEducativo.ruta) },
+        onPuntosVerdes = { ir(EcoSmartRoute.PuntosVerdes.ruta) },
         onPerfil = { ir(EcoSmartRoute.Perfil.ruta) },
     )
 }

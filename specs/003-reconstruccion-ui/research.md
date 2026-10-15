@@ -212,3 +212,53 @@ usuaria reportó 12 puntos de feedback (ver `spec.md` → Clarifications, sesió
   de UI; cero lógica nueva, solo mover el punto de entrada visual a la pantalla donde
   la usuaria ya edita datos sensibles de su cuenta.
 
+## 9. Acceso a Puntos Verdes desde la barra inferior (feedback 2026-10-14, continuación)
+
+La barra inferior reconstruida en la Fase 2 (`T002`-`T004`) dejó inalcanzable
+`PuntosVerdesScreen`: el parámetro `onVerPuntosVerdes` de `HomeScreen` quedó declarado
+pero sin invocar (ningún botón/tarjeta lo llama), violando `RNF-002` de spec 001. Se
+documentan acá las decisiones técnicas de `RF-UI-002c` (ver `spec.md` →
+Clarifications, sesión 2026-10-14 continuación):
+
+- **Nombre del valor de enum**: El 6º valor de `PestanaInferior` se llama
+  `PUNTOS_VERDES` (no `UBICACION` ni `MAPA`), consistente con el nombre ya usado por
+  `EcoSmartRoute.PuntosVerdes` y `PuntosVerdesScreen` en el código existente.
+  **Rationale**: evita introducir un segundo vocabulario para el mismo concepto
+  (Principio V, claridad de código); el ícono visual (ubicación/pin) es un detalle de
+  presentación del valor, no su nombre. **Alternatives considered**: `UBICACION`
+  (rechazada: describe el ícono, no el destino; sería ambiguo si en el futuro se agrega
+  otro ítem basado en ubicación).
+- **Posición e ícono**: El nuevo `NavigationBarItem` se agrega entre Educación y Perfil
+  en `BarraInferiorEcoSmart`, usando `Icons.Filled.LocationOn` y
+  `contentDescription = "Puntos Verdes"`, igual al patrón ya usado por los otros 5
+  ítems (`iconoCaminar()`/`iconoHoja()` + `contentDescription` fijo). **Rationale**:
+  decisión ya tomada en `spec.md` → Clarifications; `LocationOn` es parte del set de
+  Material Icons ya usado por el resto de la barra (`Icons.Filled.*`), sin agregar una
+  dependencia de iconografía nueva. **Alternatives considered**: ícono custom tipo
+  `iconoCaminar()`/`iconoHoja()` (rechazada: no aporta valor visual adicional sobre el
+  ícono estándar de Material para un pin de ubicación, y evita un asset vectorial
+  nuevo).
+- **Pestaña persistente, no atajo**: `PuntosVerdesScreen` pasa a recibir un parámetro
+  `barraInferior: @Composable () -> Unit` (igual que `HomeScreen`/`ActividadesScreen`/
+  etc.), cableado en `EcoSmartNavHost.kt` como
+  `composable(EcoSmartRoute.PuntosVerdes.ruta) { PuntosVerdesScreen(onVolver = ...,
+  barraInferior = { BarraInferior(navController, PestanaInferior.PUNTOS_VERDES) }) }`,
+  con `ir(EcoSmartRoute.PuntosVerdes.ruta)` en la función privada `BarraInferior` (mismo
+  patrón `popUpTo(EcoSmartRoute.Home.ruta)` + `launchSingleTop = true` que los otros 5
+  ítems). **Rationale**: decisión ya tomada en `spec.md` → Clarifications; mantiene
+  consistencia de interacción con el resto de la barra (siempre visible, siempre
+  resalta el ítem activo). **Alternatives considered**: pantalla apilada sin barra,
+  igual que `PerfilEdicionScreen`/`HistorialScreen` (rechazada explícitamente en
+  Clarifications por el riesgo de que la usuaria pierda la referencia de en qué tab
+  está parada al volver).
+- **Destino del callback muerto `onVerPuntosVerdes`**: Se elimina el parámetro
+  `onVerPuntosVerdes` de `HomeScreen` (y su wiring huérfano en `EcoSmartNavHost.kt`),
+  en vez de re-cablearlo a un botón nuevo dentro de Home.
+  **Rationale**: `RF-UI-002c` ya cubre el acceso a Puntos Verdes desde cualquier
+  pantalla principal (1 toque, `SC-UI-006`); mantener un segundo punto de entrada
+  dentro de Home sería una ruta de código muerta/duplicada que ninguna historia de
+  usuario pide (Principio I: ninguna funcionalidad sin requisito formal asociado).
+  **Alternatives considered**: re-cablear `onVerPuntosVerdes` a una tarjeta/enlace
+  dentro de Home, conservando ambos accesos (rechazada: duplica el punto de entrada sin
+  un requisito que lo pida, y complica el test de `SC-UI-006`).
+

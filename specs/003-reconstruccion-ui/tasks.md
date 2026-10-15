@@ -450,6 +450,62 @@ implementadas en las Fases 3 a 8, no nuevas historias de usuario.
 
 ---
 
+## Phase 10: Acceso a Puntos Verdes desde la Barra Inferior (RF-UI-002c, feedback 2026-10-14 continuación)
+
+**Purpose**: Restaurar el acceso a `PuntosVerdesScreen` (hoy inalcanzable —
+`onVerPuntosVerdes` quedó declarado en `HomeScreen` pero nunca invocado tras la
+reestructuración de la Fase 2, violando `RNF-002` de spec 001) agregando un 6º ítem de
+ubicación a la barra de navegación inferior, como pestaña persistente igual que las
+otras 5 (`RF-UI-002c`, `SC-UI-006` — ver `spec.md` → Clarifications sesión 2026-10-14
+continuación, y `plan.md`/`research.md` §9). Son correcciones/extensiones sobre la
+Fase 2 (Foundational) y la Fase 3 (US1) ya completadas, no una nueva historia de
+usuario.
+
+- [X] T060 Extender el enum `PestanaInferior` a 6 valores agregando `PUNTOS_VERDES` y
+      agregar el parámetro `onPuntosVerdes` + un `NavigationBarItem` nuevo (ícono
+      `Icons.Filled.LocationOn`, `contentDescription` "Puntos Verdes", sin etiqueta de
+      texto visible, igual que el resto — `RF-UI-005`) a `BarraInferiorEcoSmart`, en
+      `app/src/main/kotlin/com/ecosmart/presentation/theme/ComponentesEcoSmart.kt`
+      (`RF-UI-002c`, research.md §9)
+- [X] T061 [P] Agregar el parámetro `barraInferior: @Composable () -> Unit` a
+      `PuntosVerdesScreen` (renderizado al pie de la pantalla, igual patrón que
+      `HomeScreen`/`ActividadesScreen`/etc.), sin tocar el resto de su UI ni su lógica
+      — sigue fuera del alcance de rediseño de este spec (`RF-UI-002`), en
+      `app/src/main/kotlin/com/ecosmart/presentation/home/PuntosVerdesScreen.kt`
+      (`RF-UI-002c`, research.md §9)
+- [X] T062 Cablear el 6º ítem en `EcoSmartNavHost.kt`: agregar `onPuntosVerdes` en la
+      función privada `BarraInferior(...)` (navega a `EcoSmartRoute.PuntosVerdes` con
+      `popUpTo(EcoSmartRoute.Home.ruta)` + `launchSingleTop = true`, mismo patrón que
+      los otros 5 ítems) y pasar
+      `barraInferior = { BarraInferior(navController, PestanaInferior.PUNTOS_VERDES) }`
+      al `composable(EcoSmartRoute.PuntosVerdes.ruta)`, en
+      `app/src/main/kotlin/com/ecosmart/presentation/EcoSmartNavHost.kt` (depende de
+      T060, T061)
+- [X] T063 Eliminar el parámetro `onVerPuntosVerdes` (sin invocar) de `HomeScreen`/
+      `HomeScreenContenido` y su wiring huérfano en `EcoSmartNavHost.kt` — el acceso a
+      Puntos Verdes ya queda cubierto por el ítem de la barra inferior (T060-T062,
+      research.md §9), en
+      `app/src/main/kotlin/com/ecosmart/presentation/home/HomeScreen.kt` y
+      `app/src/main/kotlin/com/ecosmart/presentation/EcoSmartNavHost.kt` (depende de
+      T062)
+- [X] T064 [P] Actualizar `BarraInferiorEcoSmartTest.kt` (sus 3 tests existentes:
+      cantidad de ítems, ítem seleccionado, callbacks al hacer clic) para cubrir el 6º
+      ítem "Puntos Verdes" (`PestanaInferior.PUNTOS_VERDES`, `onPuntosVerdes`), en
+      `app/src/androidTest/kotlin/com/ecosmart/presentation/theme/BarraInferiorEcoSmartTest.kt`
+      (depende de T060)
+- [ ] T065 Ejecutar `./gradlew :app:testDebugUnitTest` y
+      `./gradlew :app:connectedDebugAndroidTest` y confirmar que el 100% de los tests
+      (existentes + T064) pasan sin requerir ningún cambio de lógica de negocio ni de
+      navegación fuera de lo descrito en T060-T063 (`SC-UI-004`) (depende de T063, T064)
+- [ ] T066 Ejecutar de punta a punta la sección "2bis" de `quickstart.md` (validación
+      manual de que Puntos Verdes es alcanzable en 1 toque desde cualquier pantalla
+      principal, con el ícono resaltado — `SC-UI-006`) (depende de T065)
+- [X] T067 Revisar `research.md` §9, `data-model.md` §2 y `plan.md` (ya actualizados en
+      `/speckit.plan`) y ajustarlos si la implementación real de T060-T063 difiere en
+      algún detalle de lo documentado
+
+---
+
 ## Dependencies & Execution Order
 
 ### Phase Dependencies

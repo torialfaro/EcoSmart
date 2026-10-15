@@ -77,7 +77,6 @@ fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel(),
     onSeleccionarActividad: (ActividadId) -> Unit,
     onVerTodasLasActividades: () -> Unit = {},
-    onVerPuntosVerdes: () -> Unit = {},
     onVerContenidoEducativo: () -> Unit = {},
     onVerPerfil: () -> Unit,
     barraInferior: @Composable () -> Unit = {},

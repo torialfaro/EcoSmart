@@ -14,7 +14,7 @@ class BarraInferiorEcoSmartTest {
     val composeTestRule = createComposeRule()
 
     @Test
-    fun barraInferior_exponeLosCincoItems() {
+    fun barraInferior_exponeLosSeisItems() {
         composeTestRule.setContent {
             EcoSmartTheme {
                 BarraInferiorEcoSmart(
@@ -23,6 +23,7 @@ class BarraInferiorEcoSmartTest {
                     onActividades = {},
                     onRecompensas = {},
                     onEducacion = {},
+                    onPuntosVerdes = {},
                     onPerfil = {},
                 )
             }
@@ -33,6 +34,7 @@ class BarraInferiorEcoSmartTest {
         composeTestRule.onNodeWithContentDescription("Actividades").assertExists()
         composeTestRule.onNodeWithContentDescription("Recompensas").assertExists()
         composeTestRule.onNodeWithContentDescription("Educación").assertExists()
+        composeTestRule.onNodeWithContentDescription("Puntos Verdes").assertExists()
         composeTestRule.onNodeWithContentDescription("Perfil").assertExists()
     }
 
@@ -47,6 +49,7 @@ class BarraInferiorEcoSmartTest {
                         onActividades = {},
                         onRecompensas = {},
                         onEducacion = {},
+                        onPuntosVerdes = {},
                         onPerfil = {},
                     )
                 }
@@ -57,6 +60,7 @@ class BarraInferiorEcoSmartTest {
                 PestanaInferior.ACTIVIDADES -> "Actividades"
                 PestanaInferior.RECOMPENSAS -> "Recompensas"
                 PestanaInferior.EDUCACION -> "Educación"
+                PestanaInferior.PUNTOS_VERDES -> "Puntos Verdes"
                 PestanaInferior.PERFIL -> "Perfil"
             }
 
@@ -75,6 +79,7 @@ class BarraInferiorEcoSmartTest {
                     onActividades = { clickeado = "ACTIVIDADES" },
                     onRecompensas = { clickeado = "RECOMPENSAS" },
                     onEducacion = { clickeado = "EDUCACION" },
+                    onPuntosVerdes = { clickeado = "PUNTOS_VERDES" },
                     onPerfil = { clickeado = "PERFIL" },
                 )
             }
@@ -88,6 +93,9 @@ class BarraInferiorEcoSmartTest {
 
         composeTestRule.onNodeWithContentDescription("Educación").performClick()
         assertEquals("EDUCACION", clickeado)
+
+        composeTestRule.onNodeWithContentDescription("Puntos Verdes").performClick()
+        assertEquals("PUNTOS_VERDES", clickeado)
 
         composeTestRule.onNodeWithContentDescription("Perfil").performClick()
         assertEquals("PERFIL", clickeado)

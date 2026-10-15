@@ -46,6 +46,25 @@ Para cada una, verificar en particular:
 - La barra inferior resalta el tab correcto, incluido el caso especial de Caminar
   resaltando "Actividades" (`RF-UI-007`).
 
+## 2bis. Puntos Verdes — nuevo acceso desde la barra inferior (sin rediseño visual)
+
+A diferencia de la sección anterior, **no** se compara `PuntosVerdesScreen` contra
+ninguna sección de `especificacion-ui-app-eco.md` (queda fuera del alcance de rediseño,
+`RF-UI-002`/`RF-UI-002c`, research.md §9). Solo se valida que el acceso de navegación
+funcione:
+
+1. Desde cualquiera de las 6 pantallas principales, tocar el 6º ítem de la barra
+   inferior (ícono de ubicación, entre Educación y Perfil) → se abre Puntos Verdes en
+   1 solo toque (`SC-UI-006`).
+2. La barra inferior sigue visible dentro de Puntos Verdes, con el ícono de ubicación
+   resaltado como seleccionado (`RF-UI-002c`).
+3. `PuntosVerdesScreen` conserva su apariencia e implementación actuales (mapa
+   OpenStreetMap, datos por barrio — spec 001 `RF-018`/`RF-065`), sin ningún elemento
+   del nuevo sistema de diseño (tokens de `data-model.md` §1 ni componentes `C-03` a
+   `C-11`).
+4. Con TalkBack activo, el ítem se lee como "Puntos Verdes" (`contentDescription`,
+   `RF-UI-018`).
+
 ## 3. Validación funcional (no debe cambiar nada de esto)
 
 Repetir, sin encontrar ninguna diferencia de comportamiento respecto de antes de este
@@ -93,6 +112,8 @@ Este módulo se considera validado cuando:
 
 - Los 6 ítems de la sección 2 de este documento no muestran diferencias perceptibles
   contra `especificacion-ui-app-eco.md` (`SC-UI-002`).
+- Los 4 pasos de la sección 2bis confirman que Puntos Verdes es alcanzable en 1 toque
+  desde la barra inferior, sin requerir ninguna comparación visual (`SC-UI-006`).
 - Los 4 ítems de la sección 3 de este documento se comportan exactamente igual que
   antes de este módulo (`SC-UI-004`).
 - La sección 4 (accesibilidad) no encuentra incumplimientos (`SC-UI-005`).

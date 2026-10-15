@@ -38,9 +38,9 @@ Mapeo de pantallas existentes a su nueva especificación visual:
 Lo que **no** cambia porque es lógica/backend, no interfaz: autenticación, reglas de
 puntaje y topes diarios, verificación por IA (EcoGPT), persistencia remota en Firestore,
 destinos de pantalla ya existentes y permisos de dispositivo. La única excepción
-estructural es la barra de navegación inferior, que pasa de 3 a 5 tabs (ver
-Clarifications): es una reorganización de Presentación sobre datos ya existentes, no una
-nueva regla de negocio.
+estructural es la barra de navegación inferior, que pasa de 3 a 5 tabs y luego a 6
+ítems al sumar el acceso a Puntos Verdes (ver Clarifications): es una reorganización de
+Presentación sobre datos ya existentes, no una nueva regla de negocio.
 
 ## Clarifications
 
@@ -111,6 +111,33 @@ nueva regla de negocio.
   Productos — ver research.md §1), nunca el campo vacío (ver `RF-UI-012`/data-model.md
   §3 actualizados).
 
+### Session 2026-10-14 (continuación) — Ícono de ubicación y acceso al mapa de Puntos Verdes
+
+- Q: La barra inferior reconstruida (`RF-UI-002b`, 5 tabs) dejó sin punto de entrada
+  alcanzable a "Puntos Verdes" (`onVerPuntosVerdes` quedó declarado en `HomeScreen` pero
+  sin invocar, violando `RNF-002` de spec 001: acceso en no más de 2 toques desde el
+  menú principal). ¿En qué posición de la barra inferior se agrega el nuevo ícono de
+  ubicación? → A: Como 6º ítem, entre Educación y Perfil (Perfil queda al final, por
+  convención habitual de apps); la barra pasa de 5 a 6 ítems. Nuevo requisito:
+  `RF-UI-002c`.
+- Q: `PuntosVerdesScreen` ya existe con su propio estilo visual anterior al rediseño.
+  ¿Se redibuja con el nuevo sistema de diseño (tokens/componentes `C-xx`) como una 7ª
+  pantalla principal, o se deja fuera de alcance igual que el resto de pantallas no
+  diseñadas? → A: Queda fuera de alcance visual, igual que las demás pantallas no
+  cubiertas por `especificacion-ui-app-eco.md` (ver `RF-UI-002`): conserva su
+  apariencia e implementación actuales sin cambios; este spec únicamente agrega el
+  ítem de navegación que la hace alcanzable desde la barra inferior.
+- Q: Hoy `PuntosVerdesScreen` se navega como pantalla apilada sin barra inferior (igual
+  que Editar perfil/Historial). Al sumar el ícono de ubicación, ¿se comporta como
+  pestaña persistente (barra visible también en Puntos Verdes, resaltada al estar
+  seleccionada) o como atajo secundario sin barra? → A: Pestaña persistente, igual que
+  las otras 5: la barra de navegación inferior DEBE mostrarse también en Puntos Verdes,
+  con el ícono de ubicación resaltado como seleccionado mientras esa pantalla está
+  activa (ver `RF-UI-002c` actualizado).
+- Q: ¿Qué ícono y `contentDescription` debe usar el nuevo ítem? → A: Ícono estándar de
+  ubicación/pin ("LocationOn"), con `contentDescription` "Puntos Verdes", siguiendo el
+  mismo patrón de los demás íconos de la barra (ver `RF-UI-002c` actualizado).
+
 ### Session 2026-10-12
 
 - Q: El diseño pide una pantalla/tab "Recompensas" completa (catálogo, categorías,
@@ -155,8 +182,9 @@ pantalla completa esté terminada todavía.
 
 1. **Given** la app corriendo con el nuevo tema, **When** se renderiza la barra de
    navegación inferior en cualquier pantalla principal, **Then** coincide con `C-02`:
-   5 ítems distribuidos en partes iguales, iconos de 24 pt (relleno verde en el activo,
-   línea gris en los inactivos), etiqueta `type.tab`, alto 64 pt + área segura.
+   6 ítems distribuidos en partes iguales (ver RF-UI-002c), iconos de 24 pt (relleno
+   verde en el activo, línea gris en los inactivos), etiqueta `type.tab`, alto 64 pt +
+   área segura.
 2. **Given** un botón principal en cualquier pantalla, **When** se renderiza, **Then**
    coincide con `C-07`: ancho completo, alto 48 pt, forma de píldora, fondo
    `color.green.700`, texto blanco en `type.chip` SemiBold, con sus estados de reposo,
@@ -164,6 +192,9 @@ pantalla completa esté terminada todavía.
 3. **Given** una fila de chips de filtro o segmento, **When** la usuaria toca una opción,
    **Then** solo esa opción queda seleccionada (fondo `color.green.700`, texto blanco) y
    las demás vuelven a su estado no seleccionado (`C-04`).
+4. **Given** cualquier pantalla principal, **When** la usuaria toca el ícono de
+   ubicación de la barra inferior, **Then** se abre Puntos Verdes con la barra inferior
+   visible y el ícono de ubicación resaltado como seleccionado (RF-UI-002c).
 
 ---
 
@@ -310,7 +341,8 @@ pantallas ya reconstruidas.
   ViewModel (Principio X de `constitution.md`).
 - **RF-UI-002**: El sistema NO DEBE introducir nuevas reglas de negocio, ni nuevas
   pantallas de detalle más allá de las reorganizaciones de navegación explícitamente
-  permitidas por RF-UI-002b. Las pantallas y flujos referenciados pero no diseñados en
+  permitidas por RF-UI-002b y RF-UI-002c. Las pantallas y flujos referenciados pero no
+  diseñados en
   `especificacion-ui-app-eco.md` §1.3 (detalle/canje de recompensa, reproductor de
   video, listado de videos destacados, pestañas Artículos/IA, filas de menú de Perfil,
   destino de la tarjeta de puntos) quedan fuera de alcance: conservan su UI y
@@ -326,6 +358,23 @@ pantallas ya reconstruidas.
   (S-02) reutilizando los mismos datos, y Educación se promueve de enlace a tab. Esta
   reorganización es exclusivamente de Presentación/Navegación sobre datos ya existentes
   y no constituye una excepción a RF-UI-002.
+- **RF-UI-002c**: El sistema DEBE agregar un 6º ítem a la barra de navegación inferior
+  (ver Clarifications 2026-10-14 continuación), un ícono de ubicación ("LocationOn",
+  `contentDescription` "Puntos Verdes") que navega a la pantalla ya existente de Puntos
+  Verdes (`EcoSmartRoute.PuntosVerdes`, hoy inalcanzable porque `onVerPuntosVerdes`
+  quedó sin invocar en `HomeScreen` tras RF-UI-002b), restaurando el cumplimiento de
+  `RNF-002` de spec 001 (acceso en no más de 2 toques desde el menú principal). El
+  nuevo ítem se ubica entre Educación y Perfil (Inicio, Actividades, Recompensas,
+  Educación, Ubicación, Perfil) y NO DEBE mostrar etiqueta de texto, consistente con
+  RF-UI-005. A diferencia de las demás pantallas fuera de alcance (que se navegan como
+  pantallas apiladas sin barra), Puntos Verdes DEBE comportarse como una pestaña
+  persistente más: la barra de navegación inferior se muestra también dentro de Puntos
+  Verdes, con el ícono de ubicación resaltado como seleccionado mientras esa pantalla
+  está activa, igual que el resaltado de Actividades en su propio detalle (RF-UI-007).
+  La pantalla de destino (`PuntosVerdesScreen`) conserva su apariencia e implementación
+  visual actuales sin cambios (no forma parte del rediseño de este spec, igual que el
+  resto de pantallas fuera de alcance de RF-UI-002); esta reorganización de navegación
+  no constituye una excepción a RF-UI-002.
 - **RF-UI-003**: El sistema NO DEBE implementar los estados e interacciones
   transversales de la sección 10 de `especificacion-ui-app-eco.md` (carga/skeleton,
   vacío, error de red, sin conexión, pull-to-refresh, ni los estados de Caminar
@@ -478,6 +527,10 @@ persistencia ni identidad de negocio.
 - **SC-UI-005**: Una auditoría de accesibilidad (contraste, tamaño de zonas táctiles,
   escalado de texto al 130%) no encuentra incumplimientos en ninguna de las 6 pantallas
   reconstruidas.
+- **SC-UI-006**: Desde cualquiera de las 6 pantallas principales, tocar el ícono de
+  ubicación de la barra de navegación inferior (RF-UI-002c) abre Puntos Verdes en 1
+  solo toque, restaurando el cumplimiento de `RNF-002` de spec 001 (hoy incumplido
+  porque la pantalla es inalcanzable desde la UI).
 
 ## Assumptions
 
@@ -487,7 +540,11 @@ persistencia ni identidad de negocio.
   `constitution.md` (v2.1.0).
 - La pantalla Recompensas se construye con datos de ejemplo fijos en la capa de
   Presentación (sin backend ni persistencia), y la barra de navegación se reestructura
-  de 3 a 5 tabs, según lo resuelto en Clarifications.
+  de 3 a 5 tabs y luego a 6 ítems (acceso a Puntos Verdes), según lo resuelto en
+  Clarifications.
+- `PuntosVerdesScreen` queda fuera del alcance visual de este spec (conserva su
+  apariencia e implementación actuales); únicamente se restaura su alcanzabilidad desde
+  la barra de navegación inferior (RF-UI-002c, Clarifications 2026-10-14 continuación).
 - Las preguntas de producto abiertas en §13.2 (destino de la tarjeta de puntos, función
   de "Elegí una actividad", reinicio diario, verificación no medible, canje de
   recompensa, alcance de la pestaña IA, cálculo de nivel/racha, modo offline, plataforma

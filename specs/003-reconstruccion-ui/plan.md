@@ -16,14 +16,19 @@ Actividades, Caminar/detalle de actividad, Recompensas, Educación, Perfil) seg�
 `especificacion-ui-app-eco.md`, definiendo un sistema de diseño único (tokens +
 componentes `C-01`–`C-11`) reutilizado por todas ellas, y reestructurando la barra de
 navegación inferior de 3 tabs (Inicio/Misiones/Perfil) a 5 tabs (Inicio/Actividades/
-Recompensas/Educación/Perfil — `RF-UI-002b`). Ninguna regla de negocio, cálculo de
-puntaje, persistencia o verificación por IA cambia: todo el trabajo vive en
-`presentation/` (Compose) y, para la pantalla Recompensas —que hoy no tiene ningún dato
-ni backend—, en una lista de ejemplo estática embebida solo en esa capa (`RF-UI-003b`,
-sin tocar Dominio/Aplicación/Infraestructura). La investigación de Fase 0
-(`research.md`) resuelve, entre otras cosas, por qué no se agrega una librería de
-carga de imágenes remota y cómo se mapea la pantalla `S-03` a las dos pantallas
-Kotlin ya existentes que hoy cubren ese flujo.
+Recompensas/Educación/Perfil — `RF-UI-002b`) y luego a 6 ítems al restaurar el acceso a
+Puntos Verdes (ícono de ubicación, entre Educación y Perfil — `RF-UI-002c`), hoy
+inalcanzable porque `onVerPuntosVerdes` quedó sin cablear en `HomeScreen` tras
+`RF-UI-002b`. Ninguna regla de negocio, cálculo de puntaje, persistencia o verificación
+por IA cambia: todo el trabajo vive en `presentation/` (Compose) y, para la pantalla
+Recompensas —que hoy no tiene ningún dato ni backend—, en una lista de ejemplo estática
+embebida solo en esa capa (`RF-UI-003b`, sin tocar Dominio/Aplicación/Infraestructura).
+Puntos Verdes (`PuntosVerdesScreen`) no entra en el rediseño visual (sigue fuera de
+alcance, `RF-UI-002`): solo gana un punto de entrada de navegación y la barra inferior.
+La investigación de Fase 0 (`research.md`) resuelve, entre otras cosas, por qué no se
+agrega una librería de carga de imágenes remota, cómo se mapea la pantalla `S-03` a las
+dos pantallas Kotlin ya existentes que hoy cubren ese flujo, y cómo se restaura el
+acceso a Puntos Verdes sin violar `RF-UI-002`.
 
 ## Technical Context
 
@@ -64,8 +69,10 @@ salvo lectura de datos ya expuestos); reutilizar tal cual los `UiState` ya expue
 de pantalla, respeto a "reducir movimiento").
 
 **Scale/Scope**: 6 pantallas reconstruidas, 11 componentes globales (`C-01`–`C-11`),
-reestructuración de 3→5 tabs, 1 pantalla nueva sin equivalente previo (Recompensas, con
-datos de ejemplo estáticos), 0 endpoints nuevos, 0 entidades de dominio nuevas.
+reestructuración de 3→5→6 tabs (el 6º ítem solo agrega navegación, no rediseña
+`PuntosVerdesScreen` — `RF-UI-002c`), 1 pantalla nueva sin equivalente previo
+(Recompensas, con datos de ejemplo estáticos), 0 endpoints nuevos, 0 entidades de
+dominio nuevas.
 
 ## Constitution Check
 
@@ -76,12 +83,12 @@ para habilitar este módulo).
 
 | # | Principio | Estado | Cómo lo satisface este plan |
 |---|-----------|--------|------------------------------|
-| I | La Especificación Manda (NON-NEGOTIABLE) | ✅ PASS | Cada pantalla/componente de este plan traza a un `RF-UI-xxx`/`SC-UI-xxx` numerado de `spec.md`; los dos hallazgos nuevos de esta fase (sin datos de Recompensas, 3→5 tabs) ya fueron resueltos en `spec.md` → Clarifications antes de continuar. |
+| I | La Especificación Manda (NON-NEGOTIABLE) | ✅ PASS | Cada pantalla/componente de este plan traza a un `RF-UI-xxx`/`SC-UI-xxx` numerado de `spec.md`; los hallazgos nuevos de esta fase (sin datos de Recompensas, 3→5 tabs, y el acceso a Puntos Verdes vía el 6º ítem de la barra) ya fueron resueltos en `spec.md` → Clarifications antes de continuar. |
 | II | Restricción Estricta de Fases (NON-NEGOTIABLE) | ✅ PASS | Este comando solo produce `plan.md`, `research.md`, `data-model.md`, `quickstart.md`; no se escribió código fuente de la app. |
 | III | Modelado de Dominio con POO Real | ✅ PASS (no aplica) | Este módulo no agrega ni modifica entidades de dominio (`RF-UI-001`); la muestra de Recompensas es un dato de Presentación sin reglas de negocio propias (no hay tope diario, racha ni verificación asociada a ella). |
 | IV | Separación Estricta de Capas (Clean Architecture) | ✅ PASS | Todo el trabajo vive en `presentation/` (Compose + lectura de `UiState` ya expuestos). Ningún archivo de `domain/`, `application/` o `infrastructure/` se modifica. |
 | V | Calidad y Claridad de Código | ✅ PASS | Los componentes globales (`C-01`–`C-11`) se extraen una sola vez a `theme/ComponentesEcoSmart.kt`/`theme/Tokens.kt`; ninguna pantalla duplica estilos sueltos (`RF-UI-004`). |
-| VI | Tipado y Valores Cerrados (Enums) | ✅ PASS | `PestanaInferior` se extiende como `enum class` (5 valores) en vez de strings sueltos; `CategoriaActividad` **no** se modifica ni se le agregan valores nuevos pese a que el documento de diseño use nombres de ejemplo que no son categorías reales (ver `RF-UI-011` corregido y research.md §4). |
+| VI | Tipado y Valores Cerrados (Enums) | ✅ PASS | `PestanaInferior` se extiende como `enum class` a 6 valores (incluyendo `PUNTOS_VERDES` — ver research.md §9) en vez de strings sueltos; `CategoriaActividad` **no** se modifica ni se le agregan valores nuevos pese a que el documento de diseño use nombres de ejemplo que no son categorías reales (ver `RF-UI-011` corregido y research.md §4). |
 | VII | Diseño Pragmático (Patrones Solo si Simplifican) | ✅ PASS | Se descarta agregar Coil/Glide (research.md §1) por no resolver ningún problema real (no hay URLs de imagen reales todavía); se reutiliza el patrón ya existente (`painterResource` + drawables locales). |
 | VIII | Calidad de Pruebas | ⚠ PENDIENTE EN `/speckit.tasks` | research.md §7 define la estrategia (Compose UI Test por pantalla/componente + cero regresiones en los tests ya existentes, `SC-UI-004`); las tareas concretas se generan en `/speckit.tasks`. |
 | IX | Experiencia de Usuario (UX) Amena y Motivadora | ✅ PASS | No se introduce ningún mensaje ni estado punitivo nuevo; los estados de error/vacío (sección 10 del doc de diseño) quedan explícitamente fuera de alcance (`RF-UI-003`), por lo que no hay riesgo de un tono distinto al ya aprobado en spec 001. |
@@ -94,10 +101,20 @@ pasar antes por `/speckit.clarify`"): se resolvió explícitamente en `spec.md` 
 Clarifications (datos de ejemplo fijos, solo en Presentación, sin canje real) antes de
 continuar con este plan. ✅ PASS.
 
+**Gate adicional (hallazgo de `/speckit.analyze`, sesión 2026-10-14 continuación)**: La
+barra de navegación inferior reconstruida (`RF-UI-002b`) dejó inalcanzable la pantalla
+`PuntosVerdesScreen` (ya existente, spec 001 `RF-018`/`RF-065`), violando `RNF-002` de
+spec 001. Esto **no** es una violación del Principio X: `RF-UI-002c` únicamente agrega
+un punto de entrada de navegación (6º ítem de la barra) a una pantalla que conserva su
+apariencia actual sin cambios — no introduce ningún elemento nuevo de
+`especificacion-ui-app-eco.md` fuera de lo ya aprobado en `spec.md` → Clarifications. ✅
+PASS.
+
 *Post-Fase 1 (re-chequeo tras data-model.md/quickstart.md)*: ✅ PASS sin cambios — el
 "modelo de datos" de Fase 1 son tokens de diseño y una lista de Presentación no
 persistida (data-model.md), no entidades de dominio; no se introdujo ninguna necesidad
-de lógica de negocio nueva en ningún punto del diseño.
+de lógica de negocio nueva en ningún punto del diseño, incluyendo el 6º ítem de
+navegación de Puntos Verdes (`RF-UI-002c`).
 
 ## Project Structure
 
@@ -139,20 +156,29 @@ app/src/main/kotlin/com/ecosmart/presentation/
 │                                       #   sección (C-08), tarjeta de video (C-09),
 │                                       #   tarjeta de recompensa (C-10), tarjeta de
 │                                       #   puntos (C-11); `PestanaInferior` pasa de 3 a
-│                                       #   5 valores (C-02)
+│                                       #   5 y luego a 6 valores (C-02), agregando
+│                                       #   `PUNTOS_VERDES` (RF-UI-002c, research.md §9)
 ├── home/
 │   ├── HomeScreen.kt                  # Se recorta a resumen (S-01): saludo, tarjeta de
 │   │                                  #   puntos, progreso general, carrusel del día,
-│   │                                  #   botón "Ver todas", carrusel de contenido
+│   │                                  #   botón "Ver todas", carrusel de contenido;
+│   │                                  #   se elimina el parámetro `onVerPuntosVerdes`
+│   │                                  #   (sin invocar, reemplazado por el ítem de
+│   │                                  #   navegación de RF-UI-002c — research.md §9)
 │   ├── HomeViewModel.kt                # Sin cambios de lógica; a lo sumo expone el mismo
 │   │                                  #   estado ya calculado de forma más conveniente
 │   │                                  #   para el resumen (p. ej. solo "hoy")
 │   ├── ActividadesScreen.kt            # NUEVO (S-02) — listado completo que hoy vive
 │   │                                  #   mezclado dentro de HomeScreen, con chips de
 │   │                                  #   filtro (Todas/En progreso/Completadas)
-│   └── ContenidoEducativoScreen.kt     # Restyle a S-05: segmento Videos/Artículos/IA
-│                                       #   (Artículos/IA con placeholder mínimo, fuera
-│                                       #   de alcance de contenido real — RF-UI-002)
+│   ├── ContenidoEducativoScreen.kt     # Restyle a S-05: segmento Videos/Artículos/IA
+│   │                                   #   (Artículos/IA con placeholder mínimo, fuera
+│   │                                   #   de alcance de contenido real — RF-UI-002)
+│   └── PuntosVerdesScreen.kt           # Sin rediseño visual (fuera de alcance,
+│                                       #   RF-UI-002); gana el parámetro `barraInferior`
+│                                       #   (selección `PUNTOS_VERDES`, resaltado igual
+│                                       #   que RF-UI-007) para comportarse como pestaña
+│                                       #   persistente (RF-UI-002c, research.md §9)
 ├── activitydetail/
 │   └── ActividadDetalleScreen.kt       # Restyle a S-03: anillo de progreso para Caminar,
 │                                       #   indicador "0/1" para el resto (RF-UI-011);
@@ -174,7 +200,11 @@ app/src/main/kotlin/com/ecosmart/presentation/
 │                                       #   (una de ellas navega a HistorialScreen, que
 │                                       #   deja de ser un tab de primer nivel)
 └── EcoSmartNavHost.kt                  # + rutas Actividades/Recompensas; la barra
-                                        #   inferior pasa a cablearse con 5 tabs
+                                        #   inferior pasa a cablearse con 5 tabs y luego
+                                        #   con 6 (agrega `onPuntosVerdes` en la función
+                                        #   privada `BarraInferior`, cableando
+                                        #   `EcoSmartRoute.PuntosVerdes` ya existente —
+                                        #   RF-UI-002c, research.md §9)
 ```
 
 **Structure Decision**: Se mantiene el mismo módulo único `:app` (Principio VII, spec
