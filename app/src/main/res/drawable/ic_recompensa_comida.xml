@@ -1,0 +1,17 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="150dp"
+    android:viewportWidth="200"
+    android:viewportHeight="150">
+    <path android:fillColor="#F2B855" android:pathData="M0,0 H200 V150 H0 Z" />
+    <!-- Placeholder: taza de café, foto de ejemplo para recompensas de categoría Comida -->
+    <path
+        android:fillColor="#7A4A1F"
+        android:pathData="M70,55 H130 V95 C130,110 118,120 100,120 C82,120 70,110 70,95 Z" />
+    <path
+        android:fillColor="#F6E7D0"
+        android:pathData="M78,63 H122 V93 C122,103 113,110 100,110 C87,110 78,103 78,93 Z" />
+    <path
+        android:fillColor="#7A4A1F"
+        android:pathData="M130,70 C142,70 148,78 148,86 C148,94 142,100 130,100 L130,90 C136,90 138,88 138,86 C138,84 136,80 130,80 Z" />
+</vector>

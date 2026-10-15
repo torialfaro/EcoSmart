@@ -51,3 +51,17 @@ data class VeredictoEcoGptDto(
     val veredicto: String,
     val motivo: String?,
 )
+
+/**
+ * DTO 1:1 con el schema `ErrorEcoGpt` de `contracts/openapi.yaml` — el body
+ * de error que el backend devuelve ante respuestas no-2xx (`main.py` →
+ * `_error(...)`). Corrección post-QA (2026-10-14): antes se descartaba este
+ * body y se mostraba el reason phrase HTTP crudo (`HttpException.message()`,
+ * p. ej. "Response.error()") en vez del mensaje real en español pensado
+ * para el usuario (ver `VerificarFotoConIA.mensajeDeErrorEcoGpt`).
+ */
+@JsonClass(generateAdapter = true)
+data class ErrorEcoGptDto(
+    val codigo: String,
+    val mensaje: String,
+)

@@ -10,6 +10,7 @@ import com.ecosmart.infrastructure.network.EcoGptClient
 import com.ecosmart.infrastructure.network.RegistroVerificacionOtorgadoDto
 import com.ecosmart.infrastructure.network.VeredictoEcoGptDto
 import com.ecosmart.infrastructure.security.CalculadorHuellaPerceptual
+import com.squareup.moshi.Moshi
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
@@ -32,6 +33,7 @@ class VerificarFotoConIATest {
         aplicarTopeDiario = aplicarTopeDiario,
         calculadorHuellaPerceptual = calculadorHuellaPerceptual,
         registroVerificacionRepository = registroVerificacionRepository,
+        moshi = Moshi.Builder().build(),
         apiKey = "api-key-de-prueba",
     )
 

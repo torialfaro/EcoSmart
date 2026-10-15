@@ -40,6 +40,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -142,6 +143,16 @@ fun VerificacionFotoScreen(
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
+            // Correcci\u00f3n post-QA: la pantalla destacaba muy vac\u00eda — ahora el nombre de la
+            // actividad para la que se saca/elige la foto queda destacado arriba de todo.
+            if (uiState.nombreActividad.isNotBlank()) {
+                Text(
+                    text = uiState.nombreActividad,
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                )
+            }
+
             // Pestañas "Cámara" / "Galería" del mockup (RF-083): la activa va rellena, la otra con borde.
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 if (modoCamara) {

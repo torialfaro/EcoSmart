@@ -17,7 +17,7 @@ from typing import Dict
 from fastapi import FastAPI, File, Form, Header, UploadFile
 from fastapi.responses import JSONResponse
 
-from .ecogpt import GeminiVeredictoInvalidoError, verificar_con_ia
+from .ecogpt import GeminiSobrecargadoError, GeminiVeredictoInvalidoError, verificar_con_ia
 from .imagenes import ImagenNoSoportadaError, preparar_imagen
 from .puntos import router as puntos_router
 from .schemas import ErrorEcoGpt, VeredictoEcoGpt
@@ -77,6 +77,13 @@ async def verificar_foto_actividad(
     except GeminiVeredictoInvalidoError:
         logger.exception("Gemini no devolvió un veredicto estructurado válido")
         return _error(500, "ERROR_VEREDICTO_IA", "No se pudo interpretar la respuesta de la IA. Reintentá.")
+    except GeminiSobrecargadoError:
+        logger.warning("Gemini devolvió 503 UNAVAILABLE incluso tras reintentar (alta demanda)")
+        return _error(
+            503,
+            "IA_SOBRECARGADA",
+            "La IA está con mucha demanda en este momento. Esperá un minuto y volvé a intentar.",
+        )
     except Exception:
         logger.exception("Error inesperado llamando a la API de Gemini")
         return _error(500, "ERROR_IA", "Ocurrió un error verificando la foto. Reintentá en unos segundos.")

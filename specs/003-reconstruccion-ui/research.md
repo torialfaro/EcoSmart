@@ -129,3 +129,86 @@ acá, a partir de la exploración real del código (`app/src/main/kotlin/com/eco
   tests de dominio innecesarios.
 - **Alternatives considered**: No agregar ningún test nuevo (rechazada: dejaría sin
   cobertura automática el único comportamiento que este módulo sí cambia — la UI).
+
+## 8. Overrides post-testing real sobre `especificacion-ui-app-eco.md` (feedback 2026-10-14)
+
+Tras implementar las 46 tareas iniciales (`T001`-`T046`) y testear la app real, la
+usuaria reportó 12 puntos de feedback (ver `spec.md` → Clarifications, sesión
+2026-10-14). Se documentan acá las decisiones técnicas de cada uno:
+
+- **Puntos y pasos reales, no hardcodeados**: `HomeViewModel`/`ActividadDetalleViewModel`
+  dejaron de usar valores fijos (1.250 pts, 1.200 m) y pasaron a leer
+  `Usuario.puntosHistoricos` y `PasosDelDiaRepository.pasosDeHoy()` (ambos ya existentes
+  desde spec 001, nunca se creó dato nuevo). **Rationale**: el propio `RF-UI-001`/
+  Principio X ya exigían reusar datos del dominio; el hardcodeo fue un defecto de
+  implementación detectado recién en testing manual, no una decisión de diseño.
+- **Metros → pasos**: Se eliminó la conversión pasos→metros (`METROS_POR_PASO`) de
+  `VerificacionCaminataScreen` y se cambió el parámetro `unidad` de `AnilloProgreso` a
+  "pasos" en todos los llamadores. **Rationale**: no existe ninguna fuente real de
+  distancia en metros en el dominio — solo el conteo de pasos del sensor del
+  dispositivo (`Sensor.TYPE_STEP_COUNTER` vía `PasosDelDiaRepository`); convertir a
+  metros con una constante arbitraria (`METROS_POR_PASO`) sería introducir un dato
+  inventado en la capa de Presentación, exactamente lo que `RF-UI-001` prohíbe.
+  **Alternatives considered**: pedir una constante de conversión real al backend
+  (rechazada: fuera de alcance, requeriría un nuevo endpoint/campo de dominio).
+- **Nombres de nivel reales**: `etiquetaNivel(nivel: NivelUsuario): String` en
+  `PerfilScreen.kt` reemplaza a `nivelNumero()`, devolviendo "Semilla"/"Brote"/
+  "Planta"/"Árbol" directamente desde el enum de dominio ya existente (spec 001).
+  **Rationale**: el enum ya traía esos nombres; numerarlos en la UI era redundante e
+  inconsistente con el resto de la app (p. ej. mensajes de notificación que ya usan el
+  nombre).
+- **Barra inferior solo iconos**: `BarraInferiorEcoSmart` quita los `Text(...)` de
+  etiqueta y conserva el `contentDescription` en cada `Icon`/`NavigationBarItem` para
+  no perder accesibilidad (`RF-UI-018` sigue aplicando). **Rationale**: pedido estético
+  explícito de la usuaria tras ver la barra renderizada; no afecta ninguna regla de
+  negocio ni test de dominio.
+- **Dropdown de categoría en Actividades**: Se agregó `DropdownCategoria` (nuevo
+  composable privado, `DropdownMenu`/`DropdownMenuItem` de Material3) con
+  `FiltroCategoria` (TODAS/RECICLAR/REUTILIZAR/CAMINAR, mapeado 1 a 1 a
+  `CategoriaActividad`), combinado con el filtro de estado ya existente mediante un
+  `&&` simple sobre la lista ya cargada por el ViewModel. **Rationale**: no requiere
+  tocar el ViewModel ni el repositorio — el filtrado por categoría se resuelve en la
+  capa de Presentación sobre la misma lista que ya expone `ActividadesViewModel`.
+- **Mismo diseño de filtro para Actividades y Educación**: El filtro de estado de
+  Actividades pasó de `FilaChipsFiltro` (chips sueltos con scroll) a `SegmentoEcoSmart`
+  (el mismo componente que ya usaba Educación para Videos/Artículos/IA, ver decisión
+  #3). **Rationale**: reusar el componente ya existente en vez de crear uno nuevo
+  mantiene un único lugar de verdad para el estilo de segmento (`RF-UI-004`).
+- **Alto uniforme de tarjetas**: `TarjetaActividad` (en `ComponentesEcoSmart.kt`) pasó de
+  altura intrínseca (`wrapContentHeight`) a altura fija por variante (176.dp compacta /
+  186.dp completa) vía `Modifier.height(...)`, con un `Spacer(Modifier.weight(1f))`
+  antes del contenido inferior (puntos/check) para mantenerlo siempre alineado abajo
+  pese al alto fijo. **Rationale**: el layout de grilla/carrusel se veía irregular con
+  alturas variables; fijar el alto es puramente visual, no cambia ningún dato mostrado.
+- **Nombre de actividad en la pantalla de foto**: `VerificacionFotoViewModel` agrega
+  `nombreActividad: String` a su `UiState`, poblado en `init` desde
+  `actividadRepository.buscarPorId(actividadId)?.descripcionCorta` (dato ya existente,
+  solo no se mostraba antes). `VerificacionFotoScreen` lo renderiza como
+  `headlineSmall`/`FontWeight.Bold` arriba de todo, antes de las pestañas Cámara/
+  Galería. **Rationale**: única excepción documentada a `RF-UI-002` para esta pantalla
+  "fuera de alcance" — el pedido es mínimo (un texto más) y no toca la lógica de
+  verificación por IA.
+- **Recompensas sin distinción de público**: Se eliminó por completo `enum class
+  PublicoRecompensa` y el campo `publico` de `RecompensaEjemplo`, junto con las 3
+  entradas de ejemplo "para Kids" y el segmento "Para adultos"/"Para Kids" de
+  `RecompensasScreen`. **Rationale**: pedido explícito de la usuaria; el catálogo de
+  ejemplo ya era un dato de Presentación puro (decisión #1 de este documento), así que
+  quitar un campo no afecta ninguna regla de negocio.
+- **Imágenes de ejemplo para recompensas**: Se agregaron 3 drawables vectoriales nuevos
+  (`ic_recompensa_comida.xml`, `ic_recompensa_descuentos.xml`,
+  `ic_recompensa_productos.xml`, placeholders libres de derechos) y una función
+  `imagenPorCategoria(categoria): Int` que asigna una de las 3 a cada
+  `RecompensaEjemplo` según su categoría; `imagenDrawableRes` pasa a ser obligatorio
+  (no nulo) en el modelo (ver `data-model.md` §3). **Rationale**: consistente con la
+  decisión #1 (sin Coil/Glide, solo recursos locales); 3 imágenes por categoría
+  (en vez de 6 únicas) evita crear más assets de los necesarios para una muestra
+  puramente visual.
+- **"Eliminar cuenta" solo en Editar perfil**: El botón y su `AlertDialog` de
+  confirmación se quitaron de `PerfilScreen`/`PerfilContenido` y se agregaron a
+  `PerfilEdicionScreen`/`CamposDePerfil`, reusando exactamente los mismos métodos ya
+  existentes de `PerfilViewModel` (`solicitarEliminarCuenta`/`confirmarEliminarCuenta`/
+  `cancelarEliminarCuenta`) — `PerfilEdicionScreen` ahora inyecta tanto
+  `PerfilEdicionViewModel` como `PerfilViewModel`. **Rationale**: pedido de reubicación
+  de UI; cero lógica nueva, solo mover el punto de entrada visual a la pantalla donde
+  la usuaria ya edita datos sensibles de su cuenta.
+

@@ -196,7 +196,7 @@ Actividades, Caminar, Recompensas o Educación estén reconstruidas todavía.
 - [X] T022 [US2] Cablear la fila de menú "Mis actividades" para que navegue a
       `EcoSmartRoute.Historial` (reemplaza al tab "Misiones" quitado en T005 —
       research.md §5) en `PerfilScreen.kt`/`EcoSmartNavHost.kt` (depende de T005, T021)
-- [ ] T023 [US2] Verificar/ajustar que chevrones y filas de menú midan ≥48×48 pt
+- [X] T023 [US2] Verificar/ajustar que chevrones y filas de menú midan ≥48×48 pt
       (`RF-UI-016`) en `PerfilScreen.kt`
 
 **Checkpoint**: Perfil queda completo y demostrable de forma independiente (`AC-18`,
@@ -216,16 +216,16 @@ reconstruidas.
 
 ### Tests for User Story 3
 
-- [ ] T024 [P] [US3] Test de Compose UI: `ActividadesScreen` filtra por chip (Todas/En
+- [X] T024 [P] [US3] Test de Compose UI: `ActividadesScreen` filtra por chip (Todas/En
       progreso/Completadas — `AC-06`/`AC-07`), en
       `app/src/androidTest/kotlin/com/ecosmart/presentation/home/ActividadesScreenTest.kt`
-- [ ] T025 [P] [US3] Test de Compose UI: `RecompensasScreen` filtra por segmento (Para
+- [X] T025 [P] [US3] Test de Compose UI: `RecompensasScreen` filtra por segmento (Para
       adultos/Para Kids) y por chip de categoría (`AC-13`/`AC-14`), en
       `app/src/androidTest/kotlin/com/ecosmart/presentation/rewards/RecompensasScreenTest.kt`
 
 ### Implementation for User Story 3
 
-- [ ] T026 [US3] Crear `ActividadesScreen.kt` (`S-02`) extrayendo el listado completo
+- [X] T026 [US3] Crear `ActividadesScreen.kt` (`S-02`) extrayendo el listado completo
       que hoy vive mezclado dentro de `HomeScreen.kt`, con el encabezado `C-03`/T018a
       (título "Actividades" + subtítulo), los chips de filtro de T011 operando sobre
       el estado idle/in_progress/completed ya calculado por el dominio, y grilla de 2
@@ -233,25 +233,25 @@ reconstruidas.
       `RF-UI-009`), en
       `app/src/main/kotlin/com/ecosmart/presentation/home/ActividadesScreen.kt`
       (depende de T003, T011, T013, T018a)
-- [ ] T027 [US3] Si `ActividadesScreen` no puede reutilizar tal cual
+- [X] T027 [US3] Si `ActividadesScreen` no puede reutilizar tal cual
       `HomeUiState.actividadesPorCategoria` (p. ej. porque `HomeScreen`/T033 ya lo
       recortó a "solo hoy"), exponer en `HomeViewModel` un `StateFlow` equivalente con
       el listado completo, sin cálculo de negocio nuevo, solo exposición de estado ya
       existente, en
       `app/src/main/kotlin/com/ecosmart/presentation/home/HomeViewModel.kt`
-- [ ] T028 [P] [US3] Crear `RecompensaEjemplo.kt` (data-model.md §3:
+- [X] T028 [P] [US3] Crear `RecompensaEjemplo.kt` (data-model.md §3:
       `RecompensaEjemplo`, `CategoriaRecompensaEjemplo`, las 6 recompensas de ejemplo de
       `especificacion-ui-app-eco.md` §7.2 con las erratas de copy ya corregidas —
       `RF-UI-003b`) en
       `app/src/main/kotlin/com/ecosmart/presentation/rewards/RecompensaEjemplo.kt`
       (depende de T001)
-- [ ] T029 [US3] Crear `RecompensasScreen.kt` (`S-04`: encabezado `C-03`/T018a, segmento
+- [X] T029 [US3] Crear `RecompensasScreen.kt` (`S-04`: encabezado `C-03`/T018a, segmento
       Para adultos/Para Kids, chips de categoría con scroll horizontal, grilla de 2
       columnas de `TarjetaRecompensa`) consumiendo únicamente `RecompensaEjemplo.kt` —
       ninguna tarjeta canjea nada real (`RF-UI-012`), en
       `app/src/main/kotlin/com/ecosmart/presentation/rewards/RecompensasScreen.kt`
       (depende de T011, T017, T018a, T028)
-- [ ] T030 [US3] Restylar `ContenidoEducativoScreen.kt` a `S-05`: encabezado `C-03`/
+- [X] T030 [US3] Restylar `ContenidoEducativoScreen.kt` a `S-05`: encabezado `C-03`/
       T018a, reemplazar el filtro por `CategoriaActividad` por el segmento Videos/
       Artículos/IA (research.md §3), mostrar el contenido curado ya existente como
       `TarjetaVideo` ancha bajo "Videos" con enlace "Ver todos", y un mensaje mínimo de
@@ -260,7 +260,7 @@ reconstruidas.
       `spec.md` → `SC-UI-003`), en
       `app/src/main/kotlin/com/ecosmart/presentation/home/ContenidoEducativoScreen.kt`
       (depende de T011, T016, T018a)
-- [ ] T031 [US3] Cablear `EcoSmartRoute.Actividades`/`EcoSmartRoute.Recompensas` (T003)
+- [X] T031 [US3] Cablear `EcoSmartRoute.Actividades`/`EcoSmartRoute.Recompensas` (T003)
       a `ActividadesScreen`/`RecompensasScreen` con la barra inferior de 5 tabs, en
       `app/src/main/kotlin/com/ecosmart/presentation/EcoSmartNavHost.kt` (depende de
       T004, T026, T029)
@@ -282,14 +282,14 @@ Caminar mientras tanto).
 
 ### Tests for User Story 4
 
-- [ ] T032 [P] [US4] Test de Compose UI: con 3 de 4 actividades completadas, Inicio
+- [X] T032 [P] [US4] Test de Compose UI: con 3 de 4 actividades completadas, Inicio
       muestra la barra de progreso general al 75% y el texto "3/4 actividades"
       (`AC-02`), en
       `app/src/androidTest/kotlin/com/ecosmart/presentation/home/HomeScreenTest.kt`
 
 ### Implementation for User Story 4
 
-- [ ] T033 [US4] Recortar `HomeScreen.kt` a resumen (`S-01`): saludo + avatar (`C-03`/
+- [X] T033 [US4] Recortar `HomeScreen.kt` a resumen (`S-01`): saludo + avatar (`C-03`/
       T018a, variante `type.greeting`), `TarjetaPuntos` (`C-11`), tarjeta de progreso
       general con `BarraProgresoLineal` (`C-05`) y fracción completadas/total,
       carrusel de `TarjetaActividad` del día, `BotonPrincipal` "Ver todas las
@@ -299,10 +299,10 @@ Caminar mientras tanto).
       aplicación mínima de T019 sobre este archivo, en
       `app/src/main/kotlin/com/ecosmart/presentation/home/HomeScreen.kt` (depende de
       T013, T014, T016, T018, T018a, T026)
-- [ ] T034 [US4] Confirmar que el saludo y la barra inferior quedan fijos mientras el
+- [X] T034 [US4] Confirmar que el saludo y la barra inferior quedan fijos mientras el
       resto hace scroll vertical (estructura `Scaffold` + `LazyColumn` apropiada) en
       `HomeScreen.kt`
-- [ ] T035 [US4] Conectar "Ver todas las actividades" para que abra `ActividadesScreen`
+- [X] T035 [US4] Conectar "Ver todas las actividades" para que abra `ActividadesScreen`
       con el chip "Todas" preseleccionado (`AC-04`), en
       `app/src/main/kotlin/com/ecosmart/presentation/EcoSmartNavHost.kt`/
       `ActividadesScreen.kt` (depende de T026, T033)
@@ -323,35 +323,35 @@ reconstruidas.
 
 ### Tests for User Story 5
 
-- [ ] T036 [P] [US5] Test de Compose UI: el anillo de progreso de Caminar expone el
+- [X] T036 [P] [US5] Test de Compose UI: el anillo de progreso de Caminar expone el
       `contentDescription` de porcentaje (p. ej. "60 por ciento" — `RF-UI-018`,
       `AC-09`), en
       `app/src/androidTest/kotlin/com/ecosmart/presentation/activitydetail/ActividadDetalleScreenTest.kt`
 
 ### Implementation for User Story 5
 
-- [ ] T037 [P] [US5] Implementar el composable de anillo de progreso animado (arco
+- [X] T037 [P] [US5] Implementar el composable de anillo de progreso animado (arco
       desde las 12 en punto, sentido horario, ángulo = 360° × valor/meta, trazo 8pt,
       riel `color.track`, arco `color.green.700`, animado de 0 al valor actual con
       `Canvas` + `Animatable`) en
       `app/src/main/kotlin/com/ecosmart/presentation/theme/ComponentesEcoSmart.kt`
       (reutilizable por T038/T039)
-- [ ] T038 [US5] Restylar `ActividadDetalleScreen.kt` a `S-03` (research.md §2):
+- [X] T038 [US5] Restylar `ActividadDetalleScreen.kt` a `S-03` (research.md §2):
       flecha de volver, encabezado `C-03`/T018a (título/subtítulo), anillo (T037) para
       `CAMINAR` o indicador "0/1" para el resto del catálogo (`RF-UI-010`/`RF-UI-011`),
       píldora de recompensa, las dos filas informativas de "Cómo se registra",
       reutilizando `ActividadDetalleViewModel` sin cambios, en
       `app/src/main/kotlin/com/ecosmart/presentation/activitydetail/ActividadDetalleScreen.kt`
       (depende de T018a, T037)
-- [ ] T039 [US5] Restylar `VerificacionCaminataScreen.kt` con el mismo anillo (T037) y
+- [X] T039 [US5] Restylar `VerificacionCaminataScreen.kt` con el mismo anillo (T037) y
       el botón de estado "¡Seguimiento en curso!" (`C-07`/T014, mostrando únicamente el
       estado activo del camino feliz — `RF-UI-003`), en
       `app/src/main/kotlin/com/ecosmart/presentation/verification/VerificacionCaminataScreen.kt`
       (depende de T014, T037)
-- [ ] T040 [US5] Agregar la ilustración decorativa de paisaje pegada al borde inferior
+- [X] T040 [US5] Agregar la ilustración decorativa de paisaje pegada al borde inferior
       de `ActividadDetalleScreen.kt`, marcada para que el lector de pantalla la ignore
       (`RF-UI-018`)
-- [ ] T040a [US5] Agregar el parámetro `barraInferior` (selección `ACTIVIDADES`) a
+- [X] T040a [US5] Agregar el parámetro `barraInferior` (selección `ACTIVIDADES`) a
       `ActividadDetalleScreen`/`VerificacionCaminataScreen` y pasarlo en sus
       `composable(...)` de `EcoSmartNavHost.kt`, para que la barra inferior se vea y
       resalte "Actividades" en el detalle de cualquier actividad (`RF-UI-007`), en
@@ -368,21 +368,85 @@ las historias de `spec.md` quedan implementadas.
 
 **Purpose**: Verificaciones transversales a las 6 pantallas reconstruidas.
 
-- [ ] T041 [P] Auditoría de contraste ≥4,5:1 en las 6 pantallas reconstruidas
+- [X] T041 [P] Auditoría de contraste ≥4,5:1 en las 6 pantallas reconstruidas
       (`RF-UI-015`, `SC-UI-005`)
-- [ ] T042 [P] Auditoría de zonas táctiles ≥48×48 pt en las 6 pantallas (`RF-UI-016`,
+- [X] T042 [P] Auditoría de zonas táctiles ≥48×48 pt en las 6 pantallas (`RF-UI-016`,
       `SC-UI-005`)
-- [ ] T043 [P] Verificar el escalado de texto del sistema al 130% sin cortes de
+- [X] T043 [P] Verificar el escalado de texto del sistema al 130% sin cortes de
       contenido crítico en las 6 pantallas (`RF-UI-017`, `AC-20`, `SC-UI-005`)
-- [ ] T044 [P] Verificar que toda animación (anillo, barras, contador de puntos,
+- [X] T044 [P] Verificar que toda animación (anillo, barras, contador de puntos,
       transición entre pantallas) respeta la preferencia de "reducir movimiento" del
       sistema (`RF-UI-019`), en
       `app/src/main/kotlin/com/ecosmart/presentation/theme/ComponentesEcoSmart.kt`
-- [ ] T045 Ejecutar `./gradlew :app:testDebugUnitTest` y confirmar que el 100% de los
+- [X] T045 Ejecutar `./gradlew :app:testDebugUnitTest` y confirmar que el 100% de los
       tests ya existentes (dominio, casos de uso, ViewModels) siguen en verde sin
       cambios (`SC-UI-004`)
 - [ ] T046 Ejecutar de punta a punta la guía de validación de `quickstart.md`
       (secciones 2 a 6) antes de dar por cerrado el módulo
+
+---
+
+## Phase 9: Correcciones Post-Testing (feedback real de la usuaria, 2026-10-14)
+
+**Purpose**: Corregir los 12 puntos de feedback reportados al testear manualmente la
+app ya reconstruida (ver `spec.md` → Clarifications, sesión 2026-10-14, y
+`research.md` §8). Todas estas tareas son correcciones sobre pantallas ya
+implementadas en las Fases 3 a 8, no nuevas historias de usuario.
+
+- [X] T047 Reemplazar los puntos hardcodeados (1.250 fijo) por
+      `Usuario.puntosHistoricos` real en
+      `app/src/main/kotlin/com/ecosmart/presentation/home/HomeViewModel.kt` y
+      `HomeScreen.kt` (`RF-UI-008`)
+- [X] T048 Reemplazar la conversión a metros por pasos crudos del podómetro
+      (`PasosDelDiaRepository.pasosDeHoy()`) en `HomeViewModel.kt`, `HomeScreen.kt`,
+      `activitydetail/ActividadDetalleViewModel.kt`, `ActividadDetalleScreen.kt` y
+      `verification/VerificacionCaminataScreen.kt`; cambiar `unidad` a "pasos" en todos
+      los llamadores de `AnilloProgreso` (`RF-UI-010`, `RF-UI-018`)
+- [X] T049 Reemplazar `nivelNumero()` por `etiquetaNivel(nivel: NivelUsuario): String`
+      (Semilla/Brote/Planta/Árbol) en
+      `app/src/main/kotlin/com/ecosmart/presentation/profile/PerfilScreen.kt`
+      (`RF-UI-014`)
+- [X] T050 Quitar las etiquetas de texto de `BarraInferiorEcoSmart`, dejando solo
+      iconos con `contentDescription`, en
+      `app/src/main/kotlin/com/ecosmart/presentation/theme/ComponentesEcoSmart.kt`
+      (`RF-UI-005`)
+- [X] T051 Agregar `DropdownCategoria`/`FiltroCategoria` (filtro desplegable de
+      categoría real combinable con el filtro de estado) en
+      `app/src/main/kotlin/com/ecosmart/presentation/home/ActividadesScreen.kt`
+      (`RF-UI-009`)
+- [X] T052 Reemplazar `FilaChipsFiltro` por `SegmentoEcoSmart` como filtro de estado de
+      Actividades, igualando el diseño visual al segmento de Educación, en
+      `ActividadesScreen.kt` (`RF-UI-009`)
+- [X] T053 Fijar el alto de `TarjetaActividad` (176.dp compacta / 186.dp completa) con
+      `Spacer(Modifier.weight(1f))` antes del contenido inferior, en
+      `ComponentesEcoSmart.kt` (`RF-UI-006`)
+- [X] T054 Agregar `nombreActividad` al `UiState` de
+      `verification/VerificacionFotoViewModel.kt` (poblado desde
+      `Actividad.descripcionCorta`) y mostrarlo destacado arriba de todo en
+      `VerificacionFotoScreen.kt` (excepción puntual a `RF-UI-002`)
+- [X] T055 Eliminar `enum class PublicoRecompensa`, el campo `publico` y las 3
+      recompensas de ejemplo "para Kids" de
+      `app/src/main/kotlin/com/ecosmart/presentation/rewards/RecompensaEjemplo.kt`;
+      quitar el segmento "Para adultos"/"Para Kids" de `RecompensasScreen.kt`
+      (`RF-UI-012`)
+- [X] T056 Agregar 3 drawables vectoriales de muestra (`ic_recompensa_comida.xml`,
+      `ic_recompensa_descuentos.xml`, `ic_recompensa_productos.xml`) y
+      `imagenPorCategoria(categoria): Int` en `RecompensaEjemplo.kt`, asignando
+      `imagenDrawableRes` (ahora obligatorio) a las 6 recompensas de ejemplo
+      (`RF-UI-012`)
+- [X] T057 Mover el botón "Eliminar cuenta" y su `AlertDialog` de confirmación desde
+      `profile/PerfilScreen.kt` hacia `auth/PerfilEdicionScreen.kt` (inyectando también
+      `PerfilViewModel` ahí), reusando los métodos ya existentes de `PerfilViewModel`;
+      actualizar `EcoSmartNavHost.kt` (`onCuentaEliminada`) (`RF-UI-014`)
+- [X] T058 [P] Actualizar los tests de Compose UI afectados por T047-T057:
+      `ActividadesScreenTest.kt`, `HomeScreenTest.kt` (campo `categoria` nuevo en
+      `ActividadItemUi`), `RecompensasScreenTest.kt` (sin tests de Kids/público),
+      `BarraInferiorEcoSmartTest.kt` (`onNodeWithContentDescription` en vez de
+      `onNodeWithText`), `PerfilScreenTest.kt` (`PerfilContenido` sin parámetros de
+      eliminar cuenta, texto de nivel "Semilla · 1.250 pts")
+- [X] T059 Actualizar documentación del spec (`spec.md` → Clarifications sesión
+      2026-10-14 y FRs `RF-UI-005/006/009/010/012/014/018`, `research.md` §8,
+      `data-model.md` §3) para reflejar los overrides de T047-T057
 
 ---
 

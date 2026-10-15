@@ -11,8 +11,10 @@ import com.ecosmart.infrastructure.di.EcoGptApiKey
 import com.ecosmart.infrastructure.network.BackendConfianzaClient
 import com.ecosmart.infrastructure.network.EcoGptClient
 import com.ecosmart.infrastructure.network.EcoGptResponseMapper
+import com.ecosmart.infrastructure.network.ErrorEcoGptDto
 import com.ecosmart.infrastructure.network.SolicitudRegistroReciclarReutilizarDto
 import com.ecosmart.infrastructure.security.CalculadorHuellaPerceptual
+import com.squareup.moshi.Moshi
 import kotlinx.coroutines.delay
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
@@ -70,6 +72,7 @@ class VerificarFotoConIA @Inject constructor(
     private val aplicarTopeDiario: AplicarTopeDiario,
     private val calculadorHuellaPerceptual: CalculadorHuellaPerceptual,
     private val registroVerificacionRepository: RegistroVerificacionRepository,
+    private val moshi: Moshi,
     @EcoGptApiKey private val apiKey: String,
 ) {
     suspend operator fun invoke(datos: DatosVerificacionFoto): ResultadoVerificarFotoConIA {
@@ -112,7 +115,7 @@ class VerificarFotoConIA @Inject constructor(
         } catch (errorHttp: HttpException) {
             // research.md §2: 5xx/formato inválido reciben el mismo tratamiento funcional que un
             // timeout en la UI (reintentar sin consumir tope), pero se modelan aparte para precisión.
-            return ResultadoVerificarFotoConIA.ErrorEcoGpt(errorHttp.message() ?: "Error de EcoGPT")
+            return ResultadoVerificarFotoConIA.ErrorEcoGpt(mensajeDeErrorEcoGpt(errorHttp))
         }
 
         val resultado = EcoGptResponseMapper.desde(respuesta)
@@ -196,4 +199,20 @@ class VerificarFotoConIA @Inject constructor(
         resultado = ResultadoVerificacion.APROBADO,
         huellaImagen = huella,
     )
+
+    /**
+     * Corrección post-QA (2026-10-14): [HttpException.message] solo devuelve el reason
+     * phrase HTTP crudo (p. ej. "Response.error()"), nunca el body de la respuesta — el
+     * usuario veía ese texto genérico en vez del mensaje real en español que el backend
+     * ya arma (`main.py` → `_error(...)`, p. ej. "La IA está con mucha demanda..." ante
+     * un 503 de Gemini). Se parsea el `errorBody()` con el `ErrorEcoGpt` del contrato y,
+     * si falla el parseo (body vacío/formato inesperado), se cae al mensaje HTTP crudo.
+     */
+    private fun mensajeDeErrorEcoGpt(errorHttp: HttpException): String {
+        val cuerpo = errorHttp.response()?.errorBody()?.string()
+        val mensajeParseado = cuerpo?.let {
+            runCatching { moshi.adapter(ErrorEcoGptDto::class.java).fromJson(it)?.mensaje }.getOrNull()
+        }
+        return mensajeParseado ?: errorHttp.message() ?: "Error de EcoGPT"
+    }
 }

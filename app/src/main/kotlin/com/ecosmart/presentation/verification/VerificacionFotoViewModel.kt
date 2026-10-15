@@ -35,6 +35,7 @@ sealed class ResultadoUiFoto {
 }
 
 data class VerificacionFotoUiState(
+    val nombreActividad: String = "",
     val descripcion: String = "",
     val archivoFoto: File? = null,
     val enviando: Boolean = false,
@@ -60,6 +61,12 @@ class VerificacionFotoViewModel @Inject constructor(
         // Corrección post-QA (2026-09-23): empieza a despertar el backend de EcoGPT apenas
         // se abre esta pantalla, no recién al tocar "Enviar" (research.md §2.1).
         viewModelScope.launch { verificarFotoConIA.precalentarBackend() }
+        // Corrección post-QA (2026-10-14): la pantalla destaca el nombre de la actividad
+        // para la que se está sacando/eligiendo la foto (antes se veía vacía).
+        viewModelScope.launch {
+            val actividad = actividadRepository.buscarPorId(actividadId)
+            _uiState.value = _uiState.value.copy(nombreActividad = actividad?.descripcionCorta ?: "")
+        }
     }
 
     fun actualizarDescripcion(texto: String) {

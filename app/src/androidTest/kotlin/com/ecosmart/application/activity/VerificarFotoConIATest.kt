@@ -78,6 +78,7 @@ class VerificarFotoConIATest {
             aplicarTopeDiario = aplicarTopeDiario,
             calculadorHuellaPerceptual = CalculadorHuellaPerceptual(),
             registroVerificacionRepository = registroVerificacionRepository,
+            moshi = Moshi.Builder().build(),
             apiKey = "api-key-de-prueba",
         )
     }

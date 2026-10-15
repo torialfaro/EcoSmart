@@ -1,0 +1,22 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="360dp"
+    android:height="120dp"
+    android:viewportWidth="360"
+    android:viewportHeight="120">
+    <!-- Colina trasera -->
+    <path
+        android:fillColor="#BACFBA"
+        android:pathData="M0,60 Q90,20 180,50 T360,30 L360,120 L0,120 Z" />
+    <!-- Colina media -->
+    <path
+        android:fillColor="#7EAA77"
+        android:pathData="M0,80 Q120,40 240,75 T360,60 L360,120 L0,120 Z" />
+    <!-- Colina frontal -->
+    <path
+        android:fillColor="#49875B"
+        android:pathData="M0,100 Q150,60 300,90 T360,85 L360,120 L0,120 Z" />
+    <!-- Camino sinuoso -->
+    <path
+        android:fillColor="#E3E5DF"
+        android:pathData="M160,120 C170,105 175,95 190,85 C205,75 210,65 215,60 L220,60 C215,66 210,77 195,87 C180,97 174,107 165,120 Z" />
+</vector>

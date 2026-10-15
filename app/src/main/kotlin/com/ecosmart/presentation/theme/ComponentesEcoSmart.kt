@@ -46,13 +46,16 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.semantics.contentDescription
@@ -64,6 +67,25 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ecosmart.app.R
+
+/**
+ * Consulta la preferencia del sistema de reducir movimiento (animator_duration_scale == 0).
+ * RF-UI-019: omitir animaciones si el usuario tiene activa esta preferencia.
+ */
+@Composable
+fun reducirMovimientoActivo(): Boolean {
+    val context = LocalContext.current
+    return try {
+        val escala = android.provider.Settings.Global.getFloat(
+            context.contentResolver,
+            android.provider.Settings.Global.ANIMATOR_DURATION_SCALE,
+            1.0f,
+        )
+        escala == 0f
+    } catch (_: Exception) {
+        false
+    }
+}
 
 /**
  * Encabezado de pantalla (C-03 / especificacion-ui-app-eco.md §3):
@@ -190,7 +212,7 @@ private fun iconoHoja(): ImageVector = ImageVector.vectorResource(R.drawable.ic_
 @Composable
 private fun iconoCaminar(): ImageVector = ImageVector.vectorResource(R.drawable.ic_caminar)
 
-/** Barra inferior Inicio / Actividades / Recompensas / Educación / Perfil del mockup (RF-UI-002b). */
+/** Barra inferior Inicio / Actividades / Recompensas / Educación / Perfil del mockup (RF-UI-002b). Solo iconos, sin etiqueta de texto (feedback post-QA). */
 @Composable
 fun BarraInferiorEcoSmart(
     seleccion: PestanaInferior,
@@ -211,36 +233,31 @@ fun BarraInferiorEcoSmart(
         NavigationBarItem(
             selected = seleccion == PestanaInferior.INICIO,
             onClick = onInicio,
-            icon = { Icon(Icons.Filled.Home, contentDescription = null) },
-            label = { Text("Inicio", fontWeight = if (seleccion == PestanaInferior.INICIO) FontWeight.ExtraBold else FontWeight.Medium) },
+            icon = { Icon(Icons.Filled.Home, contentDescription = "Inicio") },
             colors = colores,
         )
         NavigationBarItem(
             selected = seleccion == PestanaInferior.ACTIVIDADES,
             onClick = onActividades,
-            icon = { Icon(iconoCaminar(), contentDescription = null) },
-            label = { Text("Actividades", fontWeight = if (seleccion == PestanaInferior.ACTIVIDADES) FontWeight.ExtraBold else FontWeight.Medium) },
+            icon = { Icon(iconoCaminar(), contentDescription = "Actividades") },
             colors = colores,
         )
         NavigationBarItem(
             selected = seleccion == PestanaInferior.RECOMPENSAS,
             onClick = onRecompensas,
-            icon = { Icon(Icons.Filled.Star, contentDescription = null) },
-            label = { Text("Recompensas", fontWeight = if (seleccion == PestanaInferior.RECOMPENSAS) FontWeight.ExtraBold else FontWeight.Medium) },
+            icon = { Icon(Icons.Filled.Star, contentDescription = "Recompensas") },
             colors = colores,
         )
         NavigationBarItem(
             selected = seleccion == PestanaInferior.EDUCACION,
             onClick = onEducacion,
-            icon = { Icon(iconoHoja(), contentDescription = null) },
-            label = { Text("Educación", fontWeight = if (seleccion == PestanaInferior.EDUCACION) FontWeight.ExtraBold else FontWeight.Medium) },
+            icon = { Icon(iconoHoja(), contentDescription = "Educación") },
             colors = colores,
         )
         NavigationBarItem(
             selected = seleccion == PestanaInferior.PERFIL,
             onClick = onPerfil,
-            icon = { Icon(Icons.Filled.Person, contentDescription = null) },
-            label = { Text("Perfil", fontWeight = if (seleccion == PestanaInferior.PERFIL) FontWeight.ExtraBold else FontWeight.Medium) },
+            icon = { Icon(Icons.Filled.Person, contentDescription = "Perfil") },
             colors = colores,
         )
     }
@@ -299,7 +316,7 @@ fun BotonPrincipal(
     }
 }
 
-/** Chip individual reutilizable de selección única (C-04). */
+/** Chip individual reutilizable de selección única (C-04). Zona táctil mínima 48x48 (RF-UI-016). */
 @Composable
 fun ChipFiltro(
     texto: String,
@@ -321,20 +338,26 @@ fun ChipFiltro(
 
     Box(
         modifier = modifier
-            .height(32.dp)
-            .clip(FormaPill)
-            .background(fondo)
+            .defaultMinSize(minWidth = 48.dp, minHeight = 48.dp)
             .then(
                 if (habilitado) Modifier.clickable(onClick = onClick) else Modifier,
-            )
-            .padding(horizontal = 14.dp),
+            ),
         contentAlignment = Alignment.Center,
     ) {
-        Text(
-            text = texto,
-            style = TypeChip,
-            color = colorTexto,
-        )
+        Box(
+            modifier = Modifier
+                .height(32.dp)
+                .clip(FormaPill)
+                .background(fondo)
+                .padding(horizontal = 14.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                text = texto,
+                style = TypeChip,
+                color = colorTexto,
+            )
+        }
     }
 }
 
@@ -364,7 +387,7 @@ fun <T> FilaChipsFiltro(
     }
 }
 
-/** Segmented control de 2 o 3 opciones a ancho completo (C-04). */
+/** Segmented control de 2 o 3 opciones a ancho completo (C-04). Zona táctil mínima 48x48 por opción (RF-UI-016). */
 @Composable
 fun <T> SegmentoEcoSmart(
     opciones: List<T>,
@@ -377,7 +400,7 @@ fun <T> SegmentoEcoSmart(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .height(40.dp)
+            .defaultMinSize(minHeight = 48.dp)
             .clip(FormaPill)
             .background(ColorGreen100)
             .padding(4.dp),
@@ -401,7 +424,7 @@ fun <T> SegmentoEcoSmart(
             Box(
                 modifier = Modifier
                     .weight(1f)
-                    .height(32.dp)
+                    .defaultMinSize(minHeight = 40.dp)
                     .clip(FormaPill)
                     .background(fondo)
                     .then(
@@ -429,10 +452,15 @@ fun BarraProgresoLineal(
     colorRelleno: Color = ColorGreen500,
     animada: Boolean = true,
 ) {
+    val reducirMovimiento = reducirMovimientoActivo()
     val fraccionClampeada = progreso.coerceIn(0f, 1f)
     val fraccionAnimada by animateFloatAsState(
         targetValue = fraccionClampeada,
-        animationSpec = if (animada) tween(durationMillis = 600, easing = FastOutSlowInEasing) else tween(durationMillis = 0),
+        animationSpec = if (animada && !reducirMovimiento) {
+            tween(durationMillis = 600, easing = FastOutSlowInEasing)
+        } else {
+            tween(durationMillis = 0)
+        },
         label = "BarraProgresoLinealAnimacion",
     )
 
@@ -502,7 +530,8 @@ fun TarjetaActividad(
     val progresoTexto = if (esMedible) "$progresoActual / $meta $unidad" else "$progresoActual / $meta"
     val descripcionAccesibilidad = "$nombre, $progresoTexto, $puntosBase puntos, $estadoTexto"
 
-    val anchoModifier = if (esCompacta) Modifier.width(150.dp) else Modifier.fillMaxWidth()
+    // Alto fijo por variante (feedback post-QA: las tarjetas no deben variar de alto entre sí).
+    val anchoModifier = if (esCompacta) Modifier.width(150.dp).height(176.dp) else Modifier.fillMaxWidth().height(186.dp)
 
     Card(
         modifier = modifier
@@ -516,7 +545,7 @@ fun TarjetaActividad(
         border = borde,
     ) {
         Column(
-            modifier = Modifier.padding(14.dp),
+            modifier = Modifier.padding(14.dp).fillMaxSize(),
             horizontalAlignment = if (esCompacta) Alignment.CenterHorizontally else Alignment.Start,
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
@@ -555,6 +584,9 @@ fun TarjetaActividad(
                     modifier = Modifier.padding(top = 2.dp),
                 )
             }
+
+            // Empuja el costo/estado al pie de la tarjeta para que todas midan igual (feedback post-QA).
+            Box(modifier = Modifier.weight(1f))
 
             if (!esCompacta) {
                 Text(
@@ -776,7 +808,7 @@ fun TarjetaRecompensa(
                     horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
                     Text(
-                        text = "$costoPuntos pts",
+                        text = "${formatearPuntos(costoPuntos)} pts",
                         style = TypeMeta.copy(fontWeight = FontWeight.Bold),
                         color = ColorGreen700,
                     )
@@ -857,7 +889,7 @@ fun TarjetaPuntos(
                         horizontalArrangement = Arrangement.spacedBy(4.dp),
                     ) {
                         Text(
-                            text = puntos.toString(),
+                            text = formatearPuntos(puntos),
                             style = TypePoints,
                             color = ColorGreen900,
                         )
@@ -876,6 +908,108 @@ fun TarjetaPuntos(
                 contentDescription = null,
                 tint = ColorGreen900,
                 modifier = Modifier.size(24.dp),
+            )
+        }
+    }
+}
+
+/** Formatea puntaje con punto como separador de miles (ej: 1.250). */
+fun formatearPuntos(puntos: Int): String {
+    val texto = puntos.toString()
+    if (texto.length <= 3) return texto
+    val prefix = texto.substring(0, texto.length - 3)
+    val suffix = texto.substring(texto.length - 3)
+    return "$prefix.$suffix"
+}
+
+/**
+ * Anillo de progreso animado (S03-D / especificacion-ui-app-eco.md §6.1):
+ * Diámetro ~160dp, trazo de 8dp, riel color.track, arco color.green.700.
+ * Inicia a las 12 en punto (-90°) en sentido horario. Centro con valor y meta.
+ * Accesibilidad (RF-UI-018): se lee como porcentaje ("X por ciento").
+ */
+@Composable
+fun AnilloProgreso(
+    valor: Int,
+    meta: Int,
+    modifier: Modifier = Modifier,
+    unidad: String = "m",
+    iconoCentro: @Composable (() -> Unit)? = null,
+    animado: Boolean = true,
+) {
+    val reducirMovimiento = reducirMovimientoActivo()
+    val porcentajeCalculado = if (meta > 0) ((valor.toFloat() / meta.toFloat()) * 100).toInt() else 0
+    val fraccion = if (meta > 0) (valor.toFloat() / meta.toFloat()).coerceIn(0f, 1f) else 0f
+
+    val fraccionAnimada by animateFloatAsState(
+        targetValue = fraccion,
+        animationSpec = if (animado && !reducirMovimiento) {
+            tween(durationMillis = 600, easing = FastOutSlowInEasing)
+        } else {
+            tween(durationMillis = 0)
+        },
+        label = "AnilloProgresoAnimacion",
+    )
+
+    val descripcionAccesibilidad = "$porcentajeCalculado por ciento"
+
+    Box(
+        modifier = modifier
+            .size(160.dp)
+            .semantics(mergeDescendants = true) {
+                contentDescription = descripcionAccesibilidad
+            },
+        contentAlignment = Alignment.Center,
+    ) {
+        Canvas(modifier = Modifier.fillMaxSize().padding(8.dp)) {
+            val strokeWidth = 8.dp.toPx()
+
+            // Riel de fondo
+            drawArc(
+                color = ColorTrack,
+                startAngle = 0f,
+                sweepAngle = 360f,
+                useCenter = false,
+                style = Stroke(width = strokeWidth),
+            )
+
+            // Arco activo desde las 12 en punto (-90°) en sentido horario
+            if (fraccionAnimada > 0f) {
+                drawArc(
+                    color = ColorGreen700,
+                    startAngle = -90f,
+                    sweepAngle = 360f * fraccionAnimada,
+                    useCenter = false,
+                    style = Stroke(width = strokeWidth),
+                )
+            }
+        }
+
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+        ) {
+            if (iconoCentro != null) {
+                iconoCentro()
+            } else {
+                Icon(
+                    iconoCaminar(),
+                    contentDescription = null,
+                    tint = ColorGreen700,
+                    modifier = Modifier.size(24.dp),
+                )
+            }
+
+            Text(
+                text = "${formatearPuntos(valor)} $unidad",
+                style = TypeDisplay.copy(fontSize = 24.sp),
+                color = ColorTextPrimary,
+            )
+
+            Text(
+                text = "de ${formatearPuntos(meta)} $unidad",
+                style = TypeBody,
+                color = ColorTextSecondary,
             )
         }
     }

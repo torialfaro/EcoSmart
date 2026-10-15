@@ -12,6 +12,7 @@ import com.ecosmart.domain.valueobject.CategoriaActividad
 import com.ecosmart.presentation.activitydetail.ActividadDetalleScreen
 import com.ecosmart.presentation.auth.PerfilEdicionScreen
 import com.ecosmart.presentation.auth.RegistroScreen
+import com.ecosmart.presentation.home.ActividadesScreen
 import com.ecosmart.presentation.home.ContenidoEducativoScreen
 import com.ecosmart.presentation.home.ContenidoEducativoDetalleScreen
 import com.ecosmart.presentation.home.HomeScreen
@@ -19,6 +20,7 @@ import com.ecosmart.presentation.home.PuntosVerdesScreen
 import com.ecosmart.presentation.permissions.SolicitudPermisosScreen
 import com.ecosmart.presentation.profile.HistorialScreen
 import com.ecosmart.presentation.profile.PerfilScreen
+import com.ecosmart.presentation.rewards.RecompensasScreen
 import com.ecosmart.presentation.theme.BarraInferiorEcoSmart
 import com.ecosmart.presentation.theme.PestanaInferior
 import com.ecosmart.presentation.verification.VerificacionCaminataScreen
@@ -91,10 +93,28 @@ fun EcoSmartNavHost(
                 onSeleccionarActividad = { actividadId ->
                     navController.navigate(EcoSmartRoute.ActividadDetalle.crearRuta(actividadId.valor))
                 },
+                onVerTodasLasActividades = {
+                    navController.navigate(EcoSmartRoute.Actividades.ruta)
+                },
                 onVerPuntosVerdes = { navController.navigate(EcoSmartRoute.PuntosVerdes.ruta) },
                 onVerContenidoEducativo = { navController.navigate(EcoSmartRoute.ContenidoEducativo.ruta) },
                 onVerPerfil = { navController.navigate(EcoSmartRoute.Perfil.ruta) },
                 barraInferior = { BarraInferior(navController, PestanaInferior.INICIO) },
+            )
+        }
+        composable(EcoSmartRoute.Actividades.ruta) {
+            ActividadesScreen(
+                onSeleccionarActividad = { actividadId ->
+                    navController.navigate(EcoSmartRoute.ActividadDetalle.crearRuta(actividadId))
+                },
+                onVerPerfil = { navController.navigate(EcoSmartRoute.Perfil.ruta) },
+                barraInferior = { BarraInferior(navController, PestanaInferior.ACTIVIDADES) },
+            )
+        }
+        composable(EcoSmartRoute.Recompensas.ruta) {
+            RecompensasScreen(
+                onVerPerfil = { navController.navigate(EcoSmartRoute.Perfil.ruta) },
+                barraInferior = { BarraInferior(navController, PestanaInferior.RECOMPENSAS) },
             )
         }
         composable(EcoSmartRoute.ActividadDetalle.ruta, arguments = EcoSmartRoute.ActividadDetalle.argumentos) {
@@ -108,6 +128,7 @@ fun EcoSmartNavHost(
                     navController.navigate(destino)
                 },
                 onVolver = { navController.popBackStack() },
+                barraInferior = { BarraInferior(navController, PestanaInferior.ACTIVIDADES) },
             )
         }
         composable(EcoSmartRoute.PuntosVerdes.ruta) {
@@ -116,7 +137,9 @@ fun EcoSmartNavHost(
         composable(EcoSmartRoute.ContenidoEducativo.ruta) {
             ContenidoEducativoScreen(
                 onSeleccionarContenido = { id -> navController.navigate(EcoSmartRoute.ContenidoEducativoDetalle.crearRuta(id)) },
+                onVerPerfil = { navController.navigate(EcoSmartRoute.Perfil.ruta) },
                 onVolver = { navController.popBackStack() },
+                barraInferior = { BarraInferior(navController, PestanaInferior.EDUCACION) },
             )
         }
         composable(EcoSmartRoute.ContenidoEducativoDetalle.ruta, arguments = EcoSmartRoute.ContenidoEducativoDetalle.argumentos) { entrada ->
@@ -129,6 +152,7 @@ fun EcoSmartNavHost(
             VerificacionCaminataScreen(
                 onVerProgreso = { navController.navigate(EcoSmartRoute.Perfil.ruta) },
                 onVolver = { navController.popBackStack() },
+                barraInferior = { BarraInferior(navController, PestanaInferior.ACTIVIDADES) },
             )
         }
         composable(EcoSmartRoute.VerificacionFoto.ruta, arguments = EcoSmartRoute.VerificacionFoto.argumentos) {
@@ -150,7 +174,14 @@ fun EcoSmartNavHost(
             )
         }
         composable(EcoSmartRoute.PerfilEdicion.ruta) {
-            PerfilEdicionScreen(onVolver = { navController.popBackStack() })
+            PerfilEdicionScreen(
+                onVolver = { navController.popBackStack() },
+                onCuentaEliminada = {
+                    navController.navigate(EcoSmartRoute.Registro.ruta) {
+                        popUpTo(0)
+                    }
+                },
+            )
         }
         composable(EcoSmartRoute.Historial.ruta) {
             HistorialScreen()

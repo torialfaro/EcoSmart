@@ -44,6 +44,73 @@ nueva regla de negocio.
 
 ## Clarifications
 
+### Session 2026-10-14 (feedback de testing real de la UI ya implementada)
+
+- Q: La tarjeta de puntos (Inicio) y el texto "Nivel N · puntos" (Perfil) mostraban un
+  valor fijo de 1.250 puntos que nunca cambiaba. ¿Deben mostrar el puntaje real del
+  usuario? → A: Sí. Ambas pantallas DEBEN mostrar `Usuario.puntosHistoricos` (ya
+  calculado por el dominio existente, spec 001), empezando en 0 y subiendo a medida que
+  el usuario completa actividades. Ningún valor de puntos puede quedar hardcodeado en la
+  capa de Presentación (refuerza `RF-UI-008`/`RF-UI-014`).
+- Q: El anillo de progreso de Caminar (Inicio, detalle de actividad, seguimiento activo)
+  mostraba "1.200 m" / "de 2.000 m" fijos, sin relación con el dispositivo real. ¿Debe
+  medirse en metros (como en el mockup) o en pasos crudos del podómetro? → A: En pasos,
+  no en metros. El anillo DEBE mostrar los pasos reales leídos del podómetro del propio
+  dispositivo (`PasosDelDiaRepository.pasosDeHoy()`, ya existente, spec 001 RF-070) como
+  valor, empezando en 0 y subiendo a medida que el usuario camina; nunca un valor fijo.
+  Esto reemplaza la conversión a metros de `especificacion-ui-app-eco.md` §6.1/S03-D en
+  todas las pantallas que muestran el anillo (Inicio, detalle de Caminar, seguimiento
+  activo) — ver `RF-UI-010` actualizado.
+- Q: El texto de nivel mostraba "Nivel 1", "Nivel 2", etc., con números inventados en la
+  capa de Presentación. El dominio ya define los niveles con nombre (`NivelUsuario`:
+  `SEMILLA`, `BROTE`, `PLANTA`, `ARBOL` — spec 001). ¿Debe usarse el nombre real? → A:
+  Sí. Perfil DEBE mostrar el nombre del nivel ya definido en el dominio ("Semilla",
+  "Brote", "Planta", "Árbol"), nunca un número inventado por la UI (ver `RF-UI-014`
+  actualizado).
+- Q: `especificacion-ui-app-eco.md` §2.2/C-02 pide icono + etiqueta de texto en cada ítem
+  de la barra inferior. Tras ver la UI real, ¿se mantiene la etiqueta de texto? → A: No.
+  La barra inferior DEBE mostrar únicamente los iconos, sin etiqueta de texto visible,
+  preservando el nombre de cada destino como `contentDescription` para accesibilidad
+  (lector de pantalla). Es una corrección explícita sobre el mockup original (ver `C-02`
+  en `RF-UI-005`).
+- Q: La pantalla Actividades solo filtraba por estado (Todas/En progreso/Completadas).
+  ¿Debe sumarse un filtro adicional por categoría real (Reciclar/Reutilizar/Caminar)? →
+  A: Sí. Se agrega un control desplegable (dropdown) adicional a los chips de estado,
+  con las 4 opciones "Todas", "Reciclar", "Reutilizar", "Caminar", que filtra la grilla
+  en conjunto con el filtro de estado existente (ver `RF-UI-009` actualizado).
+- Q: Las tarjetas de actividad (carrusel de Inicio y grilla de Actividades) variaban de
+  alto entre sí según la cantidad de líneas de texto que mostraban. ¿Deben medir todas
+  igual? → A: Sí. Todas las tarjetas de una misma variante (compacta o completa) DEBEN
+  medir el mismo alto fijo, sin importar su contenido (ver `RF-UI-006` actualizado).
+- Q: El diseño visual del filtro de chips Todas/En progreso/Completadas de Actividades
+  (chips sueltos con scroll) no coincidía en estilo con el segmento Videos/Artículos/IA
+  de Educación, que se prefiere. ¿Deben unificarse? → A: Sí. El filtro de estado de
+  Actividades DEBE usar el mismo componente de segmento de ancho completo (`C-04`,
+  variante segmento) que ya usa Educación, en vez de chips sueltos con scroll horizontal.
+- Q: La pantalla de captura/selección de foto (`VerificacionFotoScreen`, hoy fuera de
+  alcance explícito por `RF-UI-002`) se percibía muy vacía al no identificar para qué
+  actividad se está sacando la foto. ¿Se agrega el nombre de la actividad? → A: Sí, como
+  excepción puntual a `RF-UI-002`: se agrega un título destacado con el nombre de la
+  actividad (ya expuesto por el dominio, `Actividad.descripcionCorta`) en la parte
+  superior de `VerificacionFotoScreen`, sin tocar el resto de su lógica de verificación.
+- Q: El catálogo de Recompensas separaba "Para adultos" / "Para Kids" con un segmento
+  superior (`especificacion-ui-app-eco.md` §7.1 S04-C). ¿Se mantiene esa distinción? →
+  A: No. Se elimina por completo el segmento "Para adultos"/"Para Kids" y cualquier
+  distinción de público: el catálogo de recompensas de ejemplo es único, sin filtro de
+  audiencia (ver `RF-UI-012` actualizado). Esto también elimina las recompensas de
+  ejemplo específicas de Kids agregadas durante la implementación inicial.
+- Q: El botón "Eliminar cuenta" vivía en la pantalla principal de Perfil junto a
+  "Cerrar sesión". ¿Debe quedar ahí o moverse a Editar perfil? → A: Se mueve
+  exclusivamente a la pantalla "Editar perfil" (`PerfilEdicionScreen`); la pantalla
+  principal de Perfil (`S-06`) deja de mostrarlo, conservando solo "Cerrar sesión" (ver
+  `RF-UI-014` actualizado). La lógica de eliminación de cuenta no cambia (sigue en
+  `PerfilViewModel`/`backendConfianzaClient.eliminarCuenta()`, spec 001/002).
+- Q: Las 6 recompensas de ejemplo no tenían ninguna imagen (campo `imagenDrawableRes`
+  nulo). ¿Deben mostrar una foto de ejemplo? → A: Sí. Cada recompensa de ejemplo DEBE
+  tener una imagen asociada (placeholder local por categoría: Comida, Descuentos,
+  Productos — ver research.md §1), nunca el campo vacío (ver `RF-UI-012`/data-model.md
+  §3 actualizados).
+
 ### Session 2026-10-12
 
 - Q: El diseño pide una pantalla/tab "Recompensas" completa (catálogo, categorías,
@@ -117,9 +184,11 @@ todavía.
 **Acceptance Scenarios**:
 
 1. **Given** la pestaña Perfil, **When** se abre la pantalla, **Then** se ven avatar de
-   56 pt, nombre, "Nivel N · puntos", una tarjeta de estadísticas de 3 columnas
-   (Actividades, Recompensas, Racha) y 5 filas de menú con icono, texto y chevron (`S-06`,
-   AC-18).
+   56 pt, nombre, "<Nombre de nivel> · puntos" (nombre real del dominio, por ejemplo
+   "Semilla · 0 pts"), una tarjeta de estadísticas de 3 columnas (Actividades,
+   Recompensas, Racha) y 5 filas de menú con icono, texto y chevron (`S-06`,
+   AC-18); el botón "Eliminar cuenta" no aparece en esta pantalla (vive en Editar
+   perfil).
 2. **Given** cualquier estado, **When** la usuaria toca una fila del menú, **Then** se
    abre exactamente la misma pantalla de destino que ya abre hoy la versión actual de la
    app (AC-19), sin cambios de navegación.
@@ -144,13 +213,14 @@ depender de que Inicio o Caminar estén reconstruidas.
 **Acceptance Scenarios**:
 
 1. **Given** la pestaña Actividades, **When** se abre la pantalla, **Then** se ven 6
-   tarjetas en 2 columnas y el chip "Todas" seleccionado (`S-02`, AC-06); al tocar
-   "Completadas" solo se ven las tarjetas completadas y el chip pasa a verde oscuro con
-   texto blanco (AC-07).
-2. **Given** la pestaña Recompensas con el segmento "Para adultos" activo, **When** la
-   usuaria toca "Para Kids", **Then** la grilla muestra solo las recompensas de Kids
-   (`S-04`, AC-13); al tocar el chip "Comida" se ven solo las recompensas de esa
-   categoría (AC-14).
+   tarjetas en 2 columnas, todas del mismo alto, y el segmento de estado "Todas"
+   seleccionado (`S-02`, AC-06); al tocar "Completadas" solo se ven las tarjetas
+   completadas y el segmento pasa a verde oscuro con texto blanco (AC-07); al elegir
+   "Caminar" en el filtro desplegable de categoría, solo se ven las tarjetas de esa
+   categoría, combinándose con el filtro de estado activo.
+2. **Given** la pestaña Recompensas, **When** la usuaria toca el chip "Comida", **Then**
+   se ven solo las recompensas de esa categoría (AC-14); no existe ningún segmento o
+   filtro de público ("Para adultos"/"Para Kids").
 3. **Given** la pestaña Educación en la pestaña "Videos", **When** la usuaria toca un
    video, **Then** se abre el mismo reproductor que ya abre hoy la versión actual de la
    app (`S-05`, AC-16).
@@ -243,9 +313,12 @@ pantallas ya reconstruidas.
   permitidas por RF-UI-002b. Las pantallas y flujos referenciados pero no diseñados en
   `especificacion-ui-app-eco.md` §1.3 (detalle/canje de recompensa, reproductor de
   video, listado de videos destacados, pestañas Artículos/IA, filas de menú de Perfil,
-  destino de la tarjeta de puntos, pestaña "Para Kids") quedan fuera de alcance:
-  conservan su UI y navegación actuales hasta que tengan su propia especificación de
-  diseño.
+  destino de la tarjeta de puntos) quedan fuera de alcance: conservan su UI y
+  navegación actuales hasta que tengan su propia especificación de diseño. La pantalla
+  de captura/selección de foto (`VerificacionFotoScreen`) tiene una única excepción
+  puntual permitida (ver Clarifications 2026-10-14: nombre de actividad destacado); el
+  segmento "Para adultos"/"Para Kids" de Recompensas (`especificacion-ui-app-eco.md`
+  §7.1) NO DEBE implementarse (ver Clarifications 2026-10-14 y RF-UI-012).
 - **RF-UI-002b**: El sistema DEBE reestructurar la barra de navegación inferior de 3 a 5
   tabs (Inicio, Actividades, Recompensas, Educación, Perfil — ver Clarifications): Inicio
   pasa a mostrar únicamente el resumen (S-01), el listado completo de actividades que
@@ -277,12 +350,18 @@ pantallas ya reconstruidas.
   (barra de estado, barra de navegación inferior, encabezado de pantalla, chip/segmento,
   barra de progreso lineal, tarjeta de actividad, botón principal, enlace de sección,
   tarjeta de video, tarjeta de recompensa, tarjeta de puntos) como una única pieza
-  reutilizada por todas las pantallas que lo necesiten.
+  reutilizada por todas las pantallas que lo necesiten. La barra de navegación inferior
+  (`C-02`) DEBE mostrar únicamente el icono de cada destino, sin etiqueta de texto
+  visible, conservando el nombre de cada destino como `contentDescription` para
+  accesibilidad (override explícito sobre `especificacion-ui-app-eco.md` §2.2, ver
+  Clarifications 2026-10-14).
 - **RF-UI-006**: La tarjeta de actividad (`C-06`) DEBE soportar sus dos variantes
   visuales (compacta/centrada en Inicio, completa/alineada a la izquierda con "+ N pts"
   en Actividades) y sus tres estados (sin iniciar, en curso, completada), derivando el
   estado únicamente de comparar el progreso actual contra la meta de la actividad
-  (idle/in_progress/completed) ya calculado por el dominio existente.
+  (idle/in_progress/completed) ya calculado por el dominio existente. Todas las tarjetas
+  de una misma variante DEBEN medir el mismo alto fijo, sin importar la cantidad de
+  texto que muestre cada una.
 - **RF-UI-007**: La barra de navegación inferior (`C-02`) DEBE resaltar el tab
   "Actividades" también dentro de la pantalla de detalle de cualquier actividad, por ser
   una pantalla hija de Actividades (§1.2, §6).
@@ -296,16 +375,22 @@ pantallas ya reconstruidas.
   todas las actividades" (`C-07`) y carrusel de contenido educativo (`C-09`). El saludo y
   la barra inferior permanecen fijos mientras el resto hace scroll vertical.
 - **RF-UI-009**: La pantalla/tab nueva Actividades (ver RF-UI-002b) DEBE construirse
-  según §5: título/subtítulo, chips de filtro de selección única (Todas/En
-  progreso/Completadas) operando sobre los mismos datos ya filtrables por estado que
-  hoy muestra Home, y grilla de 2 columnas de tarjetas `C-06` en su variante completa
-  (con "+ N pts").
+  según §5: título/subtítulo, filtro de estado de selección única (Todas/En
+  progreso/Completadas) usando el mismo componente de segmento de ancho completo que
+  ya usa Educación (no chips sueltos con scroll), operando sobre los mismos datos ya
+  filtrables por estado que hoy muestra Home, más un control desplegable (dropdown)
+  adicional de filtro por categoría real (Todas/Reciclar/Reutilizar/Caminar,
+  `CategoriaActividad`) combinable con el filtro de estado, y grilla de 2 columnas de
+  tarjetas `C-06` en su variante completa (con "+ N pts").
 - **RF-UI-010**: El detalle de Caminar DEBE reconstruirse según §6: flecha de volver,
   título/subtítulo, anillo de progreso (arco desde las 12 en punto, sentido horario,
   ángulo = 360° × valor ÷ meta), píldora de recompensa, botón de estado mostrando
   únicamente el estado "activo" del camino feliz (ver RF-UI-003), las dos filas
   informativas de "Cómo se registra" y la ilustración decorativa de paisaje. El arco se
-  anima de 0 al valor actual al abrir la pantalla.
+  anima de 0 al valor actual al abrir la pantalla. El valor y la meta del anillo se
+  expresan en pasos (no en metros, override sobre `especificacion-ui-app-eco.md` §6.1),
+  tomados únicamente del podómetro real del dispositivo
+  (`PasosDelDiaRepository.pasosDeHoy()`), nunca de un valor fijo.
 - **RF-UI-011**: El detalle de cualquier otra actividad del catálogo real (categorías
   RECICLAR y REUTILIZAR; `especificacion-ui-app-eco.md` §5.2 usa "Separar residuos",
   "Usar menos plástico" y "Ahorrar agua" solo como ejemplos ilustrativos, no como
@@ -316,18 +401,25 @@ pantallas ya reconstruidas.
   de "Cómo se registra" a cada actividad según los datos ya existentes del dominio
   (`descripcionCorta`, `pasosASeguir`, `resultadoEsperado`, `puntosBase`).
 - **RF-UI-012**: La pantalla/tab nueva Recompensas (ver RF-UI-002b, RF-UI-003b) DEBE
-  construirse según §7: título/subtítulo, segmento "Para adultos"/"Para Kids", chips de
-  categoría con scroll horizontal, y grilla de 2 columnas de tarjetas de recompensa
-  (`C-10`) con imagen, título (hasta 2 líneas, truncado con puntos suspensivos si
-  excede), costo en formato "N.NNN pts" (punto como separador de miles) y chevron.
+  construirse según §7: título/subtítulo, chips de categoría con scroll horizontal, y
+  grilla de 2 columnas de tarjetas de recompensa (`C-10`) con imagen, título (hasta 2
+  líneas, truncado con puntos suspensivos si excede), costo en formato "N.NNN pts"
+  (punto como separador de miles) y chevron. No DEBE existir el segmento "Para
+  adultos"/"Para Kids" de `especificacion-ui-app-eco.md` §7.1 ni ninguna otra distinción
+  de público: el catálogo de ejemplo es único. Cada recompensa de ejemplo DEBE tener
+  asociada una imagen de muestra (`imagenDrawableRes` nunca vacío).
 - **RF-UI-013**: La pantalla/tab Educación (ver RF-UI-002b) DEBE construirse según §8:
   título/subtítulo, segmento Videos/Artículos/IA, título de sección "Videos destacados"
   con enlace "Ver todos", y tarjetas de video anchas (`C-09`) con metadato "N min ·
   Categoría" sobre degradé oscuro.
 - **RF-UI-014**: La pantalla Perfil DEBE reconstruirse según §9: avatar de 56 pt,
-  nombre, "Nivel N · puntos", tarjeta de estadísticas de 3 columnas (Actividades,
+  nombre, "<Nombre de nivel> · puntos" usando el nombre de nivel ya definido por el
+  dominio existente (`NivelUsuario`: Semilla/Brote/Planta/Árbol — nunca un número
+  inventado por la UI), tarjeta de estadísticas de 3 columnas (Actividades,
   Recompensas, Racha, usando los valores ya calculados por el dominio existente) y lista
-  de 5 filas de menú con icono, texto y chevron.
+  de 5 filas de menú con icono, texto y chevron. El botón "Eliminar cuenta" NO DEBE
+  aparecer en esta pantalla; vive exclusivamente en la pantalla "Editar perfil"
+  (`PerfilEdicionScreen`), reutilizando la misma lógica existente sin cambios.
 
 ### Accesibilidad y adaptabilidad
 
@@ -343,7 +435,7 @@ pantallas ya reconstruidas.
   ninguna pantalla (AC-20).
 - **RF-UI-018**: Cada tarjeta de actividad DEBE exponerse a un lector de pantalla como
   un único elemento con nombre, progreso, puntos y estado (por ejemplo: "Caminar, 1.200
-  de 2.000 metros, 50 puntos, en curso"); el anillo de progreso de Caminar DEBE leerse
+  de 2.000 pasos, 50 puntos, en curso"); el anillo de progreso de Caminar DEBE leerse
   como un porcentaje (por ejemplo: "60 por ciento"); las ilustraciones decorativas
   (planeta, paisaje) DEBEN marcarse para que el lector de pantalla las ignore.
 - **RF-UI-019**: Toda animación (barras/anillo de progreso, contador de puntos, tarjeta
@@ -406,6 +498,20 @@ persistencia ni identidad de negocio.
   no" y "Combo café + medi… medialuna") se corrigen como parte de este spec usando el
   texto final que el propio documento indica ("Tu guía de reciclaje" y "Combo café +
   medialuna"), por ser erratas de copy y no decisiones de producto.
+- Tras el testing real de la UI ya implementada (feedback 2026-10-14), se incorporan
+  los siguientes overrides deliberados sobre `especificacion-ui-app-eco.md`, resueltos
+  en Clarifications: (1) el anillo de progreso de Caminar mide pasos crudos del
+  podómetro del dispositivo en vez de metros convertidos; (2) la barra de navegación
+  inferior muestra solo iconos, sin etiquetas de texto; (3) Actividades suma un filtro
+  desplegable de categoría además del segmento de estado, y ese segmento de estado
+  adopta el mismo diseño visual que el segmento Videos/Artículos/IA de Educación; (4)
+  las tarjetas de actividad tienen alto uniforme por variante; (5) Recompensas no tiene
+  ningún segmento ni filtro de público ("Para adultos"/"Para Kids"); (6) cada recompensa
+  de ejemplo incluye una imagen de muestra; (7) el nombre de nivel en Perfil es el
+  nombre real del dominio (Semilla/Brote/Planta/Árbol), no un número; (8) "Eliminar
+  cuenta" vive únicamente en Editar perfil; (9) la pantalla de captura/selección de
+  foto muestra el nombre de la actividad de forma destacada como única excepción a
+  RF-UI-002.
 - El punto de partida de cada pantalla es la implementación ya existente de
   `001-ecosmart-mvp` (estado, navegación y datos reales ya conectados); este spec
   reemplaza únicamente las vistas y los recursos de estilo, reutilizando los mismos

@@ -3,6 +3,7 @@ package com.ecosmart.presentation.home
 import android.net.Uri
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,13 +14,13 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
@@ -28,13 +29,32 @@ import androidx.lifecycle.ViewModel
 import com.ecosmart.domain.valueobject.CategoriaActividad
 import com.ecosmart.presentation.comun.EncabezadoConUsuario
 import com.ecosmart.presentation.comun.etiquetaCategoria
+import com.ecosmart.presentation.theme.ColorBgScreen
+import com.ecosmart.presentation.theme.ColorTextPrimary
+import com.ecosmart.presentation.theme.ColorTextSecondary
+import com.ecosmart.presentation.theme.EncabezadoEcoSmart
+import com.ecosmart.presentation.theme.EnlaceSeccion
 import com.ecosmart.presentation.theme.FormaBotonPildora
+import com.ecosmart.presentation.theme.SegmentoEcoSmart
+import com.ecosmart.presentation.theme.SpaceScreenX
 import com.ecosmart.presentation.theme.TarjetaEcoSmart
+import com.ecosmart.presentation.theme.TarjetaVideo
+import com.ecosmart.presentation.theme.TypeBody
+import com.ecosmart.presentation.theme.TypeSection
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
+
+/**
+ * Segmento de opciones para la pantalla de Educación (S-05 / C-04 / research.md §3).
+ */
+enum class SegmentoEducacion(val etiqueta: String) {
+    VIDEOS("Videos"),
+    ARTICULOS("Artículos"),
+    IA("IA"),
+}
 
 /**
  * Contenido educativo estático (US6, RF-016/RF-017). No hay una entidad de
@@ -54,6 +74,7 @@ private data class ContenidoEducativo(
     val titulo: String,
     val categoria: CategoriaActividad,
     val esVideo: Boolean,
+    val duracionMinutos: Int,
     val subtemas: List<SubtemaEducativo>,
 )
 
@@ -65,6 +86,7 @@ private val CATALOGO_CONTENIDO = listOf(
         titulo = "Cómo separar tus residuos en casa",
         categoria = CategoriaActividad.RECICLAR,
         esVideo = false,
+        duracionMinutos = 3,
         subtemas = listOf(
             SubtemaEducativo("🟦", "Reciclables", "Papel, cartón, plástico, vidrio y metal limpios y secos."),
             SubtemaEducativo("🟫", "Orgánicos", "Restos de comida y otros residuos biodegradables."),
@@ -76,6 +98,7 @@ private val CATALOGO_CONTENIDO = listOf(
         titulo = "El circuito del reciclaje en CABA",
         categoria = CategoriaActividad.RECICLAR,
         esVideo = true,
+        duracionMinutos = 4,
         subtemas = listOf(
             SubtemaEducativo("🏠", "Separá", "Separá los residuos en tu casa."),
             SubtemaEducativo("📍", "Llevá", "Llevá los reciclables a un Punto Verde o entregalos a recuperadores urbanos."),
@@ -88,6 +111,7 @@ private val CATALOGO_CONTENIDO = listOf(
         titulo = "5 ideas para reutilizar frascos de vidrio",
         categoria = CategoriaActividad.REUTILIZAR,
         esVideo = false,
+        duracionMinutos = 5,
         subtemas = listOf(
             SubtemaEducativo("🌱", "Maceta", "Usalo para una planta pequeña."),
             SubtemaEducativo("✏️", "Portalápices", "Guardá lápices, fibras o pinceles."),
@@ -101,6 +125,7 @@ private val CATALOGO_CONTENIDO = listOf(
         titulo = "Upcycling: de la ropa vieja a algo nuevo",
         categoria = CategoriaActividad.REUTILIZAR,
         esVideo = true,
+        duracionMinutos = 3,
         subtemas = listOf(
             SubtemaEducativo("♻️", "Reutilizá", "Dale un nuevo uso a algo que ya tenés."),
             SubtemaEducativo("✂️", "Transformá", "Cortá, cosé o modificá la ropa."),
@@ -113,6 +138,7 @@ private val CATALOGO_CONTENIDO = listOf(
         titulo = "Beneficios de caminar para el planeta y tu salud",
         categoria = CategoriaActividad.CAMINAR,
         esVideo = false,
+        duracionMinutos = 2,
         subtemas = listOf(
             SubtemaEducativo("🌎", "Cuidás el planeta", "Caminar genera menos contaminación que usar un auto."),
             SubtemaEducativo("❤️", "Cuidás tu salud", "Ayuda a mantenerte activo/a."),
@@ -125,6 +151,7 @@ private val CATALOGO_CONTENIDO = listOf(
         titulo = "Cómo armar una rutina de caminata",
         categoria = CategoriaActividad.CAMINAR,
         esVideo = true,
+        duracionMinutos = 4,
         subtemas = listOf(
             SubtemaEducativo("📅", "Elegí tus días", "Buscá momentos que puedas mantener."),
             SubtemaEducativo("🚶", "Empezá de a poco", "Comenzá con caminatas cortas."),
@@ -140,67 +167,114 @@ private fun enlaceMasInfo(titulo: String): String = "https://www.google.com/sear
 @HiltViewModel
 class ContenidoEducativoViewModel @Inject constructor() : ViewModel() {
 
-    private val _categoriaSeleccionada = MutableStateFlow<CategoriaActividad?>(null)
-    val categoriaSeleccionada: StateFlow<CategoriaActividad?> = _categoriaSeleccionada.asStateFlow()
+    private val _segmentoSeleccionado = MutableStateFlow(SegmentoEducacion.VIDEOS)
+    val segmentoSeleccionado: StateFlow<SegmentoEducacion> = _segmentoSeleccionado.asStateFlow()
 
-    fun seleccionarCategoria(categoria: CategoriaActividad?) {
-        _categoriaSeleccionada.value = categoria
+    fun seleccionarSegmento(segmento: SegmentoEducacion) {
+        _segmentoSeleccionado.value = segmento
     }
 }
 
-/** US6 — artículos y videos filtrables por categoría (RF-016/RF-017). */
+/**
+ * Pantalla Educación (S-05 — especificacion-ui-app-eco.md §8):
+ * Encabezado C-03 ("Educación" / "Aprendé, informate, hacé la diferencia" + hoja),
+ * segmento de 3 opciones C-04 (Videos / Artículos / IA), sección "Videos destacados"
+ * con enlace "Ver todos" (C-08), y tarjetas de video anchas (C-09) con metadato "N min · Categoría".
+ */
 @Composable
 fun ContenidoEducativoScreen(
     viewModel: ContenidoEducativoViewModel = hiltViewModel(),
     onSeleccionarContenido: (String) -> Unit = {},
-    onVolver: () -> Unit = {},
+    onVerPerfil: (() -> Unit)? = null,
+    onVolver: (() -> Unit)? = null,
+    barraInferior: @Composable () -> Unit = {},
 ) {
-    val categoriaSeleccionada by viewModel.categoriaSeleccionada.collectAsState()
-    val contenidoFiltrado = if (categoriaSeleccionada == null) {
-        CATALOGO_CONTENIDO
-    } else {
-        CATALOGO_CONTENIDO.filter { it.categoria == categoriaSeleccionada }
-    }
+    val segmentoSeleccionado by viewModel.segmentoSeleccionado.collectAsState()
 
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
-        topBar = { EncabezadoConUsuario(onVolver = onVolver) },
+        containerColor = ColorBgScreen,
+        topBar = {
+            EncabezadoEcoSmart(
+                titulo = "Educación",
+                subtitulo = "Aprendé, informate, hacé la diferencia",
+                onAvatar = onVerPerfil,
+                onVolver = onVolver,
+            )
+        },
+        bottomBar = barraInferior,
     ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(horizontal = 20.dp),
+                .padding(horizontal = SpaceScreenX),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-            ) {
-                FilterChip(
-                    selected = categoriaSeleccionada == null,
-                    onClick = { viewModel.seleccionarCategoria(null) },
-                    label = { Text("Todas", maxLines = 1, softWrap = false) },
-                    modifier = Modifier.weight(1f),
-                )
-                CategoriaActividad.entries.forEach { categoria ->
-                    FilterChip(
-                        selected = categoriaSeleccionada == categoria,
-                        onClick = { viewModel.seleccionarCategoria(categoria) },
-                        label = { Text(etiquetaCategoria(categoria), maxLines = 1, softWrap = false) },
-                        modifier = Modifier.weight(1f),
-                    )
-                }
-            }
-            LazyColumn(
-                modifier = Modifier.fillMaxSize().padding(top = 12.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                items(contenidoFiltrado, key = { it.id }) { contenido ->
-                    TarjetaEcoSmart(modifier = Modifier.clickable { onSeleccionarContenido(contenido.id) }) {
-                        Text(text = contenido.titulo, style = MaterialTheme.typography.titleSmall)
+            // S05-C: Segmento C-04 (Videos / Artículos / IA)
+            SegmentoEcoSmart(
+                opciones = SegmentoEducacion.entries,
+                seleccionado = segmentoSeleccionado,
+                onSeleccionar = viewModel::seleccionarSegmento,
+                etiqueta = { it.etiqueta },
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+            )
+
+            when (segmentoSeleccionado) {
+                SegmentoEducacion.VIDEOS -> {
+                    // S05-D: Título "Videos destacados" con enlace C-08 "Ver todos"
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
                         Text(
-                            text = if (contenido.esVideo) "Video" else "Artículo",
-                            style = MaterialTheme.typography.bodySmall,
+                            text = "Videos destacados",
+                            style = TypeSection,
+                            color = ColorTextPrimary,
+                        )
+                        EnlaceSeccion(
+                            texto = "Ver todos",
+                            onClick = { /* Muestra todo el catálogo de videos */ },
+                        )
+                    }
+
+                    // S05-E / S05-F: Tarjetas de video C-09 anchas
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        val videos = CATALOGO_CONTENIDO.filter { it.esVideo }
+                        items(videos, key = { it.id }) { item ->
+                            TarjetaVideo(
+                                titulo = item.titulo,
+                                onClick = { onSeleccionarContenido(item.id) },
+                                metadato = "${item.duracionMinutos} min · ${etiquetaCategoria(item.categoria)}",
+                                esCompacta = false,
+                            )
+                        }
+                    }
+                }
+                SegmentoEducacion.ARTICULOS -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            text = "Próximamente: Artículos educativos",
+                            style = TypeBody,
+                            color = ColorTextSecondary,
+                        )
+                    }
+                }
+                SegmentoEducacion.IA -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            text = "Próximamente: Asistente IA para resolver dudas",
+                            style = TypeBody,
+                            color = ColorTextSecondary,
                         )
                     }
                 }

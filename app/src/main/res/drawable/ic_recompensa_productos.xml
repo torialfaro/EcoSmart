@@ -1,0 +1,20 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="150dp"
+    android:viewportWidth="200"
+    android:viewportHeight="150">
+    <path android:fillColor="#DFEBD8" android:pathData="M0,0 H200 V150 H0 Z" />
+    <!-- Placeholder: caja/producto sustentable, foto de ejemplo para recompensas de categoría Productos -->
+    <path
+        android:fillColor="#286B4B"
+        android:pathData="M60,60 H140 V110 H60 Z" />
+    <path
+        android:fillColor="#1F5E34"
+        android:pathData="M60,60 L100,45 L140,60 Z" />
+    <path
+        android:fillColor="#E6F2DF"
+        android:pathData="M94,60 H106 V110 H94 Z" />
+    <path
+        android:fillColor="#4FA24A"
+        android:pathData="M100,38 C106,42 108,50 100,56 C92,50 94,42 100,38 Z" />
+</vector>

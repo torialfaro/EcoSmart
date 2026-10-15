@@ -16,18 +16,31 @@ Se usa salida estructurada nativa de Gemini (`response_mime_type` +
 `response_schema`) en vez de pedirle texto libre y parsear con regex/JSON
 best-effort: es la forma confiable de obtener siempre un JSON válido con
 el shape exacto que espera `VeredictoEcoGpt`.
+
+Corrección post-QA (2026-10-14): la capa gratuita de Gemini responde 503
+"UNAVAILABLE" ("This model is currently experiencing high demand") con
+cierta frecuencia en horas pico — es un error transitorio del lado de
+Google, no un bug nuestro. Se agrega un reintento automático con backoff
+ante ese error específico (`google.genai.errors.ServerError`) antes de
+propagarlo como falla real, igual que ya se hacía para el cold-start del
+hosting (ver `VerificarFotoConIA.kt` del lado Android).
 """
 
+import asyncio
 import json
 import os
 from typing import Optional, Tuple
 
 from google import genai
+from google.genai import errors as genai_errors
 from google.genai import types
 
 MODELO_GEMINI = os.environ.get("GEMINI_MODEL", "gemini-3.6-flash")
 
 _cliente = genai.Client(api_key=os.environ.get("GEMINI_API_KEY", ""))
+
+_REINTENTOS_SERVIDOR_SOBRECARGADO = 2
+_ESPERA_ENTRE_REINTENTOS_S = 1.5
 
 _ESQUEMA_VEREDICTO = {
     "type": "OBJECT",
@@ -51,6 +64,10 @@ _ESQUEMA_VEREDICTO = {
 
 class GeminiVeredictoInvalidoError(Exception):
     """Gemini respondió sin un JSON válido con la forma esperada de veredicto."""
+
+
+class GeminiSobrecargadoError(Exception):
+    """Gemini devolvió 503 UNAVAILABLE incluso tras reintentar (alta demanda transitoria)."""
 
 
 def _construir_prompt(
@@ -83,17 +100,25 @@ async def verificar_con_ia(
 ) -> Tuple[str, Optional[str]]:
     prompt = _construir_prompt(categoria, resultado_esperado, descripcion_usuario, cantidad_huellas_previas)
 
-    respuesta = await _cliente.aio.models.generate_content(
-        model=MODELO_GEMINI,
-        contents=[
-            types.Part.from_bytes(data=imagen_bytes, mime_type=media_type),
-            prompt,
-        ],
-        config=types.GenerateContentConfig(
-            response_mime_type="application/json",
-            response_schema=_ESQUEMA_VEREDICTO,
-        ),
-    )
+    respuesta = None
+    for intento in range(_REINTENTOS_SERVIDOR_SOBRECARGADO + 1):
+        try:
+            respuesta = await _cliente.aio.models.generate_content(
+                model=MODELO_GEMINI,
+                contents=[
+                    types.Part.from_bytes(data=imagen_bytes, mime_type=media_type),
+                    prompt,
+                ],
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    response_schema=_ESQUEMA_VEREDICTO,
+                ),
+            )
+            break
+        except genai_errors.ServerError as error:
+            if intento == _REINTENTOS_SERVIDOR_SOBRECARGADO:
+                raise GeminiSobrecargadoError(str(error)) from error
+            await asyncio.sleep(_ESPERA_ENTRE_REINTENTOS_S * (intento + 1))
 
     texto = respuesta.text
     if not texto:

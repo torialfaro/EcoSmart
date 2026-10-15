@@ -21,17 +21,14 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -126,9 +123,6 @@ fun PerfilScreen(
                 viewModel.cerrarSesion()
                 onCerrarSesion()
             },
-            onEliminarCuenta = viewModel::solicitarEliminarCuenta,
-            onConfirmarEliminarCuenta = viewModel::confirmarEliminarCuenta,
-            onCancelarEliminarCuenta = viewModel::cancelarEliminarCuenta,
             modifier = Modifier.padding(padding),
         )
     }
@@ -140,14 +134,11 @@ fun PerfilContenido(
     onVerHistorial: () -> Unit,
     onEditarPerfil: () -> Unit,
     onCerrarSesion: () -> Unit,
-    onEliminarCuenta: () -> Unit,
-    onConfirmarEliminarCuenta: () -> Unit,
-    onCancelarEliminarCuenta: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val usuario = uiState.usuario ?: return
     val primerNombre = usuario.nombre.ifBlank { usuario.nombreUsuario }
-    val nivelTexto = "Nivel ${nivelNumero(uiState.nivel)} · ${formatearPuntos(uiState.puntosHistoricos)} pts"
+    val nivelTexto = "${etiquetaNivel(uiState.nivel)} · ${formatearPuntos(uiState.puntosHistoricos)} pts"
 
     Column(
         modifier = modifier
@@ -264,7 +255,7 @@ fun PerfilContenido(
 
         Box(modifier = Modifier.height(8.dp))
 
-        // Acciones de cuenta
+        // Acción de cuenta (eliminar cuenta se movió a PerfilEdicionScreen, feedback post-QA)
         OutlinedButton(
             onClick = onCerrarSesion,
             shape = FormaBotonPildora,
@@ -272,37 +263,6 @@ fun PerfilContenido(
         ) {
             Text("Cerrar sesión", color = ColorGreen700, style = TypeCardTitle)
         }
-
-        OutlinedButton(
-            onClick = onEliminarCuenta,
-            shape = FormaBotonPildora,
-            modifier = Modifier.fillMaxWidth().height(48.dp),
-        ) {
-            Text("Eliminar cuenta", color = MaterialTheme.colorScheme.error, style = TypeCardTitle)
-        }
-    }
-
-    if (uiState.mostrarConfirmacionEliminarCuenta) {
-        AlertDialog(
-            onDismissRequest = onCancelarEliminarCuenta,
-            title = { Text("¿Eliminar tu cuenta?") },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Se borra de inmediato tu perfil, tu historial y tu acceso. No hay forma de deshacerlo.")
-                    uiState.mensajeErrorEliminarCuenta?.let { Text(it, color = MaterialTheme.colorScheme.error) }
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = onConfirmarEliminarCuenta, enabled = !uiState.eliminandoCuenta) {
-                    Text("Eliminar")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = onCancelarEliminarCuenta, enabled = !uiState.eliminandoCuenta) {
-                    Text("Cancelar")
-                }
-            },
-        )
     }
 }
 
@@ -375,11 +335,12 @@ private fun FilaMenuPerfil(
     }
 }
 
-private fun nivelNumero(nivel: NivelUsuario): Int = when (nivel) {
-    NivelUsuario.SEMILLA -> 1
-    NivelUsuario.BROTE -> 2
-    NivelUsuario.PLANTA -> 3
-    NivelUsuario.ARBOL -> 4
+/** Corrección post-QA: el nivel se muestra con el nombre ya definido en el dominio (NivelUsuario), no un número inventado. */
+private fun etiquetaNivel(nivel: NivelUsuario): String = when (nivel) {
+    NivelUsuario.SEMILLA -> "Semilla"
+    NivelUsuario.BROTE -> "Brote"
+    NivelUsuario.PLANTA -> "Planta"
+    NivelUsuario.ARBOL -> "Árbol"
 }
 
 private fun formatearPuntos(puntos: Int): String {
@@ -388,10 +349,4 @@ private fun formatearPuntos(puntos: Int): String {
     val prefix = texto.substring(0, texto.length - 3)
     val suffix = texto.substring(texto.length - 3)
     return "$prefix.$suffix"
-}
-
-private fun etiquetaCategoria(categoria: CategoriaActividad): String = when (categoria) {
-    CategoriaActividad.RECICLAR -> "Reciclar"
-    CategoriaActividad.REUTILIZAR -> "Reutilizar"
-    CategoriaActividad.CAMINAR -> "Caminar"
 }

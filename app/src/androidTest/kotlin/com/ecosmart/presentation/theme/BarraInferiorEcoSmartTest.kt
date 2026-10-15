@@ -2,7 +2,7 @@ package com.ecosmart.presentation.theme
 
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.performClick
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -28,11 +28,12 @@ class BarraInferiorEcoSmartTest {
             }
         }
 
-        composeTestRule.onNodeWithText("Inicio").assertExists()
-        composeTestRule.onNodeWithText("Actividades").assertExists()
-        composeTestRule.onNodeWithText("Recompensas").assertExists()
-        composeTestRule.onNodeWithText("Educación").assertExists()
-        composeTestRule.onNodeWithText("Perfil").assertExists()
+        // Solo iconos sin etiqueta de texto (feedback post-QA); se identifican por contentDescription.
+        composeTestRule.onNodeWithContentDescription("Inicio").assertExists()
+        composeTestRule.onNodeWithContentDescription("Actividades").assertExists()
+        composeTestRule.onNodeWithContentDescription("Recompensas").assertExists()
+        composeTestRule.onNodeWithContentDescription("Educación").assertExists()
+        composeTestRule.onNodeWithContentDescription("Perfil").assertExists()
     }
 
     @Test
@@ -51,7 +52,7 @@ class BarraInferiorEcoSmartTest {
                 }
             }
 
-            val textoEsperado = when (pestana) {
+            val descripcionEsperada = when (pestana) {
                 PestanaInferior.INICIO -> "Inicio"
                 PestanaInferior.ACTIVIDADES -> "Actividades"
                 PestanaInferior.RECOMPENSAS -> "Recompensas"
@@ -59,7 +60,7 @@ class BarraInferiorEcoSmartTest {
                 PestanaInferior.PERFIL -> "Perfil"
             }
 
-            composeTestRule.onNodeWithText(textoEsperado).assertIsSelected()
+            composeTestRule.onNodeWithContentDescription(descripcionEsperada).assertIsSelected()
         }
     }
 
@@ -79,19 +80,19 @@ class BarraInferiorEcoSmartTest {
             }
         }
 
-        composeTestRule.onNodeWithText("Actividades").performClick()
+        composeTestRule.onNodeWithContentDescription("Actividades").performClick()
         assertEquals("ACTIVIDADES", clickeado)
 
-        composeTestRule.onNodeWithText("Recompensas").performClick()
+        composeTestRule.onNodeWithContentDescription("Recompensas").performClick()
         assertEquals("RECOMPENSAS", clickeado)
 
-        composeTestRule.onNodeWithText("Educación").performClick()
+        composeTestRule.onNodeWithContentDescription("Educación").performClick()
         assertEquals("EDUCACION", clickeado)
 
-        composeTestRule.onNodeWithText("Perfil").performClick()
+        composeTestRule.onNodeWithContentDescription("Perfil").performClick()
         assertEquals("PERFIL", clickeado)
 
-        composeTestRule.onNodeWithText("Inicio").performClick()
+        composeTestRule.onNodeWithContentDescription("Inicio").performClick()
         assertEquals("INICIO", clickeado)
     }
 }

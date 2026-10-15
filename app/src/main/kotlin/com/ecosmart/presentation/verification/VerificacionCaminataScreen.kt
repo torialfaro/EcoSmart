@@ -6,13 +6,17 @@ import android.content.pm.PackageManager
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -24,14 +28,19 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ecosmart.app.R
 import com.ecosmart.application.activity.RegistrarCaminata
 import com.ecosmart.application.permission.EvaluarEstadoPermiso
 import com.ecosmart.domain.valueobject.TipoPermiso
@@ -43,9 +52,15 @@ import com.ecosmart.infrastructure.sensors.CaminataService
 import com.ecosmart.infrastructure.sensors.EstadoCaminata
 import com.ecosmart.infrastructure.sensors.PodometroProvider
 import com.ecosmart.infrastructure.session.SesionUsuario
-import com.ecosmart.presentation.comun.EncabezadoConUsuario
 import com.ecosmart.presentation.permissions.GuiaHabilitarPermisoScreen
+import com.ecosmart.presentation.theme.AnilloProgreso
+import com.ecosmart.presentation.theme.BotonPrincipal
+import com.ecosmart.presentation.theme.ColorBgScreen
+import com.ecosmart.presentation.theme.EncabezadoEcoSmart
 import com.ecosmart.presentation.theme.FormaBotonPildora
+import com.ecosmart.presentation.theme.SpaceScreenX
+import com.ecosmart.presentation.theme.TypeCardTitle
+import com.ecosmart.presentation.theme.TypeTitle
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -57,7 +72,6 @@ import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import javax.inject.Inject
 
-private const val METROS_POR_PASO = 0.75
 private const val META_PASOS_POR_DEFECTO = 1000
 private const val MENSAJE_CAMINATA_ACTIVA_EN_OTRO_DISPOSITIVO =
     "Ya tenés una caminata en curso en otro de tus dispositivos. Esperá a que termine o a que " +
@@ -171,6 +185,7 @@ fun VerificacionCaminataScreen(
     viewModel: VerificacionCaminataViewModel = hiltViewModel(),
     onVerProgreso: () -> Unit,
     onVolver: () -> Unit,
+    barraInferior: @Composable () -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
@@ -201,14 +216,25 @@ fun VerificacionCaminataScreen(
     }
 
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
-        topBar = { EncabezadoConUsuario(onVolver = onVolver) },
+        containerColor = ColorBgScreen,
+        topBar = {
+            EncabezadoEcoSmart(
+                titulo = "Caminar",
+                subtitulo = "Sumá distancia, cuidá el planeta",
+                onVolver = onVolver,
+                mostrarAvatar = false,
+                mostrarHojaSubtitulo = true,
+            )
+        },
+        bottomBar = barraInferior,
     ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(horizontal = 20.dp),
+                .padding(horizontal = SpaceScreenX)
+                .verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             when (val estado = uiState.estado) {
@@ -249,16 +275,31 @@ fun VerificacionCaminataScreen(
                     TextButton(onClick = onVolver, modifier = Modifier.fillMaxWidth()) { Text("Atrás") }
                 }
                 is EstadoCaminata.EnCurso -> {
-                    if (estado.actividadId != uiState.actividadId) {
-                        Text("Ya tenés otra caminata en curso; se muestra su avance.")
+                    // Corrección post-QA: se muestran pasos crudos del podómetro, no una conversión a metros.
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 12.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        AnilloProgreso(
+                            valor = estado.pasosLogrados,
+                            meta = estado.metaPasos.coerceAtLeast(1),
+                            unidad = "pasos",
+                        )
                     }
-                    val metros = (estado.pasosLogrados * METROS_POR_PASO).toInt()
-                    Text("Llevás ${estado.pasosLogrados} de ${estado.metaPasos} pasos (~$metros m)", style = MaterialTheme.typography.titleLarge)
-                    LinearProgressIndicator(
-                        progress = { (estado.pasosLogrados.toFloat() / estado.metaPasos).coerceIn(0f, 1f) },
-                        modifier = Modifier.fillMaxWidth(),
+
+                    BotonPrincipal(
+                        texto = "¡Seguimiento en curso!",
+                        onClick = { /* Describe estado, no acción en camino feliz (RF-UI-003) */ },
                     )
-                    Text("La caminata sigue en segundo plano: podés salir de esta pantalla o de la app. Se completa sola al llegar a la meta y, si no llegás hoy, se descarta a medianoche.")
+
+                    Text(
+                        text = "La caminata sigue en segundo plano: podés salir de esta pantalla o de la app. Se completa sola al llegar a la meta y, si no llegás hoy, se descarta a medianoche.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(horizontal = 8.dp),
+                    )
+
                     TextButton(onClick = onVolver, modifier = Modifier.fillMaxWidth()) { Text("Atrás") }
                 }
                 is EstadoCaminata.Completada -> {
@@ -280,6 +321,17 @@ fun VerificacionCaminataScreen(
                     ) { Text("Atrás") }
                 }
             }
+
+            // Ilustración decorativa de paisaje (RF-UI-018)
+            Image(
+                painter = painterResource(R.drawable.il_paisaje_colinas),
+                contentDescription = null,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(90.dp)
+                    .clearAndSetSemantics {},
+                contentScale = ContentScale.FillWidth,
+            )
         }
     }
 }

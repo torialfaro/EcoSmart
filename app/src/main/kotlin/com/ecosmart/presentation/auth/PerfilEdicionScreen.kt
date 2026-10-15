@@ -7,14 +7,18 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -28,21 +32,31 @@ import com.ecosmart.domain.model.Usuario
 import com.ecosmart.domain.valueobject.Barrio
 import com.ecosmart.domain.valueobject.CategoriaActividad
 import com.ecosmart.domain.valueobject.esTelefonoValido
+import com.ecosmart.presentation.profile.PerfilViewModel
 import com.ecosmart.presentation.theme.EncabezadoEcoSmart
 import com.ecosmart.presentation.theme.FormaBotonPildora
 
 /**
  * US3 — edición de perfil y cambio de contraseña (RF-007 a RF-009).
  * Corrección post-QA (RF-068): recién ahora se conecta a la navegación,
- * desde el botón "Editar perfil" de `PerfilScreen`.
+ * desde el botón "Editar perfil" de `PerfilScreen`. Corrección post-QA
+ * (2026-10-14): "Eliminar cuenta" se movió acá desde `PerfilScreen` (la
+ * lógica de eliminación sigue viviendo en `PerfilViewModel`, sin cambios).
  */
 @Composable
 fun PerfilEdicionScreen(
     viewModel: PerfilEdicionViewModel = hiltViewModel(),
+    viewModelPerfil: PerfilViewModel = hiltViewModel(),
     onVolver: () -> Unit,
+    onCuentaEliminada: () -> Unit = onVolver,
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val usuario = uiState.usuario
+    val uiStatePerfil by viewModelPerfil.uiState.collectAsState()
+
+    LaunchedEffect(uiStatePerfil.cuentaEliminada) {
+        if (uiStatePerfil.cuentaEliminada) onCuentaEliminada()
+    }
 
     if (usuario == null) {
         Scaffold { padding ->
@@ -59,6 +73,12 @@ fun PerfilEdicionScreen(
         onGuardar = viewModel::guardarPerfil,
         onCambiarContrasena = viewModel::actualizarContrasena,
         onVolver = onVolver,
+        mostrarConfirmacionEliminarCuenta = uiStatePerfil.mostrarConfirmacionEliminarCuenta,
+        eliminandoCuenta = uiStatePerfil.eliminandoCuenta,
+        mensajeErrorEliminarCuenta = uiStatePerfil.mensajeErrorEliminarCuenta,
+        onSolicitarEliminarCuenta = viewModelPerfil::solicitarEliminarCuenta,
+        onConfirmarEliminarCuenta = viewModelPerfil::confirmarEliminarCuenta,
+        onCancelarEliminarCuenta = viewModelPerfil::cancelarEliminarCuenta,
     )
 }
 
@@ -71,6 +91,12 @@ private fun CamposDePerfil(
     onGuardar: (DatosPerfil) -> Unit,
     onCambiarContrasena: (String, String) -> Unit,
     onVolver: () -> Unit,
+    mostrarConfirmacionEliminarCuenta: Boolean,
+    eliminandoCuenta: Boolean,
+    mensajeErrorEliminarCuenta: String?,
+    onSolicitarEliminarCuenta: () -> Unit,
+    onConfirmarEliminarCuenta: () -> Unit,
+    onCancelarEliminarCuenta: () -> Unit,
 ) {
     var email by remember(usuario.id) { mutableStateOf(usuario.email) }
     var nombre by remember(usuario.id) { mutableStateOf(usuario.nombre) }
@@ -209,6 +235,39 @@ private fun CamposDePerfil(
             ) {
                 Text("Actualizar contraseña")
             }
+
+            HorizontalDivider()
+
+            OutlinedButton(
+                onClick = onSolicitarEliminarCuenta,
+                shape = FormaBotonPildora,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text("Eliminar cuenta", color = MaterialTheme.colorScheme.error)
+            }
         }
+    }
+
+    if (mostrarConfirmacionEliminarCuenta) {
+        AlertDialog(
+            onDismissRequest = onCancelarEliminarCuenta,
+            title = { Text("¿Eliminar tu cuenta?") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Se borra de inmediato tu perfil, tu historial y tu acceso. No hay forma de deshacerlo.")
+                    mensajeErrorEliminarCuenta?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = onConfirmarEliminarCuenta, enabled = !eliminandoCuenta) {
+                    Text("Eliminar")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = onCancelarEliminarCuenta, enabled = !eliminandoCuenta) {
+                    Text("Cancelar")
+                }
+            },
+        )
     }
 }

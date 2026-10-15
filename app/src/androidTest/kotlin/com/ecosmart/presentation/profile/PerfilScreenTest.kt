@@ -48,15 +48,12 @@ class PerfilScreenTest {
                     onVerHistorial = {},
                     onEditarPerfil = {},
                     onCerrarSesion = {},
-                    onEliminarCuenta = {},
-                    onConfirmarEliminarCuenta = {},
-                    onCancelarEliminarCuenta = {},
                 )
             }
         }
 
         composeTestRule.onNodeWithText("Martina").assertExists()
-        composeTestRule.onNodeWithText("Nivel 1 · 1.250 pts").assertExists()
+        composeTestRule.onNodeWithText("Semilla · 1.250 pts").assertExists()
     }
 
     @Test
@@ -76,9 +73,6 @@ class PerfilScreenTest {
                     onVerHistorial = {},
                     onEditarPerfil = {},
                     onCerrarSesion = {},
-                    onEliminarCuenta = {},
-                    onConfirmarEliminarCuenta = {},
-                    onCancelarEliminarCuenta = {},
                 )
             }
         }
@@ -108,9 +102,6 @@ class PerfilScreenTest {
                     onVerHistorial = { verHistorialClickeado = true },
                     onEditarPerfil = { editarPerfilClickeado = true },
                     onCerrarSesion = {},
-                    onEliminarCuenta = {},
-                    onConfirmarEliminarCuenta = {},
-                    onCancelarEliminarCuenta = {},
                 )
             }
         }

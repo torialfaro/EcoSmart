@@ -19,8 +19,11 @@ import javax.inject.Inject
 
 data class HomeUiState(
     val actividadesPorCategoria: Map<CategoriaActividad, List<Actividad>> = emptyMap(),
+    val todasLasActividades: List<Actividad> = emptyList(),
     val cargando: Boolean = true,
     val nombreUsuario: String = "",
+    val puntosHistoricos: Int = 0,
+    val pasosHoy: Int = 0,
 )
 
 /** US4 — Home filtrada por categorías de interés, agrupada por sección (RF-011/RF-012). */
@@ -50,9 +53,11 @@ class HomeViewModel @Inject constructor(
      */
     fun refrescar() {
         // Corrección post-QA (2026-09-24): fija cuanto antes la base de pasos del día (RF-070).
-        viewModelScope.launch { pasosDelDiaRepository.pasosDeHoy() }
+        // Corrección post-QA (2026-10-14): el valor real se guarda y expone en el estado
+        // (antes se descartaba, dejando la UI con un placeholder hardcodeado).
         observacionActividades?.cancel()
         observacionActividades = viewModelScope.launch {
+            val pasosHoy = pasosDelDiaRepository.pasosDeHoy() ?: 0
             actividadRepository.sembrarCatalogoSiEstaVacio()
             val usuarioId = sesionUsuario.usuarioActualId.value ?: return@launch
             val usuario = usuarioRepository.buscarPorId(usuarioId) ?: return@launch
@@ -60,8 +65,11 @@ class HomeViewModel @Inject constructor(
                 _uiState.value = HomeUiState(
                     // RF-012: la Home agrupa en secciones separadas por categoría.
                     actividadesPorCategoria = actividades.groupBy { it.categoria },
+                    todasLasActividades = actividades,
                     cargando = false,
                     nombreUsuario = usuario.nombreUsuario,
+                    puntosHistoricos = usuario.puntosHistoricos,
+                    pasosHoy = pasosHoy,
                 )
             }
         }

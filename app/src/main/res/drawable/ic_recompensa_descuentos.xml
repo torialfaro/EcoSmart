@@ -1,0 +1,19 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="150dp"
+    android:viewportWidth="200"
+    android:viewportHeight="150">
+    <path android:fillColor="#E6F2DF" android:pathData="M0,0 H200 V150 H0 Z" />
+    <!-- Placeholder: cupón de descuento, foto de ejemplo para recompensas de categoría Descuentos -->
+    <path
+        android:fillColor="#1F5E34"
+        android:pathData="M50,45 H150 C155,45 160,50 160,55 V95 C160,100 155,105 150,105 H50 C45,105 40,100 40,95 V55 C40,50 45,45 50,45 Z" />
+    <path
+        android:fillColor="#E6F2DF"
+        android:pathData="M60,60 L80,80 M80,60 L60,80"
+        android:strokeColor="#E6F2DF"
+        android:strokeWidth="6" />
+    <path
+        android:fillColor="#F2B855"
+        android:pathData="M100,55 L108,70 L124,72 L112,83 L115,99 L100,91 L85,99 L88,83 L76,72 L92,70 Z" />
+</vector>
