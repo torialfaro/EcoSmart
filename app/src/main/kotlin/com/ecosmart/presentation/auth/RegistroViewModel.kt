@@ -79,6 +79,12 @@ class RegistroViewModel @Inject constructor(
         enviar { autenticarEnSesion(iniciarSesionConGoogle(datos)) }
     }
 
+    /** Reporta un fallo del selector/credencial de Google (RF-002) obtenido en la capa de
+     * Presentación, antes de llegar a invocar [continuarConGoogle] (p. ej. sin ID Token). */
+    fun onGoogleSignInFallido(mensaje: String) {
+        mostrarError(mensaje)
+    }
+
     private fun enviar(accion: suspend () -> Unit) {
         _uiState.value = _uiState.value.copy(enviando = true, mensajeError = null)
         viewModelScope.launch {

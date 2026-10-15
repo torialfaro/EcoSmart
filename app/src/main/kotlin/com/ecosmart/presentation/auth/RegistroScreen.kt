@@ -1,5 +1,9 @@
 package com.ecosmart.presentation.auth
 
+import android.content.Context
+import android.content.Intent
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -31,8 +35,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.ecosmart.app.R
+import com.ecosmart.application.auth.DatosCuentaGoogle
 import com.ecosmart.application.auth.DatosRegistro
 import com.ecosmart.domain.model.Usuario
 import com.ecosmart.domain.valueobject.Barrio
@@ -40,6 +47,11 @@ import com.ecosmart.domain.valueobject.CategoriaActividad
 import com.ecosmart.domain.valueobject.esTelefonoValido
 import com.ecosmart.presentation.theme.EncabezadoEcoSmart
 import com.ecosmart.presentation.theme.FormaBotonPildora
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.auth.api.signin.GoogleSignInStatusCodes
+import com.google.android.gms.common.api.ApiException
 
 /**
  * Pantalla de registro/login (US1/US2/US3, RF-001 a RF-006, RF-010).
@@ -47,9 +59,9 @@ import com.ecosmart.presentation.theme.FormaBotonPildora
  * (campos con etiqueta, botón de Google destacado, separador "o continuá
  * con", botón principal en forma de píldora), con la paleta verde/ámbar de
  * la app en vez de los colores literales del ejemplo. El botón "Continuar
- * con Google" delega en [RegistroViewModel.continuarConGoogle]; el flujo
- * real de Credential Manager/Google Sign-In se cablea cuando exista una
- * `Activity` dedicada (gap señalado desde la Fase 1/2).
+ * con Google" dispara el selector de cuentas de `play-services-auth`
+ * (`GoogleSignInClient`, ya dependencia del módulo) y, al volver con un ID
+ * Token válido, delega en [RegistroViewModel.continuarConGoogle].
  */
 @Composable
 fun RegistroScreen(
@@ -57,6 +69,17 @@ fun RegistroScreen(
     onAutenticado: (Usuario) -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
+    val googleSignInClient = remember { crearClienteGoogleSignIn(context) }
+    val googleSignInLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult(),
+    ) { resultado ->
+        manejarResultadoGoogleSignIn(
+            data = resultado.data,
+            onIdTokenObtenido = { idToken -> viewModel.continuarConGoogle(DatosCuentaGoogle(idTokenGoogle = idToken)) },
+            onFallo = viewModel::onGoogleSignInFallido,
+        )
+    }
 
     LaunchedEffect(uiState.usuarioAutenticado) {
         uiState.usuarioAutenticado?.let(onAutenticado)
@@ -92,7 +115,7 @@ fun RegistroScreen(
             BotonGoogle(
                 enabled = !uiState.enviando,
                 texto = if (uiState.modoLogin) "Iniciar sesión con Google" else "Registrarme con Google",
-                onClick = { /* Google Sign-In se integra junto con MainActivity/Credential Manager */ },
+                onClick = { googleSignInLauncher.launch(googleSignInClient.signInIntent) },
             )
 
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -215,6 +238,37 @@ fun RegistroScreen(
             TextButton(onClick = { viewModel.alternarModo() }, modifier = Modifier.fillMaxWidth()) {
                 Text(if (uiState.modoLogin) "¿No tenés cuenta? Registrate" else "¿Ya tenés cuenta? Iniciá sesión")
             }
+        }
+    }
+}
+
+/** Arma el cliente de Google Sign-In (`play-services-auth`) pidiendo el ID Token del cliente
+ * Web que el plugin `google-services` genera a partir de `google-services.json` (RF-002). */
+private fun crearClienteGoogleSignIn(context: Context): GoogleSignInClient {
+    val opciones = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+        .requestIdToken(context.getString(R.string.default_web_client_id))
+        .requestEmail()
+        .build()
+    return GoogleSignIn.getClient(context, opciones)
+}
+
+/** Extrae el ID Token del resultado del selector de cuentas de Google, o reporta el motivo
+ * del fallo; la cancelación explícita del usuario se ignora en silencio. */
+private fun manejarResultadoGoogleSignIn(
+    data: Intent?,
+    onIdTokenObtenido: (String) -> Unit,
+    onFallo: (String) -> Unit,
+) {
+    try {
+        val idToken = GoogleSignIn.getSignedInAccountFromIntent(data).getResult(ApiException::class.java).idToken
+        if (idToken != null) {
+            onIdTokenObtenido(idToken)
+        } else {
+            onFallo("No pudimos obtener tu cuenta de Google. Probá de nuevo.")
+        }
+    } catch (error: ApiException) {
+        if (error.statusCode != GoogleSignInStatusCodes.SIGN_IN_CANCELLED) {
+            onFallo("No pudimos iniciar sesión con Google. Probá de nuevo.")
         }
     }
 }
