@@ -161,6 +161,96 @@ Presentación sobre datos ya existentes, no una nueva regla de negocio.
   Presentación/Navegación sobre datos ya existentes (salvo Recompensas, resuelto en el
   punto anterior), sin tocar Dominio, Aplicación ni Infraestructura.
 
+### Session 2026-10-17 (rediseño inmersivo de captura de foto para completar actividad)
+
+- Q: ¿El encabezado inmersivo debe mostrar un indicador de paso ("Paso 1 de 2"/"Paso
+  2 de 2") y una insignia de puntos ("+N pts") que hoy no existen en esta pantalla? →
+  A: Sí. Ambos son información nueva derivada de datos ya existentes del dominio
+  (`Actividad.puntosBase`) o del propio flujo de 2 pasos de la pantalla, nunca un valor
+  inventado (ver `RF-UI-002d`).
+- Q: El pedido de la usuaria dice "ponelo en un desplegable", ¿el panel inferior de
+  descripción + botón "Enviar actividad" se expande/colapsa, o aparece fijo? → A: Se
+  expande automáticamente apenas hay foto lista (mostrando "Foto lista ✓"/"Repetir
+  foto" + el campo de descripción + el botón), y la usuaria puede colapsarlo o volver a
+  expandirlo tocando su encabezado, para poder ver la foto/cámara detrás sin perder lo
+  ya escrito (ver `RF-UI-002d`).
+- Q: Una vez que hay foto lista, ¿la zona superior (donde antes estaba el preview de
+  cámara) muestra la foto real capturada/elegida o una ilustración genérica fija? → A:
+  La foto real capturada o elegida de la galería, a pantalla completa, para que la
+  usuaria vea exactamente lo que va a enviar (ver `RF-UI-002d`).
+- Q: ¿Este rediseño reemplaza la excepción puntual actual de `RF-UI-002` (solo nombre
+  de actividad destacado, Clarifications 2026-10-14) o se suma como una excepción
+  adicional separada? → A: La reemplaza por completo: queda una única excepción
+  ampliada a `RF-UI-002`, limitada exclusivamente a `VerificacionFotoScreen`; no se
+  toca `VerificacionCaminataScreen` ni ninguna otra pantalla fuera de alcance (ver
+  `RF-UI-002d`).
+- Q: ¿Se actualizan también los textos (botón "Enviar actividad" en vez de "Enviar",
+  texto de ayuda "Contá qué material era y dónde lo dejaste") y la posición del
+  selector Cámara/Galería (pasa a flotar sobre el preview de cámara en vez de ir
+  arriba del scroll)? → A: Sí, se aplican todos los cambios de copy y de ubicación de
+  controles descritos en el mockup de referencia (ver `RF-UI-002d`).
+
+### Session 2026-10-18 (rediseño visual de Perfil S-06: encabezado, racha destacada, estadísticas 2 columnas, actividades realizadas y menú de cuenta)
+
+- Q: ¿Cómo se reorganiza el orden vertical de la pantalla Perfil (`S-06`)? → A: Orden de
+  arriba hacia abajo: encabezado verde de ancho completo, tarjeta de racha superpuesta
+  al pie del encabezado, estadísticas en 2 tarjetas lado a lado, sección nueva
+  "Actividades realizadas", tarjeta de menú de cuenta (5 filas), botón "Cerrar sesión"
+  y barra de navegación inferior fija al pie. El contenido hace scroll vertical
+  mientras la barra inferior permanece fija (ver `RF-UI-014`).
+- Q: ¿Qué cambios recibe el encabezado de Perfil? → A: Bloque de ancho completo con
+  degradé verde (#1F5E34 a #0F4D2E), esquinas inferiores redondeadas de 28 dp y hojas
+  decorativas translúcidas. Avatar de 68 dp (inicial sobre fondo #E6F2DF con borde)
+  alineado a la izquierda del nombre (reemplaza el avatar centrado de 56 pt). Nombre de
+  usuario en 26 pt Bold blanco y, debajo, una píldora translúcida con el nombre real del
+  nivel del dominio (Semilla, Brote, Planta o Árbol) y los puntos reales
+  (`puntosHistoricos`), nunca valores fijos ni números inventados (ver `RF-UI-014`).
+- Q: ¿Cómo se transforma la racha en Perfil? → A: Sale de la tarjeta de 3 columnas y se
+  convierte en un componente propio y destacado de ancho completo y radio 24 dp, con
+  fondo degradé cálido (#FFF4DC a #FFE2A8), borde #F2CF8A y sombra. Círculo de 64 dp
+  con llama (rellena en degradé naranja si `rachaVigente > 0`; contorno apagado si es
+  0), número en 44 pt Bold + "días de racha", mensaje de apoyo según estado (racha > 0
+  con hoy cumplido: "¡Hoy ya sumaste! Mañana llegás a N+1."; racha 0: "Completá una
+  actividad hoy para encender tu racha."; racha > 0 con hoy pendiente: "Completá una
+  actividad hoy y llegás a N+1."), y una tira semanal de 7 días (L M M J V S D, lunes
+  primero) donde los días con actividad aprobada se muestran como círculo naranja con
+  tilde, hoy lleva un anillo adicional (o borde punteado si está pendiente) y los días
+  sin actividad son círculos vacíos, calculados únicamente a partir de las fechas
+  reales de `RegistroVerificacion` aprobados (ver `RF-UI-014`).
+- Q: ¿Cómo se reestructuran las estadísticas? → A: Pasan de una tarjeta de 3 columnas a
+  dos tarjetas lado a lado (Actividades y Recompensas), cada una con círculo de ícono
+  de 40 dp, número en 24 pt Bold y etiqueta en 13 pt; Racha ya no forma parte de esta fila
+  (vive en su componente destacado) (ver `RF-UI-014`).
+- Q: ¿Qué contenido y comportamiento tiene la sección nueva "Actividades realizadas"? →
+  A: Título "Actividades realizadas" con enlace "Ver todas" (48 dp de área táctil) que
+  navega a `HistorialScreen` (mismo destino que "Mis actividades"). Muestra una tarjeta
+  blanca con las 3 actividades más recientes con `RegistroVerificacion` en resultado
+  APROBADO (ordenadas de más reciente a más antigua), cada fila con ícono de categoría
+  en círculo de 40 dp (Reciclar: flechas circulares; Reutilizar: hoja; Caminar: persona
+  caminando), nombre completo de la actividad (hasta 2 líneas, sin truncar),
+  "Categoría · cuándo" (Hoy, Ayer o fecha corta) y tilde verde de completada. Si no hay
+  ninguna actividad aprobada aún (estado vacío), se conserva el título "Actividades
+  realizadas" y se muestra un subtítulo "Comenzá a realizar actividades" (ver `RF-UI-014`).
+- Q: ¿Qué ajustes tienen el menú de cuenta, "Cerrar sesión" y la barra inferior en
+  Perfil? → A: Las 5 filas de menú conservan sus destinos (AC-19), miden 56 dp de alto
+  con íconos en círculos de 36 dp verde claro y chevrons, actualizando íconos: Mi perfil
+  (usuario), Mis actividades (tilde en círculo), Mis recompensas (regalo), Configuración
+  (ajustes/engranaje) y Ayuda (signo de pregunta). "Cerrar sesión" pasa a botón de ancho
+  completo, 52 dp de alto, píldora con contorno verde e ícono de salida ("Eliminar cuenta"
+  permanece exclusivamente en Editar perfil). En la barra inferior, el ítem seleccionado
+  (Perfil) se destaca adicionalmente con una píldora #E6F2DF detrás del ícono relleno.
+  Sin animaciones ni transiciones (RF-UI-019) (ver `RF-UI-014`).
+
+### Session 2026-10-18 (continuación) — Botón flotante de Puntos Verdes, mapa full-screen, avatar dinámico y ajustes de Perfil
+
+- Q: En la pantalla de Puntos Verdes con mapa full-screen, ¿cómo se componen el título y subtítulo del encabezado? → A: Opción B: toma el nombre del primer Punto Verde del barrio (o punto seleccionado): Título "Punto Verde en [Nombre del punto]", Subtítulo "Zona de [Dirección o Barrio]" (ver `RF-UI-002c`).
+- Q: ¿Cómo se accede ahora a Puntos Verdes tras retirar el ícono de ubicación de la barra inferior? → A: La barra inferior vuelve a tener 5 pestañas (Inicio, Actividades, Recompensas, Educación, Perfil). En la pantalla Inicio (`HomeScreen`) se agrega un botón flotante circular verde en el lateral derecho de forma estática, con el ícono de ubicación color crema superpuesto, que navega a `PuntosVerdesScreen` (ver `RF-UI-002c` y `RF-UI-008`).
+- Q: ¿Qué cambios visuales aplican a `PuntosVerdesScreen`? → A: El mapa de OpenStreetMap ocupa toda la pantalla (pantalla completa/inmersiva), excepto el encabezado superior donde figuran "EcoSmart", el ícono de volver/usuario, el título "Punto Verde en [Lugar]" y el subtítulo "Zona de [Lugar]" reubicados sobre el mapa (ver `RF-UI-002c`).
+- Q: En las pestañas Recompensas y Educación, ¿qué inicial debe mostrar el avatar? → A: DEBE mostrar siempre la inicial del usuario autenticado en sesión (`inicialUsuario = nombre.ifBlank { "U" }`), exactamente igual que en Inicio y Actividades, sin quedar estancada en "U" (ver `RF-UI-012`, `RF-UI-013`).
+- Q: En la pantalla Perfil, ¿qué valor debe mostrar la tarjeta de Recompensas si el usuario no reclamó ninguna? → A: Debe mostrar 0 (`totalRecompensas = 0`), no un valor simulado ni hardcodeado de 2 (ver `RF-UI-014`).
+- Q: En la tarjeta de estadísticas de Perfil, la etiqueta "Recompensas" es muy larga y salta de renglón. ¿Cómo se ajusta? → A: Se ajusta el tamaño de tipografía o el layout de la tarjeta (p. ej., `fontSize = 11.sp` o estilo que prevenga el salto de renglón desproporcionado) para que la palabra entre prolija en una sola línea (ver `RF-UI-014`).
+- Q: ¿Cómo queda el menú de opciones de Perfil? → A: Se elimina la opción "Mi perfil" (ya cubierta por "Configuración"), reduciendo el menú a 4 filas: "Mis actividades", "Mis recompensas", "Configuración" y "Ayuda". La opción "Ayuda" se mantiene visible pero deshabilitada/sin acción de navegación activa (sin redirigir a configuración, indicando que está en desarrollo) (ver `RF-UI-014`).
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Sistema de diseño global aplicado de forma consistente (Priority: P1)
@@ -201,28 +291,46 @@ pantalla completa esté terminada todavía.
 ### User Story 2 - Perfil reconstruido con el nuevo diseño (Priority: P2)
 
 Como usuaria, al abrir la pestaña Perfil veo mi avatar, nombre, nivel, puntos,
-estadísticas y menú de cuenta con el nuevo lenguaje visual, manteniendo exactamente los
-mismos datos y destinos que ya muestra la app hoy.
+tarjeta de racha destacada con tira semanal, estadísticas en 2 tarjetas, actividades
+recientemente realizadas y menú de cuenta con el nuevo lenguaje visual, manteniendo
+exactamente los mismos datos y destinos que ya expone el dominio existente.
 
-**Why this priority**: Es la pantalla más simple del diseño (menor cantidad de estados y
-de datos dinámicos), por lo que permite validar el sistema de diseño de punta a punta en
-una pantalla real con el menor riesgo.
+**Why this priority**: Es una pantalla central del usuario, con múltiples componentes
+visuales organizados verticalmente que integran métricas y actividades realizadas ya
+calculadas en el backend/dominio, sin requerir cambios de lógica de negocio.
 
 **Independent Test**: Puede probarse navegando a la pestaña Perfil y comparándola contra
-`S-06`, sin que Inicio, Actividades, Caminar, Recompensas o Educación estén reconstruidas
-todavía.
+su especificación de diseño (`S-06` actualizada), sin que Inicio, Actividades, Caminar,
+Recompensas o Educación estén reconstruidas todavía.
 
 **Acceptance Scenarios**:
 
-1. **Given** la pestaña Perfil, **When** se abre la pantalla, **Then** se ven avatar de
-   56 pt, nombre, "<Nombre de nivel> · puntos" (nombre real del dominio, por ejemplo
-   "Semilla · 0 pts"), una tarjeta de estadísticas de 3 columnas (Actividades,
-   Recompensas, Racha) y 5 filas de menú con icono, texto y chevron (`S-06`,
-   AC-18); el botón "Eliminar cuenta" no aparece en esta pantalla (vive en Editar
-   perfil).
-2. **Given** cualquier estado, **When** la usuaria toca una fila del menú, **Then** se
-   abre exactamente la misma pantalla de destino que ya abre hoy la versión actual de la
-   app (AC-19), sin cambios de navegación.
+1. **Given** la pestaña Perfil, **When** se abre la pantalla, **Then** se ve el encabezado
+   verde de ancho completo con degradé (#1F5E34 a #0F4D2E), avatar de 68 dp con borde
+   a la izquierda, nombre en 26 pt Bold y píldora con "<Nombre de nivel> · puntos"
+   (nombre real del dominio, p. ej. "Brote · 340 pts", nunca un valor fijo) (`AC-18`).
+2. **Given** la tarjeta destacada de racha, **When** se renderiza, **Then** muestra la llama
+   de 64 dp (rellena naranja si racha > 0, apagada contorno si es 0), "N días de racha",
+   el mensaje de apoyo positivo según si hoy se completó o está pendiente, y la tira
+   semanal de 7 días (L a D) marcando con tilde los días con actividades aprobadas
+   reales, un anillo en hoy y círculos vacíos en días sin actividad.
+3. **Given** las estadísticas, **When** se renderizan debajo de la racha, **Then** se
+   muestran en 2 tarjetas lado a lado (Actividades y Recompensas), con ícono de 40 dp,
+   número en 24 pt Bold y etiqueta que previene saltos de renglón; el valor de Recompensas
+   es 0 si no hay canjes reales.
+4. **Given** la sección "Actividades realizadas", **When** el usuario tiene actividades
+   aprobadas, **Then** se muestran hasta 3 filas ordenadas de más reciente a más antigua
+   con ícono de categoría de 40 dp, nombre completo de la actividad, "Categoría · cuándo"
+   y tilde verde; el enlace "Ver todas" abre el historial completo (`HistorialScreen`).
+   **When** el usuario no tiene ninguna actividad aprobada, **Then** se muestra el
+   título "Actividades realizadas" con el subtítulo "Comenzá a realizar actividades".
+5. **Given** el menú de cuenta, **When** se visualiza, **Then** expone 4 filas de
+   menú (Mis actividades, Mis recompensas, Configuración, Ayuda) de 56 dp de alto con
+   íconos en círculos de 36 dp y chevron; "Mi perfil" se elimina por redundante y "Ayuda"
+   queda visible sin acción activa de navegación (en desarrollo). El botón "Cerrar sesión"
+   es una píldora con contorno verde e ícono de salida; "Eliminar cuenta" no aparece en esta pantalla.
+6. **Given** la barra inferior en Perfil, **When** está seleccionada, **Then** el ícono
+   de Perfil muestra una píldora #E6F2DF detrás del ícono relleno.
 
 ---
 
@@ -347,34 +455,48 @@ pantallas ya reconstruidas.
   video, listado de videos destacados, pestañas Artículos/IA, filas de menú de Perfil,
   destino de la tarjeta de puntos) quedan fuera de alcance: conservan su UI y
   navegación actuales hasta que tengan su propia especificación de diseño. La pantalla
-  de captura/selección de foto (`VerificacionFotoScreen`) tiene una única excepción
-  puntual permitida (ver Clarifications 2026-10-14: nombre de actividad destacado); el
+  de captura/selección de foto (`VerificacionFotoScreen`) tiene una excepción ampliada
+  permitida (ver Clarifications 2026-10-17 y `RF-UI-002d`: rediseño inmersivo de
+  cámara y panel desplegable de envío), que reemplaza por completo la excepción
+  puntual original de Clarifications 2026-10-14 (nombre de actividad destacado); el
   segmento "Para adultos"/"Para Kids" de Recompensas (`especificacion-ui-app-eco.md`
   §7.1) NO DEBE implementarse (ver Clarifications 2026-10-14 y RF-UI-012).
-- **RF-UI-002b**: El sistema DEBE reestructurar la barra de navegación inferior de 3 a 5
-  tabs (Inicio, Actividades, Recompensas, Educación, Perfil — ver Clarifications): Inicio
-  pasa a mostrar únicamente el resumen (S-01), el listado completo de actividades que
-  hoy vive mezclado dentro de Home se muestra en una pantalla/tab nueva Actividades
-  (S-02) reutilizando los mismos datos, y Educación se promueve de enlace a tab. Esta
-  reorganización es exclusivamente de Presentación/Navegación sobre datos ya existentes
-  y no constituye una excepción a RF-UI-002.
-- **RF-UI-002c**: El sistema DEBE agregar un 6º ítem a la barra de navegación inferior
-  (ver Clarifications 2026-10-14 continuación), un ícono de ubicación ("LocationOn",
-  `contentDescription` "Puntos Verdes") que navega a la pantalla ya existente de Puntos
-  Verdes (`EcoSmartRoute.PuntosVerdes`, hoy inalcanzable porque `onVerPuntosVerdes`
-  quedó sin invocar en `HomeScreen` tras RF-UI-002b), restaurando el cumplimiento de
-  `RNF-002` de spec 001 (acceso en no más de 2 toques desde el menú principal). El
-  nuevo ítem se ubica entre Educación y Perfil (Inicio, Actividades, Recompensas,
-  Educación, Ubicación, Perfil) y NO DEBE mostrar etiqueta de texto, consistente con
-  RF-UI-005. A diferencia de las demás pantallas fuera de alcance (que se navegan como
-  pantallas apiladas sin barra), Puntos Verdes DEBE comportarse como una pestaña
-  persistente más: la barra de navegación inferior se muestra también dentro de Puntos
-  Verdes, con el ícono de ubicación resaltado como seleccionado mientras esa pantalla
-  está activa, igual que el resaltado de Actividades en su propio detalle (RF-UI-007).
-  La pantalla de destino (`PuntosVerdesScreen`) conserva su apariencia e implementación
-  visual actuales sin cambios (no forma parte del rediseño de este spec, igual que el
-  resto de pantallas fuera de alcance de RF-UI-002); esta reorganización de navegación
-  no constituye una excepción a RF-UI-002.
+- **RF-UI-002b**: El sistema DEBE mantener la barra de navegación inferior con 5
+  tabs principales (Inicio, Actividades, Recompensas, Educación, Perfil — ver Clarifications):
+  Inicio muestra el resumen (S-01), el listado completo de actividades se muestra en la
+  pantalla/tab Actividades (S-02) reutilizando los mismos datos, Educación se promueve a tab,
+  y Recompensas se muestra como tab.
+- **RF-UI-002c**: El sistema DEBE retirar el ícono de ubicación de la barra de navegación
+  inferior (que vuelve a 5 pestañas, RF-UI-002b), y en su lugar DEBE incorporar en la
+  pantalla Inicio (`HomeScreen`) un botón flotante circular verde (`ColorGreen700`)
+  ubicado de forma estática en la parte lateral derecha, con el ícono de ubicación en
+  color crema superpuesto, el cual al presionarse navega a `PuntosVerdesScreen`. La
+  pantalla `PuntosVerdesScreen` DEBE rediseñarse para que el mapa ocupe toda la pantalla
+  (full-screen, sin listado vertical apilado debajo ni barra inferior persistente),
+  mostrando en el encabezado superior el título "Punto Verde en [Nombre del punto]" y
+  el subtítulo "Zona de [Dirección o Barrio]" tomados del primer punto verde disponible
+  del barrio del usuario o del punto seleccionado, junto con el botón de volver y el
+  avatar de usuario.
+- **RF-UI-002d**: `VerificacionFotoScreen` (paso de foto para completar una actividad
+  de categoría Reciclar o Reutilizar) DEBE rediseñarse como excepción ampliada a
+  `RF-UI-002` (ver Clarifications 2026-10-17), reemplazando por completo la excepción
+  puntual previa de Clarifications 2026-10-14; ninguna otra pantalla fuera de alcance
+  (incluida `VerificacionCaminataScreen`) se ve afectada. El nuevo diseño DEBE:
+  (1) mostrar la cámara en vista inmersiva de pantalla completa (sin barra de estado ni
+  encabezado estándar) como "Paso 1 de 2", con flecha de volver, el indicador de paso y
+  una insignia con los puntos de la actividad (`Actividad.puntosBase`) superpuestos
+  sobre el preview, y el selector Cámara/Galería junto al disparador flotando sobre la
+  imagen en vez de ir arriba del scroll; (2) al tener una foto lista (tomada o elegida
+  de galería), mostrarla real y completa en la zona donde antes estaba el preview de
+  cámara (nunca una ilustración genérica), avanzando el indicador a "Paso 2 de 2"; (3)
+  mostrar un panel inferior que se expande automáticamente al tener la foto lista, con
+  el estado "Foto lista"/"Repetir foto", el campo "Describí lo que hiciste" (con texto
+  de ayuda "Contá qué material era y dónde lo dejaste") y el botón principal "Enviar
+  actividad" (antes "Enviar"), habilitado únicamente con foto y descripción no vacía,
+  en línea con el patrón ya existente de `RF-UI-002`/RNF-001; (4) permitir colapsar y
+  volver a expandir ese panel tocando su encabezado, sin perder la foto ni el texto ya
+  ingresado. Esta excepción no modifica ninguna regla de verificación por IA, de
+  puntaje ni de navegación ya existente (RF-UI-001).
 - **RF-UI-003**: El sistema NO DEBE implementar los estados e interacciones
   transversales de la sección 10 de `especificacion-ui-app-eco.md` (carga/skeleton,
   vacío, error de red, sin conexión, pull-to-refresh, ni los estados de Caminar
@@ -450,7 +572,8 @@ pantallas ya reconstruidas.
   de "Cómo se registra" a cada actividad según los datos ya existentes del dominio
   (`descripcionCorta`, `pasosASeguir`, `resultadoEsperado`, `puntosBase`).
 - **RF-UI-012**: La pantalla/tab nueva Recompensas (ver RF-UI-002b, RF-UI-003b) DEBE
-  construirse según §7: título/subtítulo, chips de categoría con scroll horizontal, y
+  construirse según §7: título/subtítulo, avatar de usuario que refleja la inicial real
+  del usuario en sesión (sin quedarse en "U"), chips de categoría con scroll horizontal, y
   grilla de 2 columnas de tarjetas de recompensa (`C-10`) con imagen, título (hasta 2
   líneas, truncado con puntos suspensivos si excede), costo en formato "N.NNN pts"
   (punto como separador de miles) y chevron. No DEBE existir el segmento "Para
@@ -458,17 +581,44 @@ pantallas ya reconstruidas.
   de público: el catálogo de ejemplo es único. Cada recompensa de ejemplo DEBE tener
   asociada una imagen de muestra (`imagenDrawableRes` nunca vacío).
 - **RF-UI-013**: La pantalla/tab Educación (ver RF-UI-002b) DEBE construirse según §8:
-  título/subtítulo, segmento Videos/Artículos/IA, título de sección "Videos destacados"
+  título/subtítulo, avatar de usuario que refleja la inicial real del usuario en sesión
+  (sin quedarse en "U"), segmento Videos/Artículos/IA, título de sección "Videos destacados"
   con enlace "Ver todos", y tarjetas de video anchas (`C-09`) con metadato "N min ·
   Categoría" sobre degradé oscuro.
-- **RF-UI-014**: La pantalla Perfil DEBE reconstruirse según §9: avatar de 56 pt,
-  nombre, "<Nombre de nivel> · puntos" usando el nombre de nivel ya definido por el
-  dominio existente (`NivelUsuario`: Semilla/Brote/Planta/Árbol — nunca un número
-  inventado por la UI), tarjeta de estadísticas de 3 columnas (Actividades,
-  Recompensas, Racha, usando los valores ya calculados por el dominio existente) y lista
-  de 5 filas de menú con icono, texto y chevron. El botón "Eliminar cuenta" NO DEBE
-  aparecer en esta pantalla; vive exclusivamente en la pantalla "Editar perfil"
-  (`PerfilEdicionScreen`), reutilizando la misma lógica existente sin cambios.
+- **RF-UI-014**: La pantalla Perfil DEBE reconstruirse según el diseño actualizado de
+  `S-06` (Clarifications 2026-10-18):
+  (1) Encabezado de ancho completo con degradé verde (#1F5E34 a #0F4D2E), esquinas
+  inferiores redondeadas de 28 dp y hojas decorativas translúcidas, avatar de 68 dp con
+  borde alineado a la izquierda, nombre de usuario en 26 pt Bold y píldora translúcida
+  con el nombre real del nivel (`NivelUsuario`: Semilla/Brote/Planta/Árbol) y puntos
+  reales (`Usuario.puntosHistoricos`), nunca valores fijos ni números inventados.
+  (2) Componente destacado de racha de ancho completo superpuesto al encabezado (radio
+  24 dp, degradé cálido #FFF4DC a #FFE2A8, borde #F2CF8A), con círculo de 64 dp con llama
+  (rellena naranja si `rachaVigente > 0`, contorno si es 0), número en 44 pt Bold + "días
+  de racha", mensaje de apoyo en tono positivo ("¡Hoy ya sumaste! Mañana llegás a N+1.",
+  "Completá una actividad hoy y llegás a N+1." o "Completá una actividad hoy para
+  encender tu racha.") y tira semanal de 7 días (L a D) marcando con tilde los días con
+  actividad aprobada real según `RegistroVerificacion.fecha`, anillo en hoy y círculos
+  vacíos en días sin actividad.
+  (3) Tarjetas de estadísticas en 2 columnas lado a lado (Actividades y Recompensas),
+  cada una con círculo de ícono de 40 dp, número en 24 pt Bold y etiqueta en tamaño
+  ajustado (11-12 sp) que previene el salto de renglón en la palabra "Recompensas"; si el
+  usuario no canjeó ninguna recompensa, el valor DEBE mostrar 0 (Racha ya no vive en esta fila).
+  (4) Sección nueva "Actividades realizadas", con enlace "Ver todas" (área táctil
+  48×48 dp) que navega a `HistorialScreen`, tarjeta con hasta 3 filas de actividades con
+  `RegistroVerificacion` APROBADO ordenadas de más reciente a más antigua (ícono de
+  categoría en círculo de 40 dp, nombre completo de la actividad, "Categoría · cuándo"
+  con formato Hoy / Ayer / fecha corta, y tilde verde de completada); o estado vacío
+  con título "Actividades realizadas" y subtítulo "Comenzá a realizar actividades".
+  (5) Menú de cuenta reducido a 4 filas de 56 dp de alto: "Mis actividades", "Mis
+  recompensas", "Configuración" (que concentra la edición de perfil) y "Ayuda" (opción
+  en desarrollo sin navegación activa); se elimina la fila redundante "Mi perfil".
+  (6) Botón "Cerrar sesión" de ancho completo, 52 dp de alto, píldora con contorno verde
+  e ícono de salida. El botón "Eliminar cuenta" NO DEBE aparecer en esta pantalla; vive
+  exclusivamente en "Editar perfil" (`PerfilEdicionScreen`), reutilizando la misma lógica
+  existente sin cambios.
+  (7) El ítem seleccionado de Perfil en la barra inferior se distingue además con una
+  píldora #E6F2DF detrás del ícono relleno. Sin animaciones ni transiciones (RF-UI-019).
 
 ### Accesibilidad y adaptabilidad
 
@@ -567,8 +717,21 @@ persistencia ni identidad de negocio.
   de ejemplo incluye una imagen de muestra; (7) el nombre de nivel en Perfil es el
   nombre real del dominio (Semilla/Brote/Planta/Árbol), no un número; (8) "Eliminar
   cuenta" vive únicamente en Editar perfil; (9) la pantalla de captura/selección de
-  foto muestra el nombre de la actividad de forma destacada como única excepción a
-  RF-UI-002.
+  foto (`VerificacionFotoScreen`) adopta un rediseño inmersivo (cámara a pantalla
+  completa + panel inferior desplegable con descripción y "Enviar actividad") como
+  única excepción ampliada a RF-UI-002, resuelta en Clarifications 2026-10-17
+  (`RF-UI-002d`), que reemplaza la excepción puntual original del nombre de actividad
+  destacado (Clarifications 2026-10-14); (10) la pantalla Perfil (`S-06`) adopta el
+  rediseño integral resuelto en Clarifications 2026-10-18 (`RF-UI-014`): encabezado
+  verde con avatar a la izquierda, tarjeta destacada de racha con tira semanal de 7 días
+  leída de `RegistroVerificacion` reales, estadísticas en 2 tarjetas lado a lado (con 0 en
+  recompensas sin canjes y etiqueta sin saltos de renglón), sección nueva de hasta 3 actividades
+  aprobadas recientes con estado vacío, menú de cuenta reducido a 4 filas ("Mi perfil" eliminado,
+  "Ayuda" en desarrollo), botón "Cerrar sesión" con contorno y barra inferior de 5 pestañas con píldora
+  en ítem activo; (11) el acceso a Puntos Verdes se traslada de la barra inferior a un botón
+  flotante circular verde estático en el lateral derecho de Inicio, y `PuntosVerdesScreen` pasa a
+  mapa full-screen con encabezado ("Punto Verde en [Lugar]" / "Zona de [Lugar]"); (12) las pantallas
+  Recompensas y Educación muestran en su avatar la inicial dinámica real del usuario logueado en vez de "U".
 - El punto de partida de cada pantalla es la implementación ya existente de
   `001-ecosmart-mvp` (estado, navegación y datos reales ya conectados); este spec
   reemplaza únicamente las vistas y los recursos de estilo, reutilizando los mismos

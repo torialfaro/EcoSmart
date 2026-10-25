@@ -35,7 +35,7 @@ from google import genai
 from google.genai import errors as genai_errors
 from google.genai import types
 
-MODELO_GEMINI = os.environ.get("GEMINI_MODEL", "gemini-3.6-flash")
+MODELO_GEMINI = os.environ.get("GEMINI_MODEL", "gemini-3.8-flash")
 
 _cliente = genai.Client(api_key=os.environ.get("GEMINI_API_KEY", ""))
 

@@ -53,6 +53,18 @@ val FondoPantalla = ColorBgScreen
 val CremaTexto = Color(0xFFF6F7EA)
 val AmbarPasos = Color(0xFFF2B855)
 
+// Tokens de Racha y Recompensas (rediseño Perfil S-06, RF-UI-014 / Clarifications 2026-10-18)
+val ColorRachaBgInicio = Color(0xFFFFF4DC)
+val ColorRachaBgFin = Color(0xFFFFE2A8)
+val ColorRachaBorde = Color(0xFFF2CF8A)
+val ColorRachaLlamaGradienteInicio = Color(0xFFFFB84D)
+val ColorRachaLlamaGradienteFin = Color(0xFFE9751A)
+val ColorRachaLlamaActiva = Color(0xFFD9650F)
+val ColorRachaLlamaApagada = Color(0xFFB0B3AC)
+val ColorRachaTextoNumero = Color(0xFF6B3300)
+val ColorRachaTextoMensaje = Color(0xFF6B4A12)
+val ColorRecompensaCardBg = Color(0xFFFFF1D6)
+
 private val EsquemaClaro = lightColorScheme(
     primary = VerdeBoton,
     onPrimary = CremaTexto,

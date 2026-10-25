@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -20,6 +21,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.ecosmart.presentation.comun.EncabezadoViewModel
 import com.ecosmart.presentation.theme.ColorBgScreen
 import com.ecosmart.presentation.theme.EncabezadoEcoSmart
 import com.ecosmart.presentation.theme.FilaChipsFiltro
@@ -40,13 +43,17 @@ fun RecompensasScreen(
     onVerPerfil: (() -> Unit)? = null,
     barraInferior: @Composable () -> Unit = {},
     recompensas: List<RecompensaEjemplo> = RECOMPENSAS_EJEMPLO,
+    encabezadoViewModel: EncabezadoViewModel = hiltViewModel(),
 ) {
+    val nombreUsuario by encabezadoViewModel.nombreUsuario.collectAsState()
+
     Scaffold(
         containerColor = ColorBgScreen,
         topBar = {
             EncabezadoEcoSmart(
                 titulo = "Recompensas",
                 subtitulo = "Canjeá tus puntos y disfrutá",
+                inicialUsuario = nombreUsuario.ifBlank { "U" },
                 onAvatar = onVerPerfil,
             )
         },

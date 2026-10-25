@@ -1,6 +1,7 @@
 package com.ecosmart.presentation.home
 
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.ecosmart.app.R
@@ -134,5 +135,24 @@ class HomeScreenTest {
 
         composeTestRule.onNodeWithText("Caminar").performClick()
         assertEquals("act-1", seleccionada)
+    }
+
+    @Test
+    fun homeScreen_botonFlotantePuntosVerdes_disparaNavegacion() {
+        var puntosVerdesClickeado = false
+        composeTestRule.setContent {
+            EcoSmartTheme {
+                HomeContenido(
+                    actividades = cuatroActividadesTresCompletadas(),
+                    puntosTotales = 1250,
+                    onSeleccionarActividad = {},
+                    onVerPuntosVerdes = { puntosVerdesClickeado = true },
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithContentDescription("Puntos Verdes").assertExists()
+        composeTestRule.onNodeWithContentDescription("Puntos Verdes").performClick()
+        assertTrue(puntosVerdesClickeado)
     }
 }

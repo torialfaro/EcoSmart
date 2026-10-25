@@ -14,7 +14,7 @@ class BarraInferiorEcoSmartTest {
     val composeTestRule = createComposeRule()
 
     @Test
-    fun barraInferior_exponeLosSeisItems() {
+    fun barraInferior_exponeLosCincoItems() {
         composeTestRule.setContent {
             EcoSmartTheme {
                 BarraInferiorEcoSmart(
@@ -23,44 +23,45 @@ class BarraInferiorEcoSmartTest {
                     onActividades = {},
                     onRecompensas = {},
                     onEducacion = {},
-                    onPuntosVerdes = {},
                     onPerfil = {},
                 )
             }
         }
 
-        // Solo iconos sin etiqueta de texto (feedback post-QA); se identifican por contentDescription.
+        // Solo iconos sin etiqueta de texto: se identifican por contentDescription (5 items).
         composeTestRule.onNodeWithContentDescription("Inicio").assertExists()
         composeTestRule.onNodeWithContentDescription("Actividades").assertExists()
         composeTestRule.onNodeWithContentDescription("Recompensas").assertExists()
         composeTestRule.onNodeWithContentDescription("Educación").assertExists()
-        composeTestRule.onNodeWithContentDescription("Puntos Verdes").assertExists()
         composeTestRule.onNodeWithContentDescription("Perfil").assertExists()
+        composeTestRule.onNodeWithContentDescription("Puntos Verdes").assertDoesNotExist()
     }
 
     @Test
     fun barraInferior_marcaItemSeleccionadoCorrectamente() {
-        PestanaInferior.entries.forEach { pestana ->
-            composeTestRule.setContent {
-                EcoSmartTheme {
-                    BarraInferiorEcoSmart(
-                        seleccion = pestana,
-                        onInicio = {},
-                        onActividades = {},
-                        onRecompensas = {},
-                        onEducacion = {},
-                        onPuntosVerdes = {},
-                        onPerfil = {},
-                    )
-                }
+        val seleccionActual = androidx.compose.runtime.mutableStateOf(PestanaInferior.INICIO)
+        composeTestRule.setContent {
+            EcoSmartTheme {
+                BarraInferiorEcoSmart(
+                    seleccion = seleccionActual.value,
+                    onInicio = {},
+                    onActividades = {},
+                    onRecompensas = {},
+                    onEducacion = {},
+                    onPerfil = {},
+                )
             }
+        }
+
+        PestanaInferior.entries.forEach { pestana ->
+            seleccionActual.value = pestana
+            composeTestRule.waitForIdle()
 
             val descripcionEsperada = when (pestana) {
                 PestanaInferior.INICIO -> "Inicio"
                 PestanaInferior.ACTIVIDADES -> "Actividades"
                 PestanaInferior.RECOMPENSAS -> "Recompensas"
                 PestanaInferior.EDUCACION -> "Educación"
-                PestanaInferior.PUNTOS_VERDES -> "Puntos Verdes"
                 PestanaInferior.PERFIL -> "Perfil"
             }
 
@@ -79,7 +80,6 @@ class BarraInferiorEcoSmartTest {
                     onActividades = { clickeado = "ACTIVIDADES" },
                     onRecompensas = { clickeado = "RECOMPENSAS" },
                     onEducacion = { clickeado = "EDUCACION" },
-                    onPuntosVerdes = { clickeado = "PUNTOS_VERDES" },
                     onPerfil = { clickeado = "PERFIL" },
                 )
             }
@@ -93,9 +93,6 @@ class BarraInferiorEcoSmartTest {
 
         composeTestRule.onNodeWithContentDescription("Educación").performClick()
         assertEquals("EDUCACION", clickeado)
-
-        composeTestRule.onNodeWithContentDescription("Puntos Verdes").performClick()
-        assertEquals("PUNTOS_VERDES", clickeado)
 
         composeTestRule.onNodeWithContentDescription("Perfil").performClick()
         assertEquals("PERFIL", clickeado)

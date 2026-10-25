@@ -423,7 +423,8 @@ implementadas en las Fases 3 a 8, no nuevas historias de usuario.
 - [X] T054 Agregar `nombreActividad` al `UiState` de
       `verification/VerificacionFotoViewModel.kt` (poblado desde
       `Actividad.descripcionCorta`) y mostrarlo destacado arriba de todo en
-      `VerificacionFotoScreen.kt` (excepción puntual a `RF-UI-002`)
+      `VerificacionFotoScreen.kt` (excepción puntual original a `RF-UI-002`,
+      **superseded** por el rediseño inmersivo de `RF-UI-002d` — ver Phase 11)
 - [X] T055 Eliminar `enum class PublicoRecompensa`, el campo `publico` y las 3
       recompensas de ejemplo "para Kids" de
       `app/src/main/kotlin/com/ecosmart/presentation/rewards/RecompensaEjemplo.kt`;
@@ -503,6 +504,123 @@ usuario.
 - [X] T067 Revisar `research.md` §9, `data-model.md` §2 y `plan.md` (ya actualizados en
       `/speckit.plan`) y ajustarlos si la implementación real de T060-T063 difiere en
       algún detalle de lo documentado
+
+---
+
+## Phase 11: Rediseño inmersivo de captura de foto (RF-UI-002d, feedback 2026-10-17)
+
+**Purpose**: Reemplazar la excepción puntual original de T054 (solo nombre de
+actividad destacado) por el rediseño inmersivo de `VerificacionFotoScreen` pedido por
+la usuaria (`RF-UI-002d` — ver `spec.md` → Clarifications 2026-10-17 y `research.md`):
+cámara a pantalla completa como "Paso 1 de 2", y "Paso 2 de 2" con la foto real lista +
+panel inferior desplegable (descripción + botón "Enviar actividad"). No toca
+`VerificacionCaminataScreen` ni ninguna otra pantalla fuera de alcance, ni la lógica de
+verificación por IA, puntaje o navegación (`RF-UI-001`).
+
+- [X] T068 Rediseñar el "Paso 1 de 2" de
+      `app/src/main/kotlin/com/ecosmart/presentation/verification/VerificacionFotoScreen.kt`:
+      preview de cámara a pantalla completa (edge-to-edge, sin `Scaffold`/`topBar`
+      estándar), con flecha de volver + indicador de paso ("Paso 1 de 2") + insignia de
+      puntos (`Actividad.puntosBase`, ya expuesto por `VerificacionFotoViewModel`)
+      superpuestos arriba, y el selector Cámara/Galería junto al disparador flotando
+      sobre el preview (`RF-UI-002d`)
+- [X] T069 Agregar el estado "Paso 2 de 2" en `VerificacionFotoScreen.kt`: al tener
+      `archivoFoto` no nulo, mostrar la foto real capturada/elegida a pantalla completa
+      (reemplazando el preview de cámara), con el indicador de paso actualizado
+      (`RF-UI-002d`)
+- [X] T070 Implementar el panel inferior desplegable (expandido por defecto al llegar a
+      "Paso 2 de 2", colapsable/expandible tocando su encabezado "Foto lista"/"Repetir
+      foto") con el campo "Describí lo que hiciste" (texto de ayuda "Contá qué material
+      era y dónde lo dejaste") y el botón "Enviar actividad" (antes "Enviar"),
+      reutilizando `viewModel::actualizarDescripcion`/`viewModel::enviar` sin cambios de
+      lógica, en `VerificacionFotoScreen.kt` (`RF-UI-002d`)
+- [X] T071 [P] Agregar/actualizar tests de Compose UI en
+      `app/src/androidTest/kotlin/com/ecosmart/presentation/verification/VerificacionFotoScreenTest.kt`
+      cubriendo: indicador de paso 1→2, insignia de puntos, foto real mostrada en paso
+      2, panel colapsable/expandible, y botón "Enviar actividad" habilitado solo con
+      foto + descripción (`RF-UI-002d`, depende de T068-T070)
+- [X] T072 Ejecutar `./gradlew :app:testDebugUnitTest` y
+      `./gradlew :app:connectedDebugAndroidTest` y confirmar que el 100% de los tests
+      (existentes + T071) pasan sin requerir ningún cambio de lógica de negocio, de
+      verificación por IA ni de navegación fuera de lo descrito en T068-T070
+      (`SC-UI-004`) (depende de T071)
+
+---
+
+## Phase 12: Rediseño visual de Perfil (RF-UI-014, feedback 2026-10-18)
+
+**Purpose**: Reconstruir `PerfilScreen` según la especificación actualizada de `S-06`
+(`RF-UI-014`, Clarifications 2026-10-18): encabezado verde con degradé y avatar alineado
+a la izquierda, componente destacado de racha con tira semanal de 7 días leída de los
+`RegistroVerificacion` reales, tarjetas de estadísticas en 2 columnas, sección
+"Actividades realizadas" con hasta 3 filas y estado vacío, menú de cuenta de 56 dp, botón
+"Cerrar sesión" con contorno y barra inferior con píldora en ítem activo.
+
+- [X] T073 Agregar tokens de color de racha (`ColorRachaBgInicio`, `ColorRachaBgFin`,
+      `ColorRachaBorde`, `ColorRachaLlama`, `ColorRachaTexto`, etc.) y fondo de
+      recompensas claro en
+      `app/src/main/kotlin/com/ecosmart/presentation/theme/Theme.kt` (`RF-UI-004`)
+- [X] T074 Agregar íconos vectoriales faltantes para menú de cuenta y categorías
+      (`ic_menu_configuracion.xml`, `ic_menu_ayuda.xml`, `ic_llama.xml`, etc.) en
+      `app/src/main/res/drawable/` (`RF-UI-014`)
+- [X] T075 Exponer en `PerfilViewModel` (`PerfilUiState`) los datos requeridos por la
+      nueva pantalla: tira semanal `diasSemanaRacha` (calculada sobre
+      `RegistroVerificacion.fecha` aprobados) y lista de hasta 3 actividades recientes
+      aprobadas `actividadesRealizadas` (con nombre de actividad y formato de fecha)
+      (`RF-UI-014`, `data-model.md` §5)
+- [X] T076 Rediseñar `PerfilScreen.kt` / `PerfilContenido`:
+      (1) Encabezado verde de ancho completo con degradé y avatar 68 dp a la izquierda;
+      (2) Tarjeta destacada de racha con llama de 64 dp, mensaje positivo y tira semanal
+      de 7 días;
+      (3) Tarjetas de estadísticas lado a lado (Actividades y Recompensas);
+      (4) Sección "Actividades realizadas" con enlace "Ver todas" (área táctil 48 dp) y
+      estado vacío ("Comenzá a realizar actividades");
+      (5) Menú de cuenta con 5 filas de 56 dp y nuevos íconos;
+      (6) Botón "Cerrar sesión" píldora con contorno verde;
+      (7) Resaltado de píldora en barra inferior para Perfil (`RF-UI-014`)
+- [X] T077 [P] Actualizar tests de Compose UI en
+      `app/src/androidTest/kotlin/com/ecosmart/presentation/profile/PerfilScreenTest.kt`
+      para validar la nueva jerarquía visual de Perfil, la tira de racha y la sección de
+      actividades realizadas (`RF-UI-014`)
+- [X] T078 Ejecutar `./gradlew :app:testDebugUnitTest` y
+      `./gradlew :app:connectedDebugAndroidTest` para verificar que el 100% de las
+      pruebas pasen sin regresiones (`SC-UI-004`)
+
+---
+
+## Phase 13: Botón flotante Puntos Verdes, mapa full-screen, avatar dinámico y ajustes de Perfil (RF-UI-002c/012/013/014)
+
+**Purpose**: Implementar los ajustes resueltos en Clarifications 2026-10-18 continuación:
+restablecer la barra inferior a 5 pestañas eliminando el ícono de ubicación, agregar el botón
+flotante circular verde estático en el lateral derecho de `HomeScreen` hacia Puntos Verdes,
+rediseñar `PuntosVerdesScreen` a mapa full-screen con encabezado contextual, inyectar la inicial
+dinámica en los avatares de Recompensas y Educación, corregir el contador de recompensas en Perfil
+a 0 sin saltos de renglón, y simplificar el menú de Perfil a 4 filas eliminando "Mi perfil" y dejando
+"Ayuda" en desarrollo.
+
+- [X] T079 Restablecer la barra inferior `BarraInferiorEcoSmart` y el enum `PestanaInferior`
+      a 5 pestañas (INICIO, ACTIVIDADES, RECOMPENSAS, EDUCACION, PERFIL), retirando
+      `PUNTOS_VERDES` y su NavigationBarItem en
+      `app/src/main/kotlin/com/ecosmart/presentation/theme/ComponentesEcoSmart.kt` y `EcoSmartNavHost.kt`
+- [X] T080 Incorporar en `HomeScreen` un botón flotante circular verde (`ColorGreen700`)
+      estático en el lateral derecho con ícono de ubicación color crema (`CremaTexto`),
+      que navegue a `PuntosVerdesScreen` (`RF-UI-002c`, `RF-UI-008`)
+- [X] T081 Rediseñar `PuntosVerdesScreen` a mapa de OpenStreetMap en pantalla completa
+      (full-screen, sin listado apilado inferior ni barra persistente), con encabezado
+      superpuesto que muestra el botón de volver, el avatar de usuario, el título
+      "Punto Verde en [Nombre del punto]" y subtítulo "Zona de [Dirección o Barrio]" (`RF-UI-002c`)
+- [X] T082 Inyectar la inicial dinámica del usuario en el avatar de `RecompensasScreen` y
+      `ContenidoEducativoScreen` para que coincida con el usuario en sesión en lugar de "U" (`RF-UI-012`, `RF-UI-013`)
+- [X] T083 Ajustar `PerfilScreen` y `PerfilViewModel`:
+      (1) Cambiar `totalRecompensas` a 0 en `PerfilUiState`;
+      (2) Ajustar tipografía/layout de la tarjeta de Recompensas para que no salte de renglón;
+      (3) Reducir el menú a 4 filas ("Mis actividades", "Mis recompensas", "Configuración" y "Ayuda"),
+      eliminando "Mi perfil" y dejando "Ayuda" sin navegación activa (`RF-UI-014`)
+- [X] T084 [P] Actualizar tests de Compose UI en `BarraInferiorEcoSmartTest.kt`,
+      `HomeScreenTest.kt`, `PerfilScreenTest.kt` y demás tests afectados para validar los cambios de 5 pestañas,
+      el botón flotante de Puntos Verdes y los ajustes de Perfil
+- [X] T085 Ejecutar `./gradlew :app:testDebugUnitTest` y `./gradlew :app:connectedDebugAndroidTest`
+      asegurando 100% de éxito y cero regresiones (`SC-UI-004`)
 
 ---
 

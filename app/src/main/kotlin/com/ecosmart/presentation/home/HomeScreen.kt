@@ -21,9 +21,13 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -37,6 +41,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
@@ -53,6 +58,7 @@ import com.ecosmart.presentation.theme.ColorGreen700
 import com.ecosmart.presentation.theme.ColorSurfaceCard
 import com.ecosmart.presentation.theme.ColorTextPrimary
 import com.ecosmart.presentation.theme.ColorTextSecondary
+import com.ecosmart.presentation.theme.CremaTexto
 import com.ecosmart.presentation.theme.ElevacionTarjeta
 import com.ecosmart.presentation.theme.EncabezadoEcoSmart
 import com.ecosmart.presentation.theme.EnlaceSeccion
@@ -79,6 +85,7 @@ fun HomeScreen(
     onVerTodasLasActividades: () -> Unit = {},
     onVerContenidoEducativo: () -> Unit = {},
     onVerPerfil: () -> Unit,
+    onVerPuntosVerdes: () -> Unit = {},
     barraInferior: @Composable () -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -143,6 +150,7 @@ fun HomeScreen(
             onVerTodasLasActividades = onVerTodasLasActividades,
             onVerContenidoEducativo = onVerContenidoEducativo,
             onVerPerfil = onVerPerfil,
+            onVerPuntosVerdes = onVerPuntosVerdes,
             modifier = Modifier.padding(padding),
         )
     }
@@ -156,18 +164,20 @@ fun HomeContenido(
     onVerTodasLasActividades: () -> Unit = {},
     onVerContenidoEducativo: () -> Unit = {},
     onVerPerfil: () -> Unit = {},
+    onVerPuntosVerdes: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val totalActividades = actividades.size.coerceAtLeast(1)
     val completadas = actividades.count { it.progresoActual >= it.meta && it.meta > 0 }
     val fraccionProgreso = (completadas.toFloat() / totalActividades.toFloat()).coerceIn(0f, 1f)
 
-    LazyColumn(
-        modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(start = SpaceScreenX, end = SpaceScreenX, bottom = 24.dp),
-        verticalArrangement = Arrangement.spacedBy(18.dp),
-    ) {
-        // S01-D: Tarjeta de puntos C-11 (planeta ilustrado decorativo RF-UI-018)
+    Box(modifier = modifier.fillMaxSize()) {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(start = SpaceScreenX, end = SpaceScreenX, bottom = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(18.dp),
+        ) {
+            // S01-D: Tarjeta de puntos C-11 (planeta ilustrado decorativo RF-UI-018)
         item {
             TarjetaPuntos(
                 puntos = puntosTotales,
@@ -314,4 +324,23 @@ fun HomeContenido(
             }
         }
     }
+
+    // Botón flotante circular verde estático en el lateral derecho hacia Puntos Verdes (RF-UI-002c)
+    IconButton(
+        onClick = onVerPuntosVerdes,
+        modifier = Modifier
+            .align(Alignment.CenterEnd)
+            .padding(end = 16.dp)
+            .size(56.dp)
+            .clip(CircleShape)
+            .background(ColorGreen700),
+    ) {
+        Icon(
+            imageVector = Icons.Filled.LocationOn,
+            contentDescription = "Puntos Verdes",
+            tint = CremaTexto,
+            modifier = Modifier.size(28.dp),
+        )
+    }
+}
 }

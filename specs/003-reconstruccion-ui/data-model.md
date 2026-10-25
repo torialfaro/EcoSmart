@@ -29,7 +29,7 @@ las variantes visuales que debe soportar.
 | ID | Composable (nombre propuesto) | Estados/variantes | Pantallas que lo usan |
 |---|---|---|---|
 | C-01 | *(dibujado por el SO, no aplica)* | — | Todas |
-| C-02 | `BarraInferiorEcoSmart` (`PestanaInferior`: 6 valores, incluye `PUNTOS_VERDES` — `RF-UI-002c`) | seleccionado/no seleccionado | Inicio, Actividades, Recompensas, Educación, Puntos Verdes, Perfil |
+| C-02 | `BarraInferiorEcoSmart` (`PestanaInferior`: 5 valores — `RF-UI-002b`, `RF-UI-002c`) | seleccionado/no seleccionado | Inicio, Actividades, Recompensas, Educación, Perfil |
 | C-03 | `EncabezadoEcoSmart` | con/sin avatar, con/sin flecha de volver | Todas |
 | C-04 | `ChipFiltro`/`SegmentoEcoSmart` (nuevo) | seleccionado, no seleccionado, deshabilitado | Actividades, Recompensas, Educación |
 | C-05 | `BarraProgresoLineal` (nuevo) | 0–100% | Inicio (progreso general), tarjeta de actividad medible |
@@ -40,11 +40,10 @@ las variantes visuales que debe soportar.
 | C-10 | `TarjetaRecompensa` (nuevo) | costo habilitado/deshabilitado (visual, no funcional) | Recompensas |
 | C-11 | `TarjetaPuntos` (nuevo) | — | Inicio |
 
-**Puntos Verdes y `C-02`** (`RF-UI-002c`, research.md §9): "Puntos Verdes" usa `C-02`
-(la barra inferior) igual que las otras 5 pantallas, pero `PuntosVerdesScreen` en sí
-misma **no** adopta ningún otro componente (`C-03` a `C-11`) ni los tokens de la
-sección 1: conserva su implementación visual actual, fuera del alcance de rediseño de
-este spec (`RF-UI-002`).
+**Puntos Verdes y `C-02`** (`RF-UI-002c`, research.md §11): El acceso a Puntos Verdes
+se realiza desde un botón flotante circular verde en el lateral derecho de Inicio,
+y la barra inferior (`C-02`) mantiene 5 pestañas principales. `PuntosVerdesScreen`
+presenta el mapa a pantalla completa con encabezado contextual reubicado.
 
 ## 3. Muestra estática de Recompensas (Presentación — `rewards/RecompensaEjemplo.kt`)
 
@@ -86,3 +85,35 @@ estado visual sin inventar un campo nuevo (`RF-UI-006`):
 | Sin iniciar (idle) | No existe `RegistroVerificacion` aprobado hoy para esa actividad, y (para Caminar) no hay seguimiento iniciado | `HistorialViewModel`/`ActividadDetalleViewModel`, `CaminataEnCursoStore` |
 | En curso (in_progress) | Caminar: seguimiento iniciado con `pasosRegistrados < metaPasos` | `VerificacionCaminataUiState` |
 | Completada (completed) | Existe `RegistroVerificacion` con `resultado = APROBADO` para esa actividad hoy, o (Caminar) `pasosRegistrados ≥ metaPasos` | `RegistroVerificacion.consumeTopeDiario()` ya existente |
+
+## 5. Datos de presentación para el rediseño de Perfil (Presentación — `profile/`)
+
+Tampoco agrega entidades de dominio ni altera la persistencia (`RF-UI-001`, `RF-UI-014`).
+Los nuevos datos visuales de la pantalla `PerfilScreen` se componen exclusivamente de
+lecturas sobre el dominio existente:
+
+```kotlin
+// Vive únicamente en presentation/profile/
+data class DiaSemanaRachaUi(
+    val inicialDia: String,     // "L", "M", "M", "J", "V", "S", "D"
+    val fecha: LocalDate,
+    val cumplido: Boolean,      // true si existe RegistroVerificacion APROBADO en esa fecha
+    val esHoy: Boolean,         // fecha == LocalDate.now()
+)
+
+data class ActividadRealizadaResumenUi(
+    val id: String,
+    val titulo: String,         // Actividad.descripcionCorta
+    val categoria: CategoriaActividad,
+    val fecha: LocalDate,
+    val etiquetaFecha: String,  // "Hoy", "Ayer" o "Vie 16 oct"
+)
+```
+
+| Modelo | Origen en Dominio | Notas de presentación |
+|---|---|---|
+| `diasSemanaRacha` | `RegistroVerificacionRepository.todos(usuarioId)` | Tira de 7 días (lunes a domingo) de la semana corriente (`LocalDate.now()`). Cada día con actividad aprobada lleva tilde naranja; hoy lleva anillo adicional. |
+| `actividadesRealizadas` | `RegistroVerificacionRepository.todos(usuarioId)` | Hasta 3 registros más recientes con `resultado == ResultadoVerificacion.APROBADO`. Si está vacío, la UI muestra el subtítulo "Comenzá a realizar actividades". |
+| `puntosHistoricos` | `Usuario.puntosHistoricos` | Entero real del usuario. |
+| `nivel` | `Usuario.nivel()` | `NivelUsuario` ("Semilla", "Brote", "Planta", "Árbol"). |
+| `rachaActual` | `Usuario.rachaVigente()` | Días consecutivos de racha vigente calculados por el dominio. |

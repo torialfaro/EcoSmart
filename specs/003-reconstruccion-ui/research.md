@@ -185,9 +185,22 @@ usuaria reportó 12 puntos de feedback (ver `spec.md` → Clarifications, sesió
   `actividadRepository.buscarPorId(actividadId)?.descripcionCorta` (dato ya existente,
   solo no se mostraba antes). `VerificacionFotoScreen` lo renderiza como
   `headlineSmall`/`FontWeight.Bold` arriba de todo, antes de las pestañas Cámara/
-  Galería. **Rationale**: única excepción documentada a `RF-UI-002` para esta pantalla
-  "fuera de alcance" — el pedido es mínimo (un texto más) y no toca la lógica de
-  verificación por IA.
+  Galería. **Rationale**: esta fue la excepción puntual original documentada a
+  `RF-UI-002` para esta pantalla "fuera de alcance" (Clarifications 2026-10-14) —
+  **superseded** por la excepción ampliada de Clarifications 2026-10-17 (`RF-UI-002d`,
+  ver decisión siguiente), que reemplaza este cambio mínimo por un rediseño inmersivo
+  completo de la pantalla.
+- **Rediseño inmersivo de `VerificacionFotoScreen` (`RF-UI-002d`)**: La pantalla pasa de
+  un único `Scaffold` con scroll vertical a un flujo de 2 pasos: "Paso 1 de 2" (cámara en
+  vista inmersiva de pantalla completa, con flecha de volver + indicador de paso +
+  insignia de puntos superpuestos, y el selector Cámara/Galería junto al disparador
+  flotando sobre el preview) y "Paso 2 de 2" (la foto real capturada/elegida a pantalla
+  completa, con un panel inferior que se expande automáticamente mostrando "Foto
+  lista"/"Repetir foto", el campo de descripción y el botón "Enviar actividad", colapsable
+  tocando su encabezado). **Rationale**: pedido explícito de la usuaria (ver
+  Clarifications 2026-10-17); reemplaza por completo la excepción puntual anterior
+  (nombre de actividad destacado) sin tocar `VerificacionCaminataScreen` ni la lógica de
+  verificación por IA, puntaje o navegación ya existente (`RF-UI-001`).
 - **Recompensas sin distinción de público**: Se eliminó por completo `enum class
   PublicoRecompensa` y el campo `publico` de `RecompensaEjemplo`, junto con las 3
   entradas de ejemplo "para Kids" y el segmento "Para adultos"/"Para Kids" de
@@ -261,4 +274,65 @@ Clarifications, sesión 2026-10-14 continuación):
   **Alternatives considered**: re-cablear `onVerPuntosVerdes` a una tarjeta/enlace
   dentro de Home, conservando ambos accesos (rechazada: duplica el punto de entrada sin
   un requisito que lo pida, y complica el test de `SC-UI-006`).
+
+## 10. Rediseño integral de la pantalla Perfil (feedback 2026-10-18, RF-UI-014)
+
+Se documentan acá las decisiones técnicas del rediseño visual de `PerfilScreen`
+(`S-06`) resuelto en Clarifications sesión 2026-10-18:
+
+- **Estructura y scroll vertical**: Todo el contenido de `PerfilScreen` vive dentro de un
+  único `Column` con `verticalScroll` y `Scaffold(bottomBar = barraInferior)`,
+  manteniendo la barra de 6 íconos fija al pie mientras el encabezado y el cuerpo hacen
+  scroll.
+- **Tira semanal de racha calculada con datos reales del dominio**:
+  `CalcularMetricasPerfil` o `PerfilViewModel` consulta los `RegistroVerificacion` reales
+  del usuario (`registroVerificacionRepository.todos(usuarioId)`). Para los 7 días de la
+  semana calendario en curso (de lunes a domingo, `DayOfWeek.MONDAY` a `SUNDAY`), un día
+  se marca completado con tilde si existe al menos un registro con resultado APROBADO en
+  esa fecha (`RegistroVerificacion.fecha`). Hoy se identifica con un anillo adicional.
+  No se inventa ningún día ni se simula: si no hay actividad en ese día, el círculo se
+  muestra vacío.
+- **Sección "Actividades realizadas"**: Consume los `RegistroVerificacion` con resultado
+  APROBADO ordenados por fecha descendente, tomando hasta 3 elementos. El título de la
+  actividad se resuelve desde `Actividad.descripcionCorta` (o catálogo de actividades ya
+  disponible en memoria/repositorio). La fecha se formatea como "Hoy" si coincide con
+  `LocalDate.now()`, "Ayer" si coincide con `LocalDate.now().minusDays(1)`, o formato
+  corto tipo "Vie 16 oct". Si el usuario aún no tiene actividades aprobadas, se muestra
+  el estado vacío con subtítulo "Comenzá a realizar actividades". El enlace "Ver todas"
+  (48 dp de alto táctil) reutiliza el callback `onMisActividades` navegando a
+  `HistorialScreen`.
+- **Menú de cuenta y botón "Cerrar sesión"**: El menú se reduce a 4 filas de 56 dp de
+  alto: "Mis actividades", "Mis recompensas", "Configuración" y "Ayuda". Se elimina la opción
+  redundante "Mi perfil" (cuyo destino de edición de perfil queda cubierto por "Configuración").
+  La fila "Ayuda" se mantiene en la lista con icono de signo de pregunta, pero deshabilitada o
+  sin acción de navegación activa (pantalla en desarrollo). El botón "Cerrar sesión" se
+  implementa como píldora de 52 dp con borde/contorno verde e ícono de salida, llamando al
+  callback existente `onCerrarSesion`. "Eliminar cuenta" permanece exclusivamente en
+  `PerfilEdicionScreen`.
+- **Resaltado de Perfil en la barra inferior**: Se agrega una píldora de fondo
+  `#E6F2DF` (`ColorGreen100`) detrás del ícono seleccionado en `BarraInferiorEcoSmart`
+  cuando la pestaña activa es `PestanaInferior.PERFIL`. La barra inferior vuelve a tener
+  5 pestañas (Inicio, Actividades, Recompensas, Educación, Perfil), eliminando el 6º ítem.
+- **Nuevos tokens visuales incorporados**: Tokens de color para la tarjeta de racha
+  (degradé cálido, borde, texto llama, anillo) y fondo claro de tarjeta de recompensas.
+
+## 11. Botón flotante Puntos Verdes, mapa full-screen y avatar dinámico (feedback 2026-10-18 continuación)
+
+- **Acceso a Puntos Verdes**: Se retira el ícono de ubicación de la barra de navegación inferior,
+  restableciendo la barra a 5 pestañas (`PestanaInferior`: INICIO, ACTIVIDADES, RECOMPENSAS,
+  EDUCACION, PERFIL). En su reemplazo, en `HomeScreen` se añade un botón flotante circular
+  verde (`ColorGreen700`) fijo en el lateral derecho de la pantalla, con el ícono de ubicación
+  en color crema (`CremaTexto`), que navega a `PuntosVerdesScreen`.
+- **Mapa a pantalla completa en `PuntosVerdesScreen`**: El mapa de OpenStreetMap ocupa toda
+  la pantalla (salvo el encabezado superior). Se reubica el encabezado sobre el mapa con:
+  "EcoSmart", avatar/volver, título "Punto Verde en [Nombre del punto]" y subtítulo
+  "Zona de [Dirección o Barrio]" tomados del punto verde más cercano/primer punto disponible.
+  Se elimina el listado de tarjetas apilado debajo y la barra inferior persistente.
+- **Inicial dinámica en avatar de Recompensas y Educación**: En `RecompensasScreen` y
+  `ContenidoEducativoScreen`, `EncabezadoEcoSmart` deja de usar el valor por defecto "U"
+  y pasa a inyectar la inicial real del usuario autenticado (`usuario.nombreUsuario.ifBlank { "U" }`),
+  asegurando paridad con Inicio y Actividades.
+- **Recompensas en Perfil sin canjes falsos**: `totalRecompensas` en `PerfilUiState` se fija
+  en 0 (reflejando la ausencia de backend/canjes reales), y la etiqueta "Recompensas" ajusta
+  su tamaño de fuente para evitar saltos de renglón desproporcionados en la tarjeta.
 

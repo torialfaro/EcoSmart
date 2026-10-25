@@ -36,6 +36,7 @@ sealed class ResultadoUiFoto {
 
 data class VerificacionFotoUiState(
     val nombreActividad: String = "",
+    val puntosBase: Int = 0,
     val descripcion: String = "",
     val archivoFoto: File? = null,
     val enviando: Boolean = false,
@@ -61,11 +62,14 @@ class VerificacionFotoViewModel @Inject constructor(
         // Corrección post-QA (2026-09-23): empieza a despertar el backend de EcoGPT apenas
         // se abre esta pantalla, no recién al tocar "Enviar" (research.md §2.1).
         viewModelScope.launch { verificarFotoConIA.precalentarBackend() }
-        // Corrección post-QA (2026-10-14): la pantalla destaca el nombre de la actividad
-        // para la que se está sacando/eligiendo la foto (antes se veía vacía).
+        // Corrección post-QA (2026-10-14 y 2026-10-17): la pantalla destaca el nombre de la actividad
+        // y los puntos base (RF-UI-002d).
         viewModelScope.launch {
             val actividad = actividadRepository.buscarPorId(actividadId)
-            _uiState.value = _uiState.value.copy(nombreActividad = actividad?.descripcionCorta ?: "")
+            _uiState.value = _uiState.value.copy(
+                nombreActividad = actividad?.descripcionCorta ?: "",
+                puntosBase = actividad?.puntosBase ?: 0,
+            )
         }
     }
 
@@ -108,6 +112,11 @@ class VerificacionFotoViewModel @Inject constructor(
         }
     }
 
+    /** Permite repetir la foto, regresando a la captura de cámara (Paso 1). */
+    fun repetirFoto() {
+        _uiState.value = _uiState.value.copy(archivoFoto = null)
+    }
+
     /**
      * "Volver a intentar": conserva foto/descripción ante fallas técnicas
      * (Timeout/sin conexión/error — Edge Cases correspondientes), pero
@@ -119,10 +128,14 @@ class VerificacionFotoViewModel @Inject constructor(
             ResultadoUiFoto.Timeout, ResultadoUiFoto.SinConexion, is ResultadoUiFoto.Error -> true
             else -> false
         }
+        val estadoActual = _uiState.value
         _uiState.value = if (conservarDatos) {
-            _uiState.value.copy(resultado = null, enviando = false)
+            estadoActual.copy(resultado = null, enviando = false)
         } else {
-            VerificacionFotoUiState()
+            VerificacionFotoUiState(
+                nombreActividad = estadoActual.nombreActividad,
+                puntosBase = estadoActual.puntosBase,
+            )
         }
     }
 

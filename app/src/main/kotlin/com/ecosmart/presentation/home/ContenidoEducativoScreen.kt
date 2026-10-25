@@ -28,6 +28,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import com.ecosmart.domain.valueobject.CategoriaActividad
 import com.ecosmart.presentation.comun.EncabezadoConUsuario
+import com.ecosmart.presentation.comun.EncabezadoViewModel
 import com.ecosmart.presentation.comun.etiquetaCategoria
 import com.ecosmart.presentation.theme.ColorBgScreen
 import com.ecosmart.presentation.theme.ColorTextPrimary
@@ -188,8 +189,10 @@ fun ContenidoEducativoScreen(
     onVerPerfil: (() -> Unit)? = null,
     onVolver: (() -> Unit)? = null,
     barraInferior: @Composable () -> Unit = {},
+    encabezadoViewModel: EncabezadoViewModel = hiltViewModel(),
 ) {
     val segmentoSeleccionado by viewModel.segmentoSeleccionado.collectAsState()
+    val nombreUsuario by encabezadoViewModel.nombreUsuario.collectAsState()
 
     Scaffold(
         containerColor = ColorBgScreen,
@@ -197,6 +200,7 @@ fun ContenidoEducativoScreen(
             EncabezadoEcoSmart(
                 titulo = "Educación",
                 subtitulo = "Aprendé, informate, hacé la diferencia",
+                inicialUsuario = nombreUsuario.ifBlank { "U" },
                 onAvatar = onVerPerfil,
                 onVolver = onVolver,
             )

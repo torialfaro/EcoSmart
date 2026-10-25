@@ -205,7 +205,7 @@ fun EncabezadoEcoSmart(
     }
 }
 
-enum class PestanaInferior { INICIO, ACTIVIDADES, RECOMPENSAS, EDUCACION, PUNTOS_VERDES, PERFIL }
+enum class PestanaInferior { INICIO, ACTIVIDADES, RECOMPENSAS, EDUCACION, PERFIL }
 
 @Composable
 private fun iconoHoja(): ImageVector = ImageVector.vectorResource(R.drawable.ic_hoja)
@@ -213,7 +213,7 @@ private fun iconoHoja(): ImageVector = ImageVector.vectorResource(R.drawable.ic_
 @Composable
 private fun iconoCaminar(): ImageVector = ImageVector.vectorResource(R.drawable.ic_caminar)
 
-/** Barra inferior Inicio / Actividades / Recompensas / Educación / Puntos Verdes / Perfil del mockup (RF-UI-002b, RF-UI-002c). Solo iconos, sin etiqueta de texto (feedback post-QA). */
+/** Barra inferior Inicio / Actividades / Recompensas / Educación / Perfil del mockup (RF-UI-002b, RF-UI-002c). Solo iconos, sin etiqueta de texto. */
 @Composable
 fun BarraInferiorEcoSmart(
     seleccion: PestanaInferior,
@@ -221,7 +221,6 @@ fun BarraInferiorEcoSmart(
     onActividades: () -> Unit,
     onRecompensas: () -> Unit,
     onEducacion: () -> Unit,
-    onPuntosVerdes: () -> Unit,
     onPerfil: () -> Unit,
 ) {
     NavigationBar(containerColor = FondoPagina, tonalElevation = 0.dp) {
@@ -257,15 +256,22 @@ fun BarraInferiorEcoSmart(
             colors = colores,
         )
         NavigationBarItem(
-            selected = seleccion == PestanaInferior.PUNTOS_VERDES,
-            onClick = onPuntosVerdes,
-            icon = { Icon(Icons.Filled.LocationOn, contentDescription = "Puntos Verdes") },
-            colors = colores,
-        )
-        NavigationBarItem(
             selected = seleccion == PestanaInferior.PERFIL,
             onClick = onPerfil,
-            icon = { Icon(Icons.Filled.Person, contentDescription = "Perfil") },
+            icon = {
+                if (seleccion == PestanaInferior.PERFIL) {
+                    Box(
+                        modifier = Modifier
+                            .background(ColorGreen100, FormaPill)
+                            .padding(horizontal = 14.dp, vertical = 4.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(Icons.Filled.Person, contentDescription = "Perfil")
+                    }
+                } else {
+                    Icon(Icons.Filled.Person, contentDescription = "Perfil")
+                }
+            },
             colors = colores,
         )
     }

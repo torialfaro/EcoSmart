@@ -98,6 +98,7 @@ fun EcoSmartNavHost(
                 },
                 onVerContenidoEducativo = { navController.navigate(EcoSmartRoute.ContenidoEducativo.ruta) },
                 onVerPerfil = { navController.navigate(EcoSmartRoute.Perfil.ruta) },
+                onVerPuntosVerdes = { navController.navigate(EcoSmartRoute.PuntosVerdes.ruta) },
                 barraInferior = { BarraInferior(navController, PestanaInferior.INICIO) },
             )
         }
@@ -133,7 +134,6 @@ fun EcoSmartNavHost(
         composable(EcoSmartRoute.PuntosVerdes.ruta) {
             PuntosVerdesScreen(
                 onVolver = { navController.popBackStack() },
-                barraInferior = { BarraInferior(navController, PestanaInferior.PUNTOS_VERDES) },
             )
         }
         composable(EcoSmartRoute.ContenidoEducativo.ruta) {
@@ -208,7 +208,6 @@ private fun BarraInferior(navController: NavHostController, seleccion: PestanaIn
         onActividades = { ir(EcoSmartRoute.Actividades.ruta) },
         onRecompensas = { ir(EcoSmartRoute.Recompensas.ruta) },
         onEducacion = { ir(EcoSmartRoute.ContenidoEducativo.ruta) },
-        onPuntosVerdes = { ir(EcoSmartRoute.PuntosVerdes.ruta) },
         onPerfil = { ir(EcoSmartRoute.Perfil.ruta) },
     )
 }

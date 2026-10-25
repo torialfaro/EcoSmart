@@ -223,7 +223,7 @@ equivalente en Gemini es `response_mime_type="application/json"` +
 `response_schema` (un JSON Schema con tipos en mayúsculas: `OBJECT`,
 `STRING`, etc.) en `GenerateContentConfig`, en vez de *tool use* — mismo
 efecto (JSON siempre parseable), mecanismo nativo distinto. Modelo usado:
-`gemini-2.5-flash` (configurable vía `GEMINI_MODEL`, ver
+`gemini-3.8-flash` (configurable vía `GEMINI_MODEL`, ver
 `backend/app/ecogpt.py`).
 
 **Rationale**: Python + FastAPI fue elegido por el usuario del proyecto
@@ -257,17 +257,17 @@ también cae dentro de la ventana de arranque, el usuario sigue viendo el
 error real). Ver `backend/README.md` §3 para mitigaciones adicionales no
 implementadas (ping externo periódico, plan de Render sin sleep).
 
-Sobre el modelo en sí (`gemini-2.5-flash` → `gemini-3.6-flash`, corrección
-2026-09-23): Google discontinuó `gemini-2.5-flash` para cuentas nuevas de
+Sobre el modelo en sí (`gemini-2.5-flash` → `gemini-3.6-flash` → `gemini-3.8-flash`,
+corrección 2026-10-18): Google discontinuó `gemini-2.5-flash` para cuentas nuevas de
 Google AI Studio ("This model is no longer available to new users"),
 devolviendo 404 en cada llamada — causa raíz real detrás del mismo
 síntoma visible (todo intento fallaba antes de llegar a mostrar un
-veredicto). Se migró al modelo que Google mismo recomienda en ese error,
-`gemini-3.6-flash`, verificado end-to-end (visión + salida estructurada)
+veredicto). Se migró inicialmente a `gemini-3.6-flash` y posteriormente a
+`gemini-3.8-flash`, verificado end-to-end (visión + salida estructurada)
 contra la key real del proyecto.
 
 **Riesgo documentado — calidad de verificación con un modelo gratuito**:
-`gemini-3.6-flash` es un modelo más liviano que Claude Sonnet; es
+`gemini-3.8-flash` es un modelo más liviano que Claude Sonnet; es
 razonablemente confiable para esta tarea (comparar una foto contra una
 descripción textual corta), pero puede tener más falsos
 Aprobado/Rechazado en casos ambiguos que un modelo de mayor capacidad. Se

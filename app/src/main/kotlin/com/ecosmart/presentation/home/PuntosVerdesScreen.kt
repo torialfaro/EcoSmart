@@ -1,17 +1,15 @@
 package com.ecosmart.presentation.home
 
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -21,6 +19,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -34,8 +33,8 @@ import com.ecosmart.domain.model.PuntoVerde
 import com.ecosmart.domain.repository.PuntoVerdeRepository
 import com.ecosmart.domain.repository.UsuarioRepository
 import com.ecosmart.infrastructure.session.SesionUsuario
-import com.ecosmart.presentation.comun.EncabezadoConUsuario
-import com.ecosmart.presentation.theme.TarjetaEcoSmart
+import com.ecosmart.presentation.theme.ColorBgScreen
+import com.ecosmart.presentation.theme.EncabezadoEcoSmart
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -53,6 +52,8 @@ data class PuntosVerdesUiState(
     val cargando: Boolean = true,
     val puntos: List<PuntoVerde> = emptyList(),
     val barrioNoConfigurado: Boolean = false,
+    val puntoSeleccionado: PuntoVerde? = null,
+    val nombreUsuario: String = "",
 )
 
 /**
@@ -76,17 +77,32 @@ class PuntosVerdesViewModel @Inject constructor(
             puntoVerdeRepository.sembrarSiEstaVacio()
             val usuarioId = sesionUsuario.usuarioActualId.value ?: return@launch
             val usuario = usuarioRepository.buscarPorId(usuarioId) ?: return@launch
+            val nombre = usuario.nombreUsuario
             val barrio = usuario.barrio
             if (barrio == null) {
-                _uiState.value = PuntosVerdesUiState(cargando = false, barrioNoConfigurado = true)
+                _uiState.value = PuntosVerdesUiState(
+                    cargando = false,
+                    barrioNoConfigurado = true,
+                    nombreUsuario = nombre,
+                )
                 return@launch
             }
-            _uiState.value = PuntosVerdesUiState(cargando = false, puntos = obtenerPuntosVerdesDelBarrio(barrio))
+            val puntosObtenidos = obtenerPuntosVerdesDelBarrio(barrio)
+            _uiState.value = PuntosVerdesUiState(
+                cargando = false,
+                puntos = puntosObtenidos,
+                puntoSeleccionado = puntosObtenidos.firstOrNull(),
+                nombreUsuario = nombre,
+            )
         }
+    }
+
+    fun seleccionarPunto(punto: PuntoVerde) {
+        _uiState.value = _uiState.value.copy(puntoSeleccionado = punto)
     }
 }
 
-/** US7 — mapa + listado de Puntos Verdes del barrio del usuario (RF-018, RF-020, RF-065). */
+/** US7 — mapa de Puntos Verdes a pantalla completa (RF-018, RF-020, RF-065, RF-UI-002c). */
 @Composable
 fun PuntosVerdesScreen(
     viewModel: PuntosVerdesViewModel = hiltViewModel(),
@@ -95,56 +111,75 @@ fun PuntosVerdesScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
-        topBar = { EncabezadoConUsuario(onVolver = onVolver) },
-        bottomBar = barraInferior,
-    ) { padding ->
+    val puntoActual = uiState.puntoSeleccionado ?: uiState.puntos.firstOrNull()
+    val tituloHeader = if (puntoActual != null) "Punto Verde en ${puntoActual.nombre}" else "Puntos Verdes"
+    val subtituloHeader = if (puntoActual != null) "Zona de ${puntoActual.direccion}" else "Encontrá tu punto más cercano"
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(ColorBgScreen),
+    ) {
         when {
             uiState.cargando -> Box(
-                modifier = Modifier.fillMaxSize().padding(padding),
+                modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center,
             ) { CircularProgressIndicator() }
 
             uiState.barrioNoConfigurado -> Box(
-                modifier = Modifier.fillMaxSize().padding(padding).padding(24.dp),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(24.dp),
                 contentAlignment = Alignment.Center,
             ) {
                 Text("Configurá tu barrio en el perfil para ver los Puntos Verdes cercanos a vos.")
             }
 
             uiState.puntos.isEmpty() -> Box(
-                modifier = Modifier.fillMaxSize().padding(padding).padding(24.dp),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(24.dp),
                 contentAlignment = Alignment.Center,
             ) {
-                // RF-020: informar explícitamente que no hay puntos en el barrio.
                 Text("No encontramos Puntos Verdes en tu barrio todavía.")
             }
 
-            else -> Column(modifier = Modifier.fillMaxSize().padding(padding)) {
+            else -> {
+                // Mapa a pantalla completa
                 MapaPuntosVerdes(
                     puntos = uiState.puntos,
-                    modifier = Modifier.fillMaxWidth().height(260.dp),
+                    onSeleccionarPunto = viewModel::seleccionarPunto,
+                    modifier = Modifier.fillMaxSize(),
                 )
-                LazyColumn(
-                    modifier = Modifier.fillMaxWidth().weight(1f).padding(20.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    items(uiState.puntos, key = { it.id.valor }) { punto ->
-                        TarjetaEcoSmart {
-                            Text(text = punto.nombre, style = MaterialTheme.typography.titleSmall)
-                            Text(text = punto.direccion, style = MaterialTheme.typography.bodyMedium)
-                        }
-                    }
-                }
             }
+        }
+
+        // Header superpuesto con EcoSmart, botón volver, título/subtítulo y avatar con inicial
+        Surface(
+            color = ColorBgScreen.copy(alpha = 0.95f),
+            shadowElevation = 4.dp,
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.TopCenter),
+        ) {
+            EncabezadoEcoSmart(
+                titulo = tituloHeader,
+                subtitulo = subtituloHeader,
+                inicialUsuario = uiState.nombreUsuario.ifBlank { "U" },
+                onVolver = onVolver,
+                modifier = Modifier.statusBarsPadding(),
+            )
         }
     }
 }
 
 /** RF-065/RF-066 — mapa OpenStreetMap centrado en el promedio de coordenadas de [puntos], con un marcador por cada uno. */
 @Composable
-private fun MapaPuntosVerdes(puntos: List<PuntoVerde>, modifier: Modifier = Modifier) {
+private fun MapaPuntosVerdes(
+    puntos: List<PuntoVerde>,
+    onSeleccionarPunto: (PuntoVerde) -> Unit = {},
+    modifier: Modifier = Modifier,
+) {
     val lifecycleOwner = LocalLifecycleOwner.current
     val mapViewRef = remember { mutableStateOf<MapView?>(null) }
 
@@ -169,6 +204,11 @@ private fun MapaPuntosVerdes(puntos: List<PuntoVerde>, modifier: Modifier = Modi
                     marcador.position = GeoPoint(punto.latitud, punto.longitud)
                     marcador.title = punto.nombre
                     marcador.snippet = punto.direccion
+                    marcador.setOnMarkerClickListener { _, _ ->
+                        onSeleccionarPunto(punto)
+                        marcador.showInfoWindow()
+                        true
+                    }
                     vista.overlays.add(marcador)
                 }
             }
