@@ -23,7 +23,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import retrofit2.HttpException
 import java.io.File
 import java.io.IOException
-import java.net.SocketTimeoutException
+import java.io.InterruptedIOException
 import java.time.LocalDate
 import javax.inject.Inject
 
@@ -53,9 +53,10 @@ sealed class ResultadoVerificarFotoConIA {
  *
  * El timeout de 30s NO se controla acá con un `withTimeout` propio: el
  * `OkHttpClient` de EcoGPT (`NetworkModule`, T018) ya fija `callTimeout` en
- * exactamente 30s. Ese timeout se manifiesta como [SocketTimeoutException]
- * (una subclase de [IOException]), por eso se atrapa primero y por
- * separado de un [IOException] genérico ("sin conexión") — research.md §2.
+ * exactamente 30s. Ese timeout se manifiesta como [InterruptedIOException]
+ * ("timeout" del `callTimeout`; [java.net.SocketTimeoutException] de connect/read es subclase),
+ * por eso se atrapa primero y por separado de un [IOException] genérico ("sin conexión")
+ * — research.md §2. Atrapar solo SocketTimeoutException mostraba un servidor lento como "Sin conexión".
  *
  * Corrección post-QA (2026-09-23): el backend real de EcoGPT corre en un
  * hosting free-tier que "duerme" tras inactividad (research.md §2.1); su
@@ -108,7 +109,7 @@ class VerificarFotoConIA @Inject constructor(
                         .toRequestBody("text/plain".toMediaType()),
                 )
             }
-        } catch (timeout: SocketTimeoutException) {
+        } catch (timeout: InterruptedIOException) {
             return ResultadoVerificarFotoConIA.Timeout
         } catch (sinConexion: IOException) {
             return ResultadoVerificarFotoConIA.SinConexion
@@ -176,7 +177,7 @@ class VerificarFotoConIA @Inject constructor(
 
     /**
      * Reintenta UNA vez, tras una breve espera, ante cualquier
-     * [IOException] (incluye [SocketTimeoutException], su subclase) — el
+     * [IOException] (incluye [InterruptedIOException], su subclase) — el
      * arranque en frío del backend free-tier (research.md §2.1) suele
      * resolverse solo entre el primer intento y el segundo. Si el segundo
      * intento también falla, la excepción se propaga tal cual para que

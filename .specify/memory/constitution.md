@@ -1,54 +1,48 @@
 <!--
   SYNC IMPACT REPORT
   ==================
-  Version change: 2.0.0 → 2.1.0 (MINOR — nuevo principio agregado, sin
-  redefinir ni eliminar principios existentes)
-  Reason: Arranca un tercer módulo de trabajo dedicado exclusivamente a
-  reconstruir la interfaz visual de la app a partir de
-  `especificacion-ui-app-eco.md` (tokens de diseño, componentes globales
-  C-xx, pantallas Sxx-x y criterios de aceptación AC-xx). Este módulo NO
-  toca lógica de negocio, cálculo de puntaje, topes diarios, reglas de
-  verificación por IA ni persistencia: ese comportamiento se mantiene
-  exactamente igual. Se formaliza esta restricción de alcance como un
-  nuevo principio para que `/speckit.specify` y `/speckit.plan` del nuevo
-  módulo lo validen de forma explícita.
+  Version change: 2.2.0 → 2.3.0 (MINOR — se amplía el alcance de la enmienda de
+  Educación para incluir las tarjetas educativas de la pantalla Inicio, que
+  reemplazan al carrusel de videos C-09; el resto de Inicio no cambia).
+  Previous: 2.1.0 → 2.2.0 (MINOR — enmienda al Principio X para autorizar
+  la reconstrucción visual de la sección Educación y su nueva pantalla hija)
+  Reason: Se aprueba la reconstrucción visual de la sección Educación únicamente,
+  adoptando como nueva fuente de verdad visual el diseño publicado en el lienzo de
+  Claude Design (tableros "E1 · Educación · listado" y "E2 · Lección ilustrada") en
+  reemplazo de §8 (S-05) de `especificacion-ui-app-eco.md`. Se autoriza una excepción
+  a RF-UI-002 y RF-UI-013 para eliminar el segmento Videos / Artículos / IA y agregar
+  la pantalla hija "Detalle de lección", preservando invariantes de negocio, capas y
+  accesibilidad. El resto de las pantallas no se modifica.
 
-  Modified principles: Ninguno redefinido. (Principio IV se referencia,
-  no se modifica: la nueva iniciativa de UI debe respetar sus capas tal
-  como ya estaban definidas.)
+  Modified principles:
+    - Principio X: "Reconstrucción de UI Basada en Especificación de Diseño (NON-NEGOTIABLE)"
+      enmendado para incorporar la excepción formal y nueva fuente de verdad de la
+      sección Educación (v2.2.0).
 
   Added sections/content:
-    - Nuevo Principio X. "Reconstrucción de UI Basada en Especificación de
-      Diseño (NON-NEGOTIABLE)": fija `especificacion-ui-app-eco.md` como
-      única fuente de verdad visual y limita el alcance de esta iniciativa
-      a las capas Frontend (UI) y, en lo estrictamente necesario,
-      Presentación/ViewModel, prohibiendo cambios de Dominio, Aplicación o
-      Infraestructura.
-    - "Proceso de trabajo con SpecKit": referencia a "9 principios"
-      actualizada a "10 principios" para reflejar el nuevo total.
+    - Enmienda específica de Educación dentro del Principio X:
+      * Fuente de verdad visual: lienzos Claude Design E1 y E2.
+      * Excepciones autorizadas: retiro de C-04 en Educación y nueva pantalla "Detalle de lección".
+      * Invariantes arquitectónicos y de negocio (Principios III y IV, RF-UI-001).
+      * Requisitos de accesibilidad (RF-UI-015 a RF-UI-018) y ausencia de animaciones (RF-UI-019).
 
   Removed sections: None.
 
   Templates requiring updates:
     ✅ .specify/memory/constitution.md — this file (updated)
-    ✅ .specify/templates/plan-template.md — genérico, sin cambio
-         estructural necesario; el Constitution Check del nuevo módulo de
-         UI deberá citar el Principio X explícitamente.
-    ✅ .specify/templates/spec-template.md — sin cambio estructural
-         necesario.
-    ✅ .specify/templates/tasks-template.md — sin cambio estructural
-         necesario.
+    ✅ .specify/templates/plan-template.md — genérico, sin cambio estructural necesario.
+    ✅ .specify/templates/spec-template.md — sin cambio estructural necesario.
+    ✅ .specify/templates/tasks-template.md — sin cambio estructural necesario.
 
-  Known ambiguities: las secciones 10 y 13 de
-  `especificacion-ui-app-eco.md` están marcadas por el propio documento
-  como "propuesta" o "a confirmar" (estados de error/vacío, navegación de
-  la tarjeta de puntos, pestañas Artículos/IA, detalle de recompensa,
-  etc.). El Principio X prohíbe implementarlas hasta que se resuelvan en
-  `/speckit.clarify` del nuevo módulo.
+  Known ambiguities:
+    - Destino de los videos existentes y del carrusel de contenido educativo en Inicio (C-09).
+    - Origen del contenido real de lecciones y producción de ilustraciones vectoriales.
+    - Mecanismo de asociación entre cada lección y su actividad relacionada.
+    - Ciclo de vida de los datos de ejemplo fijos en Presentación.
+    Estas ambigüedades deberán resolverse en /speckit.clarify del spec 004.
 
-  Follow-up TODOs: Crear el nuevo módulo con `/speckit.specify` (p. ej.
-  `specs/003-reconstruccion-ui/`) referenciando este principio y el
-  documento de diseño.
+  Follow-up TODOs:
+    - Inicializar spec 004 (`specs/004-redisenio-ui-educacion/spec.md`) alineado con esta enmienda.
 -->
 
 # EcoSmart Constitution
@@ -192,10 +186,40 @@ Lo marcado como «propuesta» o «a confirmar» en las secciones 10 y 13 de
 `especificacion-ui-app-eco.md` NO DEBE implementarse hasta resolverse explícitamente en
 `/speckit.clarify`.
 
+**Enmienda para la sección Educación (v2.2.0, ampliada en v2.3.0)**:
+- **Fuente de verdad visual**: La fuente de verdad visual para la sección Educación pasa
+  a ser exclusivamente el diseño publicado en el lienzo de Claude Design, tableros
+  "E1 · Educación · listado" y "E2 · Lección ilustrada". Para esta sección reemplaza al §8
+  (S-05) de `especificacion-ui-app-eco.md`; para el resto de las pantallas sigue rigiendo
+  dicho documento.
+- **Alcance ampliado a Inicio (v2.3.0)**: Entran en alcance, y solo para el módulo de
+  Educación (spec 004), las tarjetas de contenido educativo de la pantalla Inicio, que
+  reemplazan al carrusel de videos `C-09`. El resto de Inicio no se modifica.
+- **Excepción autorizada a RF-UI-002 y RF-UI-013**: Se autoriza expresamente:
+  1. Eliminar de Educación el segmento de ancho completo Videos / Artículos / IA (`C-04`),
+     el encabezado de sección "Videos destacados" con su enlace "Ver todos" (`C-08`) y las
+     tarjetas de video anchas con botón de reproducción (`C-09`). `C-04` se mantiene en
+     Actividades y `C-08` en pantallas que lo usen; `C-09` deja de usarse en contenido
+     educativo (Educación e Inicio).
+  2. Agregar una pantalla hija nueva, "Detalle de lección", ausente en la especificación
+     original.
+- **Invariantes no negociables**: Ninguna regla de negocio, puntaje, racha, nivel,
+  verificación ni persistencia se modifica (RF-UI-001, Principios III y IV). Todos los
+  cambios viven estrictamente en Frontend (UI) y Presentación (lecciones de muestra fijas
+  mientras no exista servicio de backend dedicado).
+- **Animaciones y transiciones**: Sin animaciones ni transiciones en esta sección, en
+  plena coherencia con `RF-UI-019`.
+- **Accesibilidad**: Se DEBE cumplir estrictamente con `RF-UI-015` a `RF-UI-018`
+  (relación de contraste >= 4,5:1, zonas táctiles de al menos 48×48 dp, soporte de texto del
+  sistema escalado hasta 130% sin cortes mediante alturas mínimas, e identificación clara
+  por lector de pantalla con decoraciones marcadas como tales).
+
 **Rationale**: separar el esfuerzo de reconstruir la UI del esfuerzo de cambiar reglas
 de negocio reduce el riesgo de regresiones funcionales, permite auditar el cambio
 visual de forma aislada, y mantiene una única fuente de verdad gráfica en lugar de
-decisiones de diseño dispersas o reinterpretadas en el código.
+decisiones de diseño dispersas o reinterpretadas en el código. Las enmiendas v2.2.0 y
+v2.3.0 acotan el impacto exclusivamente a Educación y a sus tarjetas en Inicio, permitiendo modernizar la experiencia pedagógica
+con lecciones ilustradas paso a paso sin alterar el resto de la aplicación ni sus reglas.
 
 ## Stack Tecnológico y Restricciones
 
@@ -337,4 +361,4 @@ iteración o feature. Las ambigüedades detectadas en el Sync Impact Report (al 
 de este archivo) DEBEN resolverse en `/speckit.specify` o `/speckit.clarify` antes de
 iniciar la implementación de la funcionalidad afectada.
 
-**Version**: 2.1.0 | **Ratified**: 2026-09-20 | **Last Amended**: 2026-10-12
+**Version**: 2.3.0 | **Ratified**: 2026-09-20 | **Last Amended**: 2026-10-30

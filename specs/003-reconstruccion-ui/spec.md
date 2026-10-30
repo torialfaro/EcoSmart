@@ -42,6 +42,13 @@ estructural es la barra de navegación inferior, que pasa de 3 a 5 tabs y luego 
 ítems al sumar el acceso a Puntos Verdes (ver Clarifications): es una reorganización de
 Presentación sobre datos ya existentes, no una nueva regla de negocio.
 
+> **Nota — sección Educación tratada en spec 004**: lo que este documento define para
+> Educación (S-05 / §8: `RF-UI-013`, escenario 3 de la Historia 3, `AC-16` y `AC-17`) y
+> el carrusel de contenido educativo `C-09` de Inicio (`RF-UI-008`) queda **reemplazado
+> por [`specs/004-redisenio-ui-educacion/spec.md`](../004-redisenio-ui-educacion/spec.md)**
+> (Constitución v2.3.0). Para esos puntos rige spec 004; el resto de este documento no
+> cambia.
+
 ## Clarifications
 
 ### Session 2026-10-14 (feedback de testing real de la UI ya implementada)
@@ -580,7 +587,8 @@ pantallas ya reconstruidas.
   adultos"/"Para Kids" de `especificacion-ui-app-eco.md` §7.1 ni ninguna otra distinción
   de público: el catálogo de ejemplo es único. Cada recompensa de ejemplo DEBE tener
   asociada una imagen de muestra (`imagenDrawableRes` nunca vacío).
-- **RF-UI-013**: La pantalla/tab Educación (ver RF-UI-002b) DEBE construirse según §8:
+- **RF-UI-013**: *(Reemplazado por `specs/004-redisenio-ui-educacion/spec.md`; el texto
+  siguiente se conserva solo como referencia histórica.)* La pantalla/tab Educación (ver RF-UI-002b) DEBE construirse según §8:
   título/subtítulo, avatar de usuario que refleja la inicial real del usuario en sesión
   (sin quedarse en "U"), segmento Videos/Artículos/IA, título de sección "Videos destacados"
   con enlace "Ver todos", y tarjetas de video anchas (`C-09`) con metadato "N min ·

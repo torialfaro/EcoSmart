@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "ecosmart/educacion/lecciones.schema.json",
+  "title": "Catálogo de lecciones de Educación",
+  "description": "Contrato de app/src/main/assets/educacion/lecciones.json. El parser descarta las lecciones que incumplan estas reglas; un archivo ilegible produce el estado de error de Educación.",
+  "type": "object",
+  "required": ["lecciones"],
+  "additionalProperties": true,
+  "properties": {
+    "lecciones": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/leccion" }
+    }
+  },
+  "$defs": {
+    "textoNoVacio": { "type": "string", "minLength": 1, "pattern": "\\S" },
+    "nombreRecurso": {
+      "type": "string",
+      "description": "Nombre de un drawable de la app (sin extensión). Si no existe, se muestra el fondo pastel de la categoría.",
+      "pattern": "^[a-z][a-z0-9_]*$"
+    },
+    "leccion": {
+      "type": "object",
+      "required": ["id", "titulo", "categoria", "duracionMinutos", "resumen", "introduccion", "pasos"],
+      "properties": {
+        "id": { "$ref": "#/$defs/textoNoVacio", "description": "Único en el catálogo. Ante duplicados se conserva la primera." },
+        "titulo": { "$ref": "#/$defs/textoNoVacio" },
+        "categoria": { "enum": ["RECICLAR", "REUTILIZAR", "CAMINAR"] },
+        "duracionMinutos": { "type": "integer", "minimum": 1 },
+        "resumen": { "$ref": "#/$defs/textoNoVacio" },
+        "introduccion": { "$ref": "#/$defs/textoNoVacio" },
+        "ilustracionPortada": { "$ref": "#/$defs/nombreRecurso" },
+        "descripcionPortada": { "type": "string" },
+        "pasos": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/paso" }
+        },
+        "tip": { "$ref": "#/$defs/tip" },
+        "textoCierre": {
+          "type": "string",
+          "description": "Opcional. Si falta o está vacío se usa 'Poné en práctica lo que aprendiste'."
+        }
+      },
+      "additionalProperties": true
+    },
+    "paso": {
+      "type": "object",
+      "required": ["titulo", "texto"],
+      "properties": {
+        "titulo": { "$ref": "#/$defs/textoNoVacio" },
+        "texto": { "$ref": "#/$defs/textoNoVacio" },
+        "ilustracion": { "$ref": "#/$defs/nombreRecurso" },
+        "descripcionIlustracion": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "tip": {
+      "type": "object",
+      "required": ["titulo", "texto"],
+      "properties": {
+        "titulo": { "$ref": "#/$defs/textoNoVacio" },
+        "texto": { "$ref": "#/$defs/textoNoVacio" }
+      },
+      "additionalProperties": true
+    }
+  }
+}

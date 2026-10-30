@@ -17,7 +17,9 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.io.File
+import java.io.InterruptedIOException
 import java.net.SocketTimeoutException
+import java.net.UnknownHostException
 
 class VerificarFotoConIATest {
 
@@ -58,6 +60,34 @@ class VerificarFotoConIATest {
         val resultado = verificarFotoConIA(datos)
 
         assertTrue(resultado is ResultadoVerificarFotoConIA.Timeout)
+    }
+
+    @Test
+    fun `el callTimeout de OkHttp (InterruptedIOException) se reporta como Timeout y no como SinConexion`() = runTest {
+        coEvery { registroVerificacionRepository.contarAprobadosDelDia(any(), any(), any()) } returns 0
+        coEvery { registroVerificacionRepository.huellasAprobadas(any(), any()) } returns emptyList()
+        coEvery { calculadorHuellaPerceptual.calcularDesdeArchivo(any()) } returns "a1b2c3d4"
+        coEvery {
+            ecoGptClient.verificarFotoActividad(any(), any(), any(), any(), any(), any())
+        } throws InterruptedIOException("timeout")
+
+        val resultado = verificarFotoConIA(datos)
+
+        assertTrue(resultado is ResultadoVerificarFotoConIA.Timeout)
+    }
+
+    @Test
+    fun `un host inalcanzable se reporta como SinConexion`() = runTest {
+        coEvery { registroVerificacionRepository.contarAprobadosDelDia(any(), any(), any()) } returns 0
+        coEvery { registroVerificacionRepository.huellasAprobadas(any(), any()) } returns emptyList()
+        coEvery { calculadorHuellaPerceptual.calcularDesdeArchivo(any()) } returns "a1b2c3d4"
+        coEvery {
+            ecoGptClient.verificarFotoActividad(any(), any(), any(), any(), any(), any())
+        } throws UnknownHostException()
+
+        val resultado = verificarFotoConIA(datos)
+
+        assertTrue(resultado is ResultadoVerificarFotoConIA.SinConexion)
     }
 
     @Test

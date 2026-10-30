@@ -36,10 +36,13 @@ from google.genai import errors as genai_errors
 from google.genai import types
 
 MODELO_GEMINI = os.environ.get("GEMINI_MODEL", "gemini-3.8-flash")
+# Respaldo ante 503/404 del modelo principal (configurable con GEMINI_MODEL_RESPALDO).
+MODELO_GEMINI_RESPALDO = os.environ.get("GEMINI_MODEL_RESPALDO", "gemini-2.5-flash")
+_MODELOS = list(dict.fromkeys(m for m in (MODELO_GEMINI, MODELO_GEMINI_RESPALDO) if m))
 
 _cliente = genai.Client(api_key=os.environ.get("GEMINI_API_KEY", ""))
 
-_REINTENTOS_SERVIDOR_SOBRECARGADO = 2
+_INTENTOS_POR_MODELO = 2
 _ESPERA_ENTRE_REINTENTOS_S = 1.5
 
 _ESQUEMA_VEREDICTO = {
@@ -90,6 +93,33 @@ Reglas de evaluación (aplicalas en este orden):
 El motivo nunca debe sonar punitivo o culpabilizador, incluso al rechazar — sé breve, concreto y alentador. Respondé únicamente con el JSON pedido, con tu decisión final."""
 
 
+async def _generar_con_respaldo(contenido):
+    """Prueba el modelo principal y, si Google lo devuelve saturado (5xx) o inexistente (404),
+    pasa al modelo de respaldo. Tiempo total acotado para entrar en el timeout de 30 s de la app."""
+    ultimo_error: Optional[Exception] = None
+    for modelo in _MODELOS:
+        for intento in range(_INTENTOS_POR_MODELO):
+            try:
+                return await _cliente.aio.models.generate_content(
+                    model=modelo,
+                    contents=contenido,
+                    config=types.GenerateContentConfig(
+                        response_mime_type="application/json",
+                        response_schema=_ESQUEMA_VEREDICTO,
+                    ),
+                )
+            except genai_errors.ServerError as error:
+                ultimo_error = error
+                if intento < _INTENTOS_POR_MODELO - 1:
+                    await asyncio.sleep(_ESPERA_ENTRE_REINTENTOS_S)
+            except genai_errors.ClientError as error:
+                if getattr(error, "code", None) != 404:
+                    raise
+                ultimo_error = error
+                break
+    raise GeminiSobrecargadoError(str(ultimo_error)) from ultimo_error
+
+
 async def verificar_con_ia(
     imagen_bytes: bytes,
     media_type: str,
@@ -99,26 +129,9 @@ async def verificar_con_ia(
     cantidad_huellas_previas: int,
 ) -> Tuple[str, Optional[str]]:
     prompt = _construir_prompt(categoria, resultado_esperado, descripcion_usuario, cantidad_huellas_previas)
+    contenido = [types.Part.from_bytes(data=imagen_bytes, mime_type=media_type), prompt]
 
-    respuesta = None
-    for intento in range(_REINTENTOS_SERVIDOR_SOBRECARGADO + 1):
-        try:
-            respuesta = await _cliente.aio.models.generate_content(
-                model=MODELO_GEMINI,
-                contents=[
-                    types.Part.from_bytes(data=imagen_bytes, mime_type=media_type),
-                    prompt,
-                ],
-                config=types.GenerateContentConfig(
-                    response_mime_type="application/json",
-                    response_schema=_ESQUEMA_VEREDICTO,
-                ),
-            )
-            break
-        except genai_errors.ServerError as error:
-            if intento == _REINTENTOS_SERVIDOR_SOBRECARGADO:
-                raise GeminiSobrecargadoError(str(error)) from error
-            await asyncio.sleep(_ESPERA_ENTRE_REINTENTOS_S * (intento + 1))
+    respuesta = await _generar_con_respaldo(contenido)
 
     texto = respuesta.text
     if not texto:
