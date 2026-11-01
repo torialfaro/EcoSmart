@@ -27,6 +27,21 @@ val FormaMedia = RoundedCornerShape(20.dp)
 val FormaPill = RoundedCornerShape(percent = 50)
 val FormaIconoCirculo = CircleShape
 
+// --- Educación (spec 004, RF-ED-018) ---
+val SpaceGapTarjetaLeccion: Dp = 16.dp
+val SpaceSeccionEducacion: Dp = 28.dp
+val RadiusTarjetaLeccion: Dp = 24.dp
+val RadiusHoja: Dp = 28.dp
+val AlturaIlustracionTarjeta: Dp = 132.dp
+val AlturaIlustracionPaso: Dp = 150.dp
+val AlturaBandaLeccion: Dp = 208.dp
+val SuperposicionHoja: Dp = 28.dp
+val AlturaChip: Dp = 28.dp
+val AlturaConectorPaso: Dp = 24.dp
+val ZonaTactilMinima: Dp = 48.dp
+val FormaTarjetaLeccion = RoundedCornerShape(24.dp)
+val FormaHojaLeccion = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
+
 // --- Elevación / Sombras (shadow.*) ---
 val ElevacionTarjeta: Dp = 2.dp
 

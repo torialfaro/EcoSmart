@@ -51,6 +51,10 @@ import com.ecosmart.domain.model.Actividad
 import com.ecosmart.domain.valueobject.ActividadId
 import com.ecosmart.domain.valueobject.CategoriaActividad
 import com.ecosmart.presentation.comun.iconoCategoria
+import com.ecosmart.presentation.education.LeccionUi
+import com.ecosmart.presentation.education.LeccionesInicioViewModel
+import com.ecosmart.presentation.education.TarjetasEducativasInicio
+import com.ecosmart.presentation.education.leccionesParaInicio
 import com.ecosmart.presentation.theme.BarraProgresoLineal
 import com.ecosmart.presentation.theme.BotonPrincipal
 import com.ecosmart.presentation.theme.ColorBgScreen
@@ -67,7 +71,6 @@ import com.ecosmart.presentation.theme.SpaceGapCard
 import com.ecosmart.presentation.theme.SpaceScreenX
 import com.ecosmart.presentation.theme.TarjetaActividad
 import com.ecosmart.presentation.theme.TarjetaPuntos
-import com.ecosmart.presentation.theme.TarjetaVideo
 import com.ecosmart.presentation.theme.TypeCardTitle
 import com.ecosmart.presentation.theme.TypeMeta
 import com.ecosmart.presentation.theme.TypeSection
@@ -83,12 +86,14 @@ fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel(),
     onSeleccionarActividad: (ActividadId) -> Unit,
     onVerTodasLasActividades: () -> Unit = {},
-    onVerContenidoEducativo: () -> Unit = {},
+    onVerLeccion: (String) -> Unit = {},
     onVerPerfil: () -> Unit,
     onVerPuntosVerdes: () -> Unit = {},
     barraInferior: @Composable () -> Unit = {},
+    leccionesViewModel: LeccionesInicioViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val leccionesInicio by leccionesViewModel.lecciones.collectAsState()
 
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
@@ -148,10 +153,11 @@ fun HomeScreen(
             puntosTotales = uiState.puntosHistoricos,
             onSeleccionarActividad = { id -> onSeleccionarActividad(ActividadId(id)) },
             onVerTodasLasActividades = onVerTodasLasActividades,
-            onVerContenidoEducativo = onVerContenidoEducativo,
+            onVerLeccion = onVerLeccion,
             onVerPerfil = onVerPerfil,
             onVerPuntosVerdes = onVerPuntosVerdes,
             modifier = Modifier.padding(padding),
+            leccionesInicio = leccionesInicio,
         )
     }
 }
@@ -162,10 +168,11 @@ fun HomeContenido(
     puntosTotales: Int = 0,
     onSeleccionarActividad: (String) -> Unit,
     onVerTodasLasActividades: () -> Unit = {},
-    onVerContenidoEducativo: () -> Unit = {},
+    onVerLeccion: (String) -> Unit = {},
     onVerPerfil: () -> Unit = {},
     onVerPuntosVerdes: () -> Unit = {},
     modifier: Modifier = Modifier,
+    leccionesInicio: List<LeccionUi> = emptyList(),
 ) {
     val totalActividades = actividades.size.coerceAtLeast(1)
     val completadas = actividades.count { it.progresoActual >= it.meta && it.meta > 0 }
@@ -294,33 +301,19 @@ fun HomeContenido(
             )
         }
 
-        // S01-I: Título "Contenido para vos"
-        item {
-            Text(
-                text = "Contenido para vos",
-                style = TypeSection,
-                color = ColorTextPrimary,
-            )
-        }
+        // S01-I: Título "Contenido para vos" (se omite sin lecciones)
+        if (leccionesInicio.isNotEmpty()) {
+            item {
+                Text(
+                    text = "Contenido para vos",
+                    style = TypeSection,
+                    color = ColorTextPrimary,
+                )
+            }
 
-        // S01-J: Carrusel horizontal de videos C-09 (compactas)
-        item {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(SpaceGapCard),
-            ) {
-                TarjetaVideo(
-                    titulo = "¿Cómo afecta la contaminación?",
-                    onClick = onVerContenidoEducativo,
-                    esCompacta = true,
-                )
-                TarjetaVideo(
-                    titulo = "Tu guía de reciclaje",
-                    onClick = onVerContenidoEducativo,
-                    esCompacta = true,
-                )
+            // S01-J: Tarjetas de lección compactas (máx. 2)
+            item {
+                TarjetasEducativasInicio(lecciones = leccionesParaInicio(leccionesInicio), onVerLeccion = onVerLeccion)
             }
         }
     }

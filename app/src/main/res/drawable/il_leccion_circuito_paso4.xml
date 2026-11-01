@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="320dp"
+    android:height="200dp"
+    android:viewportWidth="320"
+    android:viewportHeight="200">
+    <path android:fillColor="#E4EEF3" android:pathData="M0,0h320v200h-320z" />
+    <!-- Cinta transportadora -->
+    <path android:fillColor="#6B6F68" android:pathData="M20,120h280v22h-280z" />
+    <path android:fillColor="#3E4A40" android:pathData="M36,152a12,12 0,1 1,24 0a12,12 0,1 1,-24 0zM260,152a12,12 0,1 1,24 0a12,12 0,1 1,-24 0z" />
+    <!-- Fardos -->
+    <path android:fillColor="#3E9BD6" android:pathData="M50,80h56v40h-56z" />
+    <path android:fillColor="#E9751A" android:pathData="M132,70h56v50h-56z" />
+    <path android:fillColor="#FFB84D" android:pathData="M214,86h56v34h-56z" />
+    <path android:fillColor="#1B2B1F" android:fillAlpha="0.2" android:pathData="M50,98h56v4h-56zM132,92h56v4h-56zM214,100h56v4h-56z" />
+</vector>

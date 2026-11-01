@@ -213,10 +213,12 @@ ktlint {
     version.set("1.3.1")
     android.set(true)
     ignoreFailures.set(false)
+    baseline.set(file("$rootDir/config/ktlint/baseline.xml"))
 }
 
 detekt {
     buildUponDefaultConfig = true
     allRules = false
     config.setFrom(files("$rootDir/config/detekt/detekt.yml"))
+    baseline = file("$rootDir/config/detekt/baseline.xml")
 }

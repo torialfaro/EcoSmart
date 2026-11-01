@@ -1,0 +1,23 @@
+{
+  "lecciones": [
+    {
+      "id": "circuito-reciclaje-caba",
+      "titulo": "El circuito del reciclaje en CABA",
+      "categoria": "RECICLAR",
+      "duracionMinutos": 4,
+      "resumen": "Seguí el recorrido de una botella: de tu casa a un producto nuevo, en 5 pasos ilustrados.",
+      "introduccion": "Cada envase que separás hace un recorrido largo antes de volver a ser útil. Mirá cómo es, paso a paso.",
+      "ilustracionPortada": "il_leccion_circuito_portada",
+      "descripcionPortada": "Botella, lata y envase de cartón junto a un contenedor verde de reciclaje",
+      "pasos": [
+        { "titulo": "Separá en casa", "texto": "Vaciá y enjuagá tus envases de plástico, vidrio, metal y cartón. Tienen que estar limpios y secos.", "ilustracion": "il_leccion_circuito_paso1", "descripcionIlustracion": "Envases limpios clasificados en cuatro contenedores de colores" },
+        { "titulo": "Llevalos al contenedor verde", "texto": "Dejalos en un contenedor verde de tu barrio o llevalos a un Punto Verde.", "ilustracion": "il_leccion_circuito_paso2", "descripcionIlustracion": "Persona llevando una bolsa al contenedor verde" },
+        { "titulo": "Los recolectan", "texto": "Un camión especial pasa por los contenedores y junta solo los materiales reciclables.", "ilustracion": "il_leccion_circuito_paso3", "descripcionIlustracion": "Camión recolector junto a un contenedor" },
+        { "titulo": "Se clasifican por material", "texto": "En un centro de selección se separan por tipo y se prensan en fardos.", "ilustracion": "il_leccion_circuito_paso4", "descripcionIlustracion": "Cinta transportadora con fardos de materiales" },
+        { "titulo": "Vuelven a ser algo útil", "texto": "Con ese material se fabrican productos nuevos: envases, ropa, mobiliario urbano y más.", "ilustracion": "il_leccion_circuito_paso5", "descripcionIlustracion": "Botella nueva y un banco de plaza hechos con material reciclado" }
+      ],
+      "tip": { "titulo": "Tip para que cuente", "texto": "Un envase con restos de comida puede ensuciar el resto del material. Enjuagalo antes." },
+      "textoCierre": "Llevá tus envases limpios a un Punto Verde"
+    }
+  ]
+}

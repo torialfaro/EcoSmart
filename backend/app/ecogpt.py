@@ -28,7 +28,9 @@ hosting (ver `VerificarFotoConIA.kt` del lado Android).
 
 import asyncio
 import json
+import logging
 import os
+import time
 from typing import Optional, Tuple
 
 from google import genai
@@ -36,14 +38,23 @@ from google.genai import errors as genai_errors
 from google.genai import types
 
 MODELO_GEMINI = os.environ.get("GEMINI_MODEL", "gemini-3.8-flash")
-# Respaldo ante 503/404 del modelo principal (configurable con GEMINI_MODEL_RESPALDO).
-MODELO_GEMINI_RESPALDO = os.environ.get("GEMINI_MODEL_RESPALDO", "gemini-2.5-flash")
-_MODELOS = list(dict.fromkeys(m for m in (MODELO_GEMINI, MODELO_GEMINI_RESPALDO) if m))
+# Respaldos ante 503/404 del principal, en orden (lista separada por comas, configurable con
+# GEMINI_MODELOS_RESPALDO). Los 2.5 no sirven: Google los limita a cuentas que ya los usaban (404 en claves nuevas).
+MODELOS_GEMINI_RESPALDO = [
+    m.strip()
+    for m in os.environ.get("GEMINI_MODELOS_RESPALDO", "gemini-3.5-flash-lite,gemini-3.6-flash").split(",")
+    if m.strip()
+]
+_MODELOS = list(dict.fromkeys([MODELO_GEMINI, *MODELOS_GEMINI_RESPALDO]))
 
 _cliente = genai.Client(api_key=os.environ.get("GEMINI_API_KEY", ""))
 
 _INTENTOS_POR_MODELO = 2
 _ESPERA_ENTRE_REINTENTOS_S = 1.5
+# La app corta a los 30 s (RNF-008): no se arranca un modelo nuevo pasado este presupuesto.
+_PRESUPUESTO_TOTAL_S = 22.0
+
+logger = logging.getLogger("ecogpt")
 
 _ESQUEMA_VEREDICTO = {
     "type": "OBJECT",
@@ -73,6 +84,10 @@ class GeminiSobrecargadoError(Exception):
     """Gemini devolvió 503 UNAVAILABLE incluso tras reintentar (alta demanda transitoria)."""
 
 
+class GeminiModeloNoDisponibleError(Exception):
+    """Ningún modelo configurado existe o está habilitado para la API key (404 en todos)."""
+
+
 def _construir_prompt(
     categoria: str,
     resultado_esperado: str,
@@ -95,9 +110,13 @@ El motivo nunca debe sonar punitivo o culpabilizador, incluso al rechazar — s�
 
 async def _generar_con_respaldo(contenido):
     """Prueba el modelo principal y, si Google lo devuelve saturado (5xx) o inexistente (404),
-    pasa al modelo de respaldo. Tiempo total acotado para entrar en el timeout de 30 s de la app."""
+    pasa al siguiente respaldo, sin superar el presupuesto de tiempo de la app."""
+    inicio = time.monotonic()
+    hubo_sobrecarga = False
     ultimo_error: Optional[Exception] = None
     for modelo in _MODELOS:
+        if time.monotonic() - inicio > _PRESUPUESTO_TOTAL_S:
+            break
         for intento in range(_INTENTOS_POR_MODELO):
             try:
                 return await _cliente.aio.models.generate_content(
@@ -109,15 +128,20 @@ async def _generar_con_respaldo(contenido):
                     ),
                 )
             except genai_errors.ServerError as error:
+                logger.warning("Gemini %s falló (intento %d): %s", modelo, intento + 1, error)
+                hubo_sobrecarga = True
                 ultimo_error = error
                 if intento < _INTENTOS_POR_MODELO - 1:
                     await asyncio.sleep(_ESPERA_ENTRE_REINTENTOS_S)
             except genai_errors.ClientError as error:
                 if getattr(error, "code", None) != 404:
                     raise
+                logger.warning("Gemini %s no disponible para esta clave (404): %s", modelo, error)
                 ultimo_error = error
                 break
-    raise GeminiSobrecargadoError(str(ultimo_error)) from ultimo_error
+    if hubo_sobrecarga:
+        raise GeminiSobrecargadoError(str(ultimo_error)) from ultimo_error
+    raise GeminiModeloNoDisponibleError(str(ultimo_error)) from ultimo_error
 
 
 async def verificar_con_ia(

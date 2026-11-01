@@ -461,6 +461,8 @@ El anillo se dibuja con un riel `color.track` y un arco `color.green.700` de 8 p
 
 ## 8. Pantalla 5 · Educación (S-05)
 
+> **Nota:** esta sección fue reemplazada por [specs/004-redisenio-ui-educacion/spec.md](specs/004-redisenio-ui-educacion/spec.md) (Constitución v2.3.0). Lo que sigue queda solo como referencia histórica.
+
 **Objetivo:** ofrecer contenido educativo para que el usuario aprenda mientras usa la app. Incluye videos, artículos y una IA para resolver dudas (nota del diseño).
 
 ### 8.1 Especificación de cada elemento

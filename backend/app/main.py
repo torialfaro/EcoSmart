@@ -17,7 +17,12 @@ from typing import Dict
 from fastapi import FastAPI, File, Form, Header, UploadFile
 from fastapi.responses import JSONResponse
 
-from .ecogpt import GeminiSobrecargadoError, GeminiVeredictoInvalidoError, verificar_con_ia
+from .ecogpt import (
+    GeminiModeloNoDisponibleError,
+    GeminiSobrecargadoError,
+    GeminiVeredictoInvalidoError,
+    verificar_con_ia,
+)
 from .imagenes import ImagenNoSoportadaError, preparar_imagen
 from .puntos import router as puntos_router
 from .schemas import ErrorEcoGpt, VeredictoEcoGpt
@@ -83,6 +88,13 @@ async def verificar_foto_actividad(
             503,
             "IA_SOBRECARGADA",
             "La IA está con mucha demanda en este momento. Esperá un minuto y volvé a intentar.",
+        )
+    except GeminiModeloNoDisponibleError:
+        logger.error("Ningún modelo de Gemini configurado está disponible para esta API key (404)")
+        return _error(
+            503,
+            "IA_NO_DISPONIBLE",
+            "La IA no está disponible en este momento. Probá de nuevo en unos minutos.",
         )
     except Exception:
         logger.exception("Error inesperado llamando a la API de Gemini")

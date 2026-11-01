@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Las ilustraciones de lecciones se resuelven por nombre desde assets/educacion/lecciones.json. -->
+<resources
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@drawable/il_leccion_*" />

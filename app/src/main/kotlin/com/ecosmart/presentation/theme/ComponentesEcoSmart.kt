@@ -1,4 +1,4 @@
-package com.ecosmart.presentation.theme
+﻿package com.ecosmart.presentation.theme
 
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
@@ -24,6 +24,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.InlineTextContent
+import androidx.compose.foundation.text.appendInlineContent
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
@@ -31,7 +33,6 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -57,10 +58,15 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.Placeholder
+import androidx.compose.ui.text.PlaceholderVerticalAlign
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -95,6 +101,7 @@ fun reducirMovimientoActivo(): Boolean {
  * - Subtítulo en type.body + icono de hoja color.leaf (12dp)
  * - Acción a la derecha opcional: avatar circular de 36dp
  * - Flecha de volver opcional (24pt con zona táctil mínima 48x48)
+ * `hojaInline` pone la hoja al final del texto del subtítulo (puede ocupar 2 líneas).
  */
 @Composable
 fun EncabezadoEcoSmart(
@@ -107,6 +114,9 @@ fun EncabezadoEcoSmart(
     mostrarHojaSubtitulo: Boolean = true,
     onAvatar: (() -> Unit)? = null,
     onVolver: (() -> Unit)? = null,
+    estiloTitulo: TextStyle = TypeTitle,
+    colorTitulo: Color = ColorTextPrimary,
+    hojaInline: Boolean = false,
 ) {
     Row(
         modifier = modifier
@@ -144,8 +154,8 @@ fun EncabezadoEcoSmart(
                 } else if (titulo != null) {
                     Text(
                         text = titulo,
-                        style = TypeTitle,
-                        color = ColorTextPrimary,
+                        style = estiloTitulo,
+                        color = colorTitulo,
                     )
                 } else {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -163,7 +173,33 @@ fun EncabezadoEcoSmart(
                     }
                 }
 
-                if (subtitulo != null) {
+                if (subtitulo != null && hojaInline) {
+                    val texto = buildAnnotatedString {
+                        append(subtitulo)
+                        if (mostrarHojaSubtitulo) {
+                            append(" ")
+                            appendInlineContent(ID_HOJA_INLINE, " ")
+                        }
+                    }
+                    val hoja = iconoHoja()
+                    Text(
+                        text = texto,
+                        style = TypeBody,
+                        color = ColorTextSecondary,
+                        inlineContent = mapOf(
+                            ID_HOJA_INLINE to InlineTextContent(
+                                Placeholder(12.sp, 12.sp, PlaceholderVerticalAlign.Center),
+                            ) {
+                                Icon(
+                                    hoja,
+                                    contentDescription = null,
+                                    tint = ColorLeaf,
+                                    modifier = Modifier.size(12.dp),
+                                )
+                            },
+                        ),
+                    )
+                } else if (subtitulo != null) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -178,7 +214,7 @@ fun EncabezadoEcoSmart(
                                 iconoHoja(),
                                 contentDescription = null,
                                 tint = ColorLeaf,
-                                modifier = Modifier.size(12.dp),
+                                modifier = Modifier.size(12.dp).testTag(TAG_HOJA_SUBTITULO),
                             )
                         }
                     }
@@ -204,6 +240,9 @@ fun EncabezadoEcoSmart(
         }
     }
 }
+
+private const val ID_HOJA_INLINE = "hojaSubtitulo"
+const val TAG_HOJA_SUBTITULO = "HojaSubtitulo"
 
 enum class PestanaInferior { INICIO, ACTIVIDADES, RECOMPENSAS, EDUCACION, PERFIL }
 
@@ -654,109 +693,6 @@ fun EnlaceSeccion(
             style = TypeLink,
             color = ColorGreen700,
         )
-    }
-}
-
-/**
- * Tarjeta de contenido de video (C-09): esquinas radius.media (20dp), degradé oscuro inferior,
- * botón de reproducir circular de 32dp, título truncado con puntos suspensivos y metadato opcional.
- * Variantes: compacta (150 x 100 pt) y ancha (fillMaxWidth x 100 pt).
- */
-@Composable
-fun TarjetaVideo(
-    titulo: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    imagenDrawableRes: Int? = null,
-    colorFondoFallback: Color = VerdeMedio,
-    metadato: String? = null,
-    esCompacta: Boolean = true,
-) {
-    val anchoModifier = if (esCompacta) Modifier.width(150.dp) else Modifier.fillMaxWidth()
-
-    Card(
-        modifier = modifier
-            .then(anchoModifier)
-            .height(100.dp)
-            .clickable(onClick = onClick)
-            .semantics(mergeDescendants = true) {
-                contentDescription = if (metadato != null) "$titulo, $metadato" else titulo
-            },
-        shape = FormaMedia,
-        colors = CardDefaults.cardColors(containerColor = colorFondoFallback),
-    ) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            if (imagenDrawableRes != null) {
-                Image(
-                    painter = painterResource(imagenDrawableRes),
-                    contentDescription = null,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop,
-                )
-            } else {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(colorFondoFallback),
-                )
-            }
-
-            // Degradé oscuro inferior para contraste mínimo 4.5:1 con texto blanco (RF-UI-015)
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(Color.Transparent, Color(0xCC000000)),
-                            startY = 0f,
-                        ),
-                    ),
-            )
-
-            // Botón ▶ circular semitransparente de 32pt abajo a la izquierda
-            Box(
-                modifier = Modifier
-                    .padding(start = 10.dp, bottom = 10.dp)
-                    .size(32.dp)
-                    .align(Alignment.BottomStart)
-                    .clip(CircleShape)
-                    .background(Color(0x80000000)),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    Icons.Filled.PlayArrow,
-                    contentDescription = "Reproducir",
-                    tint = Color.White,
-                    modifier = Modifier.size(20.dp),
-                )
-            }
-
-            // Título y metadatos
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .align(Alignment.BottomStart)
-                    .padding(start = 48.dp, end = 8.dp, bottom = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(2.dp),
-            ) {
-                Text(
-                    text = titulo,
-                    style = TypeCardTitle,
-                    color = Color.White,
-                    maxLines = if (metadato != null) 1 else 2,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                if (metadato != null) {
-                    Text(
-                        text = metadato,
-                        style = TypeMeta,
-                        color = CremaTexto,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-            }
-        }
     }
 }
 

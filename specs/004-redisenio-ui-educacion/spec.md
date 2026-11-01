@@ -4,7 +4,7 @@
 
 **Created**: 2026-10-28
 
-**Status**: Draft
+**Status**: Implemented
 
 **Input**: User description: "Reconstrucción de la sección Educación: lecciones ilustradas sin solapas y detalle de lección. Este módulo continúa a 003-reconstruccion-ui y reemplaza únicamente lo que esa spec define para Educación (RF-UI-013, escenario 3 de la Historia 3, AC-16 y AC-17), y por extensión las tarjetas educativas de Inicio. No cambia reglas de negocio, puntaje, racha, niveles, verificación por IA ni persistencia (RF-UI-001). La fuente de verdad visual son los tableros 'E1 · Educación · listado' y 'E2 · Lección ilustrada' del lienzo de Claude Design."
 

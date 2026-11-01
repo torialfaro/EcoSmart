@@ -65,6 +65,30 @@ val ColorRachaTextoNumero = Color(0xFF6B3300)
 val ColorRachaTextoMensaje = Color(0xFF6B4A12)
 val ColorRecompensaCardBg = Color(0xFFFFF1D6)
 
+// Tokens de Educación (spec 004, RF-ED-018): fondos pastel de ilustración y textos de lectura
+val ColorPastelReciclar = ColorGreen100
+val ColorPastelReutilizar = Color(0xFFFFE8BE)
+val ColorPastelCaminar = Color(0xFFE3F2F6)
+val ColorPastelAux1 = Color(0xFFDCEFE6)
+val ColorPastelAux2 = Color(0xFFE4EEF3)
+val ColorPastelAux3 = Color(0xFFDFF0E6)
+val ColorTextoSecundarioFuerte = Color(0xFF3E4A40)
+val ColorTextoLectura = Color(0xFF4A554C)
+
+// Chips de categoría (C-14)
+val ColorChipReciclarFondo = ColorGreen100
+val ColorChipReciclarTexto = ColorGreen700
+val ColorChipReutilizarFondo = ColorRecompensaCardBg
+val ColorChipReutilizarTexto = Color(0xFF8A5A00)
+val ColorChipCaminarFondo = ColorPastelAux3
+val ColorChipCaminarTexto = ColorGreen500
+
+// Tip (C-16): alias semánticos de los tonos cálidos ya definidos para Racha/Recompensas
+val ColorTipFondo = ColorRecompensaCardBg
+val ColorTipBorde = ColorRachaBorde
+val ColorTipTitulo = ColorRachaTextoNumero
+val ColorTipTexto = ColorRachaTextoMensaje
+
 private val EsquemaClaro = lightColorScheme(
     primary = VerdeBoton,
     onPrimary = CremaTexto,
@@ -127,6 +151,14 @@ val TypeMeta = TextStyle(fontFamily = Nunito, fontWeight = FontWeight.Normal, fo
 val TypeChip = TextStyle(fontFamily = Nunito, fontWeight = FontWeight.Medium, fontSize = 12.sp)
 val TypeTab = TextStyle(fontFamily = Nunito, fontWeight = FontWeight.Medium, fontSize = 10.sp)
 val TypeLink = TextStyle(fontFamily = Nunito, fontWeight = FontWeight.SemiBold, fontSize = 12.sp)
+
+// Tipografías de Educación (spec 004, RF-ED-018): tamaño/interlineado según los tableros E1 y E2
+val TypeTituloEducacion = TextStyle(fontFamily = Nunito, fontWeight = FontWeight.Bold, fontSize = 30.sp, lineHeight = 36.sp)
+val TypeTituloLeccion = TextStyle(fontFamily = Nunito, fontWeight = FontWeight.Bold, fontSize = 24.sp, lineHeight = 32.sp)
+val TypeTituloTarjeta = TextStyle(fontFamily = Nunito, fontWeight = FontWeight.Bold, fontSize = 18.sp, lineHeight = 24.sp)
+val TypeIntroLeccion = TextStyle(fontFamily = Nunito, fontWeight = FontWeight.Normal, fontSize = 15.sp, lineHeight = 22.sp)
+val TypeResumen = TextStyle(fontFamily = Nunito, fontWeight = FontWeight.Normal, fontSize = 14.sp, lineHeight = 20.sp)
+val TypeTextoPaso = TextStyle(fontFamily = Nunito, fontWeight = FontWeight.Normal, fontSize = 14.sp, lineHeight = 21.sp)
 
 val EcoSmartTypography = Typography(
     displayLarge = TypeDisplay,

@@ -1,0 +1,78 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues></ManuallySuppressedIssues>
+  <CurrentIssues>
+    <ID>CyclomaticComplexMethod:ComponentesEcoSmart.kt$@Composable fun TarjetaActividad( nombre: String, iconoRes: Int, progresoActual: Int, meta: Int, puntosBase: Int, onClick: () -&gt; Unit, modifier: Modifier = Modifier, esCompacta: Boolean = false, esMedible: Boolean = meta &gt; 1, unidad: String = "m", )</ID>
+    <ID>CyclomaticComplexMethod:RegistroScreen.kt$@Composable fun RegistroScreen( viewModel: RegistroViewModel = hiltViewModel(), onAutenticado: (Usuario) -&gt; Unit, )</ID>
+    <ID>FunctionNaming:ComponentesEcoSmart.kt$@Composable fun &lt;T&gt; FilaChipsFiltro( opciones: List&lt;T&gt;, seleccionado: T, onSeleccionar: (T) -&gt; Unit, etiqueta: (T) -&gt; String, modifier: Modifier = Modifier, )</ID>
+    <ID>FunctionNaming:ComponentesEcoSmart.kt$@Composable fun &lt;T&gt; SegmentoEcoSmart( opciones: List&lt;T&gt;, seleccionado: T, onSeleccionar: (T) -&gt; Unit, etiqueta: (T) -&gt; String, modifier: Modifier = Modifier, estaHabilitada: (T) -&gt; Boolean = { true }, )</ID>
+    <ID>FunctionNaming:ComponentesEcoSmart.kt$@Composable fun AnilloProgreso( valor: Int, meta: Int, modifier: Modifier = Modifier, unidad: String = "m", iconoCentro: @Composable (() -&gt; Unit)? = null, animado: Boolean = true, )</ID>
+    <ID>FunctionNaming:ComponentesEcoSmart.kt$@Composable fun BarraInferiorEcoSmart( seleccion: PestanaInferior, onInicio: () -&gt; Unit, onActividades: () -&gt; Unit, onRecompensas: () -&gt; Unit, onEducacion: () -&gt; Unit, onPerfil: () -&gt; Unit, )</ID>
+    <ID>FunctionNaming:ComponentesEcoSmart.kt$@Composable fun BarraProgresoLineal( progreso: Float, modifier: Modifier = Modifier, alto: Dp = 6.dp, colorRiel: Color = ColorTrack, colorRelleno: Color = ColorGreen500, animada: Boolean = true, )</ID>
+    <ID>FunctionNaming:ComponentesEcoSmart.kt$@Composable fun BotonPrincipal( texto: String, onClick: () -&gt; Unit, modifier: Modifier = Modifier, habilitado: Boolean = true, conFlecha: Boolean = false, )</ID>
+    <ID>FunctionNaming:ComponentesEcoSmart.kt$@Composable fun ChipFiltro( texto: String, seleccionado: Boolean, onClick: () -&gt; Unit, modifier: Modifier = Modifier, habilitado: Boolean = true, )</ID>
+    <ID>FunctionNaming:ComponentesEcoSmart.kt$@Composable fun EncabezadoEcoSmart( modifier: Modifier = Modifier, titulo: String? = null, subtitulo: String? = null, saludo: String? = null, inicialUsuario: String = "U", mostrarAvatar: Boolean = true, mostrarHojaSubtitulo: Boolean = true, onAvatar: (() -&gt; Unit)? = null, onVolver: (() -&gt; Unit)? = null, estiloTitulo: TextStyle = TypeTitle, colorTitulo: Color = ColorTextPrimary, hojaInline: Boolean = false, )</ID>
+    <ID>FunctionNaming:ComponentesEcoSmart.kt$@Composable fun EnlaceSeccion( texto: String = "Ver todas", onClick: () -&gt; Unit, modifier: Modifier = Modifier, )</ID>
+    <ID>FunctionNaming:ComponentesEcoSmart.kt$@Composable fun TarjetaActividad( nombre: String, iconoRes: Int, progresoActual: Int, meta: Int, puntosBase: Int, onClick: () -&gt; Unit, modifier: Modifier = Modifier, esCompacta: Boolean = false, esMedible: Boolean = meta &gt; 1, unidad: String = "m", )</ID>
+    <ID>FunctionNaming:ComponentesEcoSmart.kt$@Composable fun TarjetaEcoSmart( modifier: Modifier = Modifier, color: Color = VerdeTarjeta, contenido: @Composable () -&gt; Unit, )</ID>
+    <ID>FunctionNaming:ComponentesEcoSmart.kt$@Composable fun TarjetaPuntos( puntos: Int, onClick: () -&gt; Unit, modifier: Modifier = Modifier, etiqueta: String = "Tus puntos", iconoIzquierda: @Composable (() -&gt; Unit)? = null, )</ID>
+    <ID>FunctionNaming:ComponentesEcoSmart.kt$@Composable fun TarjetaRecompensa( titulo: String, costoPuntos: Int, onClick: () -&gt; Unit, modifier: Modifier = Modifier, imagenDrawableRes: Int? = null, colorFondoFallback: Color = VerdeTarjeta, )</ID>
+    <ID>FunctionOnlyReturningConstant:Actividad.kt$Actividad$fun estaDisponibleHoy(): Boolean</ID>
+    <ID>LongMethod:ComponentesEcoSmart.kt$@Composable fun &lt;T&gt; SegmentoEcoSmart( opciones: List&lt;T&gt;, seleccionado: T, onSeleccionar: (T) -&gt; Unit, etiqueta: (T) -&gt; String, modifier: Modifier = Modifier, estaHabilitada: (T) -&gt; Boolean = { true }, )</ID>
+    <ID>LongMethod:ComponentesEcoSmart.kt$@Composable fun AnilloProgreso( valor: Int, meta: Int, modifier: Modifier = Modifier, unidad: String = "m", iconoCentro: @Composable (() -&gt; Unit)? = null, animado: Boolean = true, )</ID>
+    <ID>LongMethod:ComponentesEcoSmart.kt$@Composable fun BarraInferiorEcoSmart( seleccion: PestanaInferior, onInicio: () -&gt; Unit, onActividades: () -&gt; Unit, onRecompensas: () -&gt; Unit, onEducacion: () -&gt; Unit, onPerfil: () -&gt; Unit, )</ID>
+    <ID>LongMethod:ComponentesEcoSmart.kt$@Composable fun EncabezadoEcoSmart( modifier: Modifier = Modifier, titulo: String? = null, subtitulo: String? = null, saludo: String? = null, inicialUsuario: String = "U", mostrarAvatar: Boolean = true, mostrarHojaSubtitulo: Boolean = true, onAvatar: (() -&gt; Unit)? = null, onVolver: (() -&gt; Unit)? = null, estiloTitulo: TextStyle = TypeTitle, colorTitulo: Color = ColorTextPrimary, hojaInline: Boolean = false, )</ID>
+    <ID>LongMethod:ComponentesEcoSmart.kt$@Composable fun TarjetaActividad( nombre: String, iconoRes: Int, progresoActual: Int, meta: Int, puntosBase: Int, onClick: () -&gt; Unit, modifier: Modifier = Modifier, esCompacta: Boolean = false, esMedible: Boolean = meta &gt; 1, unidad: String = "m", )</ID>
+    <ID>LongMethod:ComponentesEcoSmart.kt$@Composable fun TarjetaPuntos( puntos: Int, onClick: () -&gt; Unit, modifier: Modifier = Modifier, etiqueta: String = "Tus puntos", iconoIzquierda: @Composable (() -&gt; Unit)? = null, )</ID>
+    <ID>LongMethod:ComponentesEcoSmart.kt$@Composable fun TarjetaRecompensa( titulo: String, costoPuntos: Int, onClick: () -&gt; Unit, modifier: Modifier = Modifier, imagenDrawableRes: Int? = null, colorFondoFallback: Color = VerdeTarjeta, )</ID>
+    <ID>LongMethod:MigracionDatosLocales.kt$MigracionDatosLocales$suspend fun ejecutarSiCorresponde()</ID>
+    <ID>LongMethod:VerificarFotoConIA.kt$VerificarFotoConIA$suspend operator fun invoke(datos: DatosVerificacionFoto): ResultadoVerificarFotoConIA</ID>
+    <ID>LongParameterList:AplicarTopeDiario.kt$AplicarTopeDiario$( usuarioId: UsuarioId, actividadId: ActividadId, categoria: CategoriaActividad, resultado: ResultadoVerificacion, motivoIA: String?, huellaImagen: String?, pasosRegistrados: Int?, cantidadParaPuntaje: Int, )</ID>
+    <ID>LongParameterList:ComponentesEcoSmart.kt$( modifier: Modifier = Modifier, titulo: String? = null, subtitulo: String? = null, saludo: String? = null, inicialUsuario: String = "U", mostrarAvatar: Boolean = true, mostrarHojaSubtitulo: Boolean = true, onAvatar: (() -&gt; Unit)? = null, onVolver: (() -&gt; Unit)? = null, estiloTitulo: TextStyle = TypeTitle, colorTitulo: Color = ColorTextPrimary, hojaInline: Boolean = false, )</ID>
+    <ID>LongParameterList:ComponentesEcoSmart.kt$( nombre: String, iconoRes: Int, progresoActual: Int, meta: Int, puntosBase: Int, onClick: () -&gt; Unit, modifier: Modifier = Modifier, esCompacta: Boolean = false, esMedible: Boolean = meta &gt; 1, unidad: String = "m", )</ID>
+    <ID>LongParameterList:ComponentesEcoSmart.kt$( opciones: List&lt;T&gt;, seleccionado: T, onSeleccionar: (T) -&gt; Unit, etiqueta: (T) -&gt; String, modifier: Modifier = Modifier, estaHabilitada: (T) -&gt; Boolean = { true }, )</ID>
+    <ID>LongParameterList:ComponentesEcoSmart.kt$( progreso: Float, modifier: Modifier = Modifier, alto: Dp = 6.dp, colorRiel: Color = ColorTrack, colorRelleno: Color = ColorGreen500, animada: Boolean = true, )</ID>
+    <ID>LongParameterList:ComponentesEcoSmart.kt$( seleccion: PestanaInferior, onInicio: () -&gt; Unit, onActividades: () -&gt; Unit, onRecompensas: () -&gt; Unit, onEducacion: () -&gt; Unit, onPerfil: () -&gt; Unit, )</ID>
+    <ID>LongParameterList:ComponentesEcoSmart.kt$( titulo: String, costoPuntos: Int, onClick: () -&gt; Unit, modifier: Modifier = Modifier, imagenDrawableRes: Int? = null, colorFondoFallback: Color = VerdeTarjeta, )</ID>
+    <ID>LongParameterList:ComponentesEcoSmart.kt$( valor: Int, meta: Int, modifier: Modifier = Modifier, unidad: String = "m", iconoCentro: @Composable (() -&gt; Unit)? = null, animado: Boolean = true, )</ID>
+    <ID>LongParameterList:EcoGptClient.kt$EcoGptClient$( @Header("X-EcoGPT-Api-Key") apiKey: String, @Part imagen: MultipartBody.Part, @Part("categoria") categoria: RequestBody, @Part("resultadoEsperado") resultadoEsperado: RequestBody, @Part("descripcionUsuario") descripcionUsuario: RequestBody, @Part("huellasImagenesAprobadasPrevias") huellasImagenesAprobadasPrevias: RequestBody, )</ID>
+    <ID>LongParameterList:VerificacionCaminataScreen.kt$VerificacionCaminataViewModel$( savedStateHandle: SavedStateHandle, @ApplicationContext private val context: Context, private val podometroProvider: PodometroProvider, private val store: CaminataEnCursoStore, private val sesionUsuario: SesionUsuario, private val evaluarEstadoPermiso: EvaluarEstadoPermiso, private val backendConfianzaClient: BackendConfianzaClient, private val dispositivoIdProvider: DispositivoIdProvider, private val registrarCaminata: RegistrarCaminata, )</ID>
+    <ID>MatchingDeclarationName:EcoSmartNavHost.kt$EcoSmartRoute</ID>
+    <ID>MatchingDeclarationName:EncabezadoConUsuario.kt$EncabezadoViewModel : ViewModel</ID>
+    <ID>MaxLineLength:ComponentesEcoSmart.kt$/** Barra inferior Inicio / Actividades / Recompensas / Educación / Perfil del mockup (RF-UI-002b, RF-UI-002c). Solo iconos, sin etiqueta de texto. */</ID>
+    <ID>MaxLineLength:HistorialScreen.kt$Row</ID>
+    <ID>MaxLineLength:HistorialViewModel.kt$HistorialViewModel$val nuevos = faltantes.mapNotNull { id: ActividadId -&gt; actividadRepository.buscarPorId(id)?.let { id.valor to it.descripcionCorta } }</ID>
+    <ID>MaxLineLength:VerificacionCaminataScreen.kt$text = "La caminata sigue en segundo plano: podés salir de esta pantalla o de la app. Se completa sola al llegar a la meta y, si no llegás hoy, se descarta a medianoche."</ID>
+    <ID>ReturnCount:CambiarContrasena.kt$CambiarContrasena$suspend operator fun invoke( usuarioId: UsuarioId, contrasenaActual: String, contrasenaNueva: String, ): ResultadoCambioContrasena</ID>
+    <ID>ReturnCount:CaminataEnCursoStore.kt$CaminataEnCursoStore$fun descartarSiVencio(): Boolean</ID>
+    <ID>ReturnCount:EditarPerfil.kt$EditarPerfil$suspend operator fun invoke(usuarioId: UsuarioId, datos: DatosPerfil): ResultadoEdicionPerfil</ID>
+    <ID>ReturnCount:IniciarSesion.kt$IniciarSesion$suspend operator fun invoke(email: String, contrasenaPlana: String): ResultadoInicioSesion</ID>
+    <ID>ReturnCount:RegistrarUsuario.kt$RegistrarUsuario$suspend operator fun invoke(datos: DatosRegistro): ResultadoRegistro</ID>
+    <ID>ReturnCount:RegistroVerificacion.kt$RegistroVerificacion$fun esDuplicadoDe(otro: RegistroVerificacion, umbralHamming: Int = UMBRAL_HAMMING_POR_DEFECTO): Boolean</ID>
+    <ID>ReturnCount:VerificacionCaminataScreen.kt$VerificacionCaminataViewModel$fun iniciarCaminata()</ID>
+    <ID>ReturnCount:VerificarFotoConIA.kt$VerificarFotoConIA$suspend operator fun invoke(datos: DatosVerificacionFoto): ResultadoVerificarFotoConIA</ID>
+    <ID>SwallowedException:BackendConfianzaClient.kt$BackendConfianzaClientConReintento$fallaTransitoria: IOException</ID>
+    <ID>SwallowedException:CambiarContrasena.kt$CambiarContrasena$credencialesInvalidas: FirebaseAuthInvalidCredentialsException</ID>
+    <ID>SwallowedException:IniciarSesion.kt$IniciarSesion$credencialesInvalidas: FirebaseAuthInvalidCredentialsException</ID>
+    <ID>SwallowedException:IniciarSesion.kt$IniciarSesion$usuarioInvalido: FirebaseAuthInvalidUserException</ID>
+    <ID>SwallowedException:PerfilViewModel.kt$PerfilViewModel$error: Exception</ID>
+    <ID>SwallowedException:PuntosVerdesSyncWorker.kt$PuntosVerdesSyncWorker$error: HttpException</ID>
+    <ID>SwallowedException:PuntosVerdesSyncWorker.kt$PuntosVerdesSyncWorker$error: IOException</ID>
+    <ID>SwallowedException:RegistrarUsuario.kt$RegistrarUsuario$contrasenaDebil: FirebaseAuthWeakPasswordException</ID>
+    <ID>SwallowedException:RegistrarUsuario.kt$RegistrarUsuario$emailInvalido: FirebaseAuthInvalidCredentialsException</ID>
+    <ID>SwallowedException:RegistrarUsuario.kt$RegistrarUsuario$yaRegistrado: FirebaseAuthUserCollisionException</ID>
+    <ID>SwallowedException:RegistroViewModel.kt$RegistroViewModel$errorFirebase: FirebaseException</ID>
+    <ID>SwallowedException:VerificacionFotoScreen.kt$error: Exception</ID>
+    <ID>SwallowedException:VerificacionFotoViewModel.kt$VerificacionFotoViewModel$error: Exception</ID>
+    <ID>SwallowedException:VerificarFotoConIA.kt$VerificarFotoConIA$primerError: IOException</ID>
+    <ID>SwallowedException:VerificarFotoConIA.kt$VerificarFotoConIA$sinConexion: IOException</ID>
+    <ID>SwallowedException:VerificarFotoConIA.kt$VerificarFotoConIA$timeout: InterruptedIOException</ID>
+    <ID>TooGenericExceptionCaught:PerfilViewModel.kt$PerfilViewModel$error: Exception</ID>
+    <ID>TooGenericExceptionCaught:VerificacionFotoScreen.kt$error: Exception</ID>
+    <ID>TooGenericExceptionCaught:VerificacionFotoViewModel.kt$VerificacionFotoViewModel$error: Exception</ID>
+    <ID>TooManyFunctions:ComponentesEcoSmart.kt$.ComponentesEcoSmart.kt</ID>
+    <ID>TooManyFunctions:PerfilScreen.kt$com.ecosmart.presentation.profile.PerfilScreen.kt</ID>
+    <ID>UnusedParameter:PuntosVerdesScreen.kt$barraInferior: @Composable () -&gt; Unit = {}</ID>
+    <ID>UnusedParameter:SesionUsuario.kt$SesionUsuario$usuarioId: UsuarioId</ID>
+  </CurrentIssues>
+</SmellBaseline>

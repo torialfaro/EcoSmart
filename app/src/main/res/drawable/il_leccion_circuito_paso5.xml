@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="320dp"
+    android:height="200dp"
+    android:viewportWidth="320"
+    android:viewportHeight="200">
+    <path android:fillColor="#DFF0E6" android:pathData="M0,0h320v200h-320z" />
+    <path android:fillColor="#C9E3C0" android:pathData="M0,165h320v35h-320z" />
+    <!-- Botella nueva -->
+    <path android:fillColor="#7FC4E0" android:pathData="M60,100h34v66h-34z" />
+    <path android:fillColor="#7FC4E0" android:pathData="M70,66h14v36h-14z" />
+    <path android:fillColor="#3E9BD6" android:pathData="M68,58h18v10h-18z" />
+    <!-- Banco de plaza -->
+    <path android:fillColor="#4FA24A" android:pathData="M150,92h130v14h-130zM150,114h130v14h-130z" />
+    <path android:fillColor="#1F5E34" android:pathData="M164,92h10v74h-10zM256,92h10v74h-10z" />
+    <path android:fillColor="#1F5E34" android:pathData="M150,138h130v10h-130z" />
+</vector>

@@ -1,0 +1,402 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<baseline version="1.0">
+    <file name="src/androidTest/kotlin/com/ecosmart/application/activity/VerificarFotoConIATest.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+    </file>
+    <file name="src/androidTest/kotlin/com/ecosmart/infrastructure/network/EcoGptClientTest.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+    </file>
+    <file name="src/androidTest/kotlin/com/ecosmart/infrastructure/persistence/RegistroVerificacionRepositoryImplTest.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+        <error line="39" column="26" source="standard:argument-list-wrapping" />
+        <error line="39" column="37" source="standard:argument-list-wrapping" />
+        <error line="39" column="61" source="standard:argument-list-wrapping" />
+        <error line="39" column="83" source="standard:argument-list-wrapping" />
+        <error line="39" column="107" source="standard:argument-list-wrapping" />
+        <error line="39" column="125" source="standard:argument-list-wrapping" />
+        <error line="39" column="140" source="standard:max-line-length" />
+        <error line="39" column="143" source="standard:argument-list-wrapping" />
+        <error line="40" column="26" source="standard:argument-list-wrapping" />
+        <error line="40" column="37" source="standard:argument-list-wrapping" />
+        <error line="40" column="61" source="standard:argument-list-wrapping" />
+        <error line="40" column="83" source="standard:argument-list-wrapping" />
+        <error line="40" column="107" source="standard:argument-list-wrapping" />
+        <error line="40" column="125" source="standard:argument-list-wrapping" />
+        <error line="40" column="141" source="standard:max-line-length" />
+        <error line="40" column="143" source="standard:argument-list-wrapping" />
+        <error line="41" column="26" source="standard:argument-list-wrapping" />
+        <error line="41" column="37" source="standard:argument-list-wrapping" />
+        <error line="41" column="63" source="standard:argument-list-wrapping" />
+        <error line="41" column="85" source="standard:argument-list-wrapping" />
+        <error line="41" column="110" source="standard:argument-list-wrapping" />
+        <error line="41" column="128" source="standard:argument-list-wrapping" />
+        <error line="41" column="141" source="standard:argument-list-wrapping" />
+        <error line="41" column="141" source="standard:max-line-length" />
+    </file>
+    <file name="src/androidTest/kotlin/com/ecosmart/infrastructure/persistence/RoomDaoTest.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+    </file>
+    <file name="src/androidTest/kotlin/com/ecosmart/infrastructure/persistence/UsuarioRepositoryImplTest.kt">
+        <error line="52" column="10" source="standard:annotation-spacing" />
+    </file>
+    <file name="src/androidTest/kotlin/com/ecosmart/presentation/profile/PerfilScreenTest.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+    </file>
+    <file name="src/androidTest/kotlin/com/ecosmart/presentation/theme/BotonPrincipalTest.kt">
+        <error line="8" column="1" source="standard:no-unused-imports" />
+    </file>
+    <file name="src/androidTest/kotlin/com/ecosmart/presentation/verification/VerificacionFotoScreenTest.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+        <error line="26" column="52" source="standard:function-expression-body" />
+    </file>
+    <file name="src/main/kotlin/com/ecosmart/app/EcoSmartApplication.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+    </file>
+    <file name="src/main/kotlin/com/ecosmart/application/activity/ObtenerActividadesFiltradas.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+    </file>
+    <file name="src/main/kotlin/com/ecosmart/application/activity/RegistrarCaminata.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+        <error line="96" column="1" source="standard:no-consecutive-blank-lines" />
+    </file>
+    <file name="src/main/kotlin/com/ecosmart/application/activity/VerificarFotoConIA.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+    </file>
+    <file name="src/main/kotlin/com/ecosmart/application/auth/CambiarContrasena.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+        <error line="49" column="1" source="standard:no-consecutive-blank-lines" />
+    </file>
+    <file name="src/main/kotlin/com/ecosmart/application/auth/EditarPerfil.kt">
+        <error line="27" column="5" source="standard:spacing-between-declarations-with-comments" />
+        <error line="29" column="5" source="standard:spacing-between-declarations-with-comments" />
+    </file>
+    <file name="src/main/kotlin/com/ecosmart/application/auth/IniciarSesion.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+        <error line="41" column="1" source="standard:no-consecutive-blank-lines" />
+    </file>
+    <file name="src/main/kotlin/com/ecosmart/application/auth/IniciarSesionConGoogle.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+        <error line="54" column="1" source="standard:no-consecutive-blank-lines" />
+    </file>
+    <file name="src/main/kotlin/com/ecosmart/application/auth/RegistrarUsuario.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+        <error line="35" column="5" source="standard:spacing-between-declarations-with-comments" />
+        <error line="37" column="5" source="standard:spacing-between-declarations-with-comments" />
+        <error line="90" column="1" source="standard:no-consecutive-blank-lines" />
+    </file>
+    <file name="src/main/kotlin/com/ecosmart/infrastructure/di/NetworkModule.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+    </file>
+    <file name="src/main/kotlin/com/ecosmart/infrastructure/di/PuntosVerdesNetworkModule.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+    </file>
+    <file name="src/main/kotlin/com/ecosmart/infrastructure/firebase/FirebaseIdTokenInterceptor.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+    </file>
+    <file name="src/main/kotlin/com/ecosmart/infrastructure/network/BackendConfianzaClient.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+    </file>
+    <file name="src/main/kotlin/com/ecosmart/infrastructure/network/PuntosVerdesSyncWorker.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+    </file>
+    <file name="src/main/kotlin/com/ecosmart/infrastructure/persistence/ActividadRepositoryImpl.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+    </file>
+    <file name="src/main/kotlin/com/ecosmart/infrastructure/persistence/PermisoRepositoryImpl.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+    </file>
+    <file name="src/main/kotlin/com/ecosmart/infrastructure/persistence/RegistroVerificacionRepositoryImpl.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+        <error line="34" column="66" source="standard:function-expression-body" />
+    </file>
+    <file name="src/main/kotlin/com/ecosmart/infrastructure/persistence/UsuarioRepositoryImpl.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+        <error line="56" column="87" source="standard:function-expression-body" />
+    </file>
+    <file name="src/main/kotlin/com/ecosmart/infrastructure/persistence/room/AppDatabase.kt">
+        <error line="43" column="1" source="standard:spacing-between-declarations-with-annotations" />
+    </file>
+    <file name="src/main/kotlin/com/ecosmart/infrastructure/sensors/CamaraProvider.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+    </file>
+    <file name="src/main/kotlin/com/ecosmart/infrastructure/sensors/CaminataEnCursoStore.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+    </file>
+    <file name="src/main/kotlin/com/ecosmart/infrastructure/sensors/CaminataService.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+        <error line="71" column="73" source="standard:multiline-if-else" />
+        <error line="71" column="93" source="standard:multiline-if-else" />
+    </file>
+    <file name="src/main/kotlin/com/ecosmart/infrastructure/sensors/PasosDelDiaRepositoryImpl.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+    </file>
+    <file name="src/main/kotlin/com/ecosmart/infrastructure/sensors/PodometroProvider.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+    </file>
+    <file name="src/main/kotlin/com/ecosmart/infrastructure/sensors/UbicacionProvider.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+    </file>
+    <file name="src/main/kotlin/com/ecosmart/infrastructure/session/SesionUsuario.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+    </file>
+    <file name="src/main/kotlin/com/ecosmart/presentation/activitydetail/ActividadDetalleScreen.kt">
+        <error line="19" column="1" source="standard:no-unused-imports" />
+        <error line="33" column="1" source="standard:no-unused-imports" />
+        <error line="68" column="1" source="standard:no-unused-imports" />
+    </file>
+    <file name="src/main/kotlin/com/ecosmart/presentation/activitydetail/ActividadDetalleViewModel.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+    </file>
+    <file name="src/main/kotlin/com/ecosmart/presentation/auth/PerfilEdicionScreen.kt">
+        <error line="32" column="1" source="standard:no-unused-imports" />
+    </file>
+    <file name="src/main/kotlin/com/ecosmart/presentation/auth/PerfilEdicionViewModel.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+    </file>
+    <file name="src/main/kotlin/com/ecosmart/presentation/auth/RegistroViewModel.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+    </file>
+    <file name="src/main/kotlin/com/ecosmart/presentation/comun/EncabezadoConUsuario.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+    </file>
+    <file name="src/main/kotlin/com/ecosmart/presentation/home/HomeScreen.kt">
+        <error line="5" column="1" source="standard:no-unused-imports" />
+        <error line="6" column="1" source="standard:no-unused-imports" />
+        <error line="12" column="1" source="standard:no-unused-imports" />
+        <error line="15" column="1" source="standard:no-unused-imports" />
+        <error line="18" column="1" source="standard:no-unused-imports" />
+        <error line="22" column="1" source="standard:no-unused-imports" />
+        <error line="50" column="1" source="standard:no-unused-imports" />
+        <error line="188" column="1" source="standard:indent" />
+        <error line="189" column="1" source="standard:indent" />
+        <error line="190" column="1" source="standard:indent" />
+        <error line="191" column="1" source="standard:indent" />
+        <error line="192" column="1" source="standard:indent" />
+        <error line="193" column="1" source="standard:indent" />
+        <error line="194" column="1" source="standard:indent" />
+        <error line="195" column="1" source="standard:indent" />
+        <error line="196" column="1" source="standard:indent" />
+        <error line="197" column="1" source="standard:indent" />
+        <error line="198" column="1" source="standard:indent" />
+        <error line="199" column="1" source="standard:indent" />
+        <error line="200" column="1" source="standard:indent" />
+        <error line="201" column="1" source="standard:indent" />
+        <error line="202" column="1" source="standard:indent" />
+        <error line="203" column="1" source="standard:indent" />
+        <error line="204" column="1" source="standard:indent" />
+        <error line="205" column="1" source="standard:indent" />
+        <error line="206" column="1" source="standard:indent" />
+        <error line="207" column="1" source="standard:indent" />
+        <error line="208" column="1" source="standard:indent" />
+        <error line="209" column="1" source="standard:indent" />
+        <error line="211" column="1" source="standard:indent" />
+        <error line="212" column="1" source="standard:indent" />
+        <error line="213" column="1" source="standard:indent" />
+        <error line="214" column="1" source="standard:indent" />
+        <error line="215" column="1" source="standard:indent" />
+        <error line="216" column="1" source="standard:indent" />
+        <error line="217" column="1" source="standard:indent" />
+        <error line="218" column="1" source="standard:indent" />
+        <error line="219" column="1" source="standard:indent" />
+        <error line="220" column="1" source="standard:indent" />
+        <error line="221" column="1" source="standard:indent" />
+        <error line="222" column="1" source="standard:indent" />
+        <error line="223" column="1" source="standard:indent" />
+        <error line="224" column="1" source="standard:indent" />
+        <error line="225" column="1" source="standard:indent" />
+        <error line="226" column="1" source="standard:indent" />
+        <error line="227" column="1" source="standard:indent" />
+        <error line="229" column="1" source="standard:indent" />
+        <error line="230" column="1" source="standard:indent" />
+        <error line="231" column="1" source="standard:indent" />
+        <error line="232" column="1" source="standard:indent" />
+        <error line="234" column="1" source="standard:indent" />
+        <error line="235" column="1" source="standard:indent" />
+        <error line="236" column="1" source="standard:indent" />
+        <error line="237" column="1" source="standard:indent" />
+        <error line="238" column="1" source="standard:indent" />
+        <error line="239" column="1" source="standard:indent" />
+        <error line="240" column="1" source="standard:indent" />
+        <error line="241" column="1" source="standard:indent" />
+        <error line="242" column="1" source="standard:indent" />
+        <error line="243" column="1" source="standard:indent" />
+        <error line="245" column="1" source="standard:indent" />
+        <error line="246" column="1" source="standard:indent" />
+        <error line="247" column="1" source="standard:indent" />
+        <error line="248" column="1" source="standard:indent" />
+        <error line="249" column="1" source="standard:indent" />
+        <error line="250" column="1" source="standard:indent" />
+        <error line="251" column="1" source="standard:indent" />
+        <error line="252" column="1" source="standard:indent" />
+        <error line="254" column="1" source="standard:indent" />
+        <error line="255" column="1" source="standard:indent" />
+        <error line="256" column="1" source="standard:indent" />
+        <error line="257" column="1" source="standard:indent" />
+        <error line="258" column="1" source="standard:indent" />
+        <error line="259" column="1" source="standard:indent" />
+        <error line="260" column="1" source="standard:indent" />
+        <error line="261" column="1" source="standard:indent" />
+        <error line="262" column="1" source="standard:indent" />
+        <error line="263" column="1" source="standard:indent" />
+        <error line="264" column="1" source="standard:indent" />
+        <error line="265" column="1" source="standard:indent" />
+        <error line="266" column="1" source="standard:indent" />
+        <error line="267" column="1" source="standard:indent" />
+        <error line="268" column="1" source="standard:indent" />
+        <error line="269" column="1" source="standard:indent" />
+        <error line="270" column="1" source="standard:indent" />
+        <error line="271" column="1" source="standard:indent" />
+        <error line="273" column="1" source="standard:indent" />
+        <error line="274" column="1" source="standard:indent" />
+        <error line="275" column="1" source="standard:indent" />
+        <error line="276" column="1" source="standard:indent" />
+        <error line="277" column="1" source="standard:indent" />
+        <error line="278" column="1" source="standard:indent" />
+        <error line="279" column="1" source="standard:indent" />
+        <error line="280" column="1" source="standard:indent" />
+        <error line="281" column="1" source="standard:indent" />
+        <error line="282" column="1" source="standard:indent" />
+        <error line="283" column="1" source="standard:indent" />
+        <error line="284" column="1" source="standard:indent" />
+        <error line="285" column="1" source="standard:indent" />
+        <error line="286" column="1" source="standard:indent" />
+        <error line="287" column="1" source="standard:indent" />
+        <error line="288" column="1" source="standard:indent" />
+        <error line="289" column="1" source="standard:indent" />
+        <error line="290" column="1" source="standard:indent" />
+        <error line="291" column="1" source="standard:indent" />
+        <error line="292" column="1" source="standard:indent" />
+        <error line="293" column="1" source="standard:indent" />
+        <error line="295" column="1" source="standard:indent" />
+        <error line="296" column="1" source="standard:indent" />
+        <error line="297" column="1" source="standard:indent" />
+        <error line="298" column="1" source="standard:indent" />
+        <error line="299" column="1" source="standard:indent" />
+        <error line="300" column="1" source="standard:indent" />
+        <error line="301" column="1" source="standard:indent" />
+        <error line="302" column="1" source="standard:indent" />
+        <error line="304" column="1" source="standard:indent" />
+        <error line="305" column="1" source="standard:indent" />
+        <error line="306" column="1" source="standard:indent" />
+        <error line="307" column="1" source="standard:indent" />
+        <error line="308" column="1" source="standard:indent" />
+        <error line="309" column="1" source="standard:indent" />
+        <error line="310" column="1" source="standard:indent" />
+        <error line="311" column="1" source="standard:indent" />
+        <error line="312" column="1" source="standard:indent" />
+        <error line="314" column="1" source="standard:indent" />
+        <error line="315" column="1" source="standard:indent" />
+        <error line="316" column="1" source="standard:indent" />
+        <error line="317" column="1" source="standard:indent" />
+        <error line="318" column="1" source="standard:indent" />
+        <error line="319" column="1" source="standard:indent" />
+        <error line="321" column="1" source="standard:indent" />
+        <error line="322" column="1" source="standard:indent" />
+        <error line="323" column="1" source="standard:indent" />
+        <error line="324" column="1" source="standard:indent" />
+        <error line="325" column="1" source="standard:indent" />
+        <error line="326" column="1" source="standard:indent" />
+        <error line="327" column="1" source="standard:indent" />
+        <error line="328" column="1" source="standard:indent" />
+        <error line="329" column="1" source="standard:indent" />
+        <error line="330" column="1" source="standard:indent" />
+        <error line="331" column="1" source="standard:indent" />
+        <error line="332" column="1" source="standard:indent" />
+        <error line="333" column="1" source="standard:indent" />
+        <error line="334" column="1" source="standard:indent" />
+        <error line="335" column="1" source="standard:indent" />
+        <error line="336" column="1" source="standard:indent" />
+        <error line="337" column="1" source="standard:indent" />
+        <error line="338" column="1" source="standard:indent" />
+    </file>
+    <file name="src/main/kotlin/com/ecosmart/presentation/home/HomeViewModel.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+    </file>
+    <file name="src/main/kotlin/com/ecosmart/presentation/home/PuntosVerdesScreen.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+        <error line="10" column="1" source="standard:no-unused-imports" />
+        <error line="11" column="1" source="standard:no-unused-imports" />
+        <error line="22" column="1" source="standard:no-unused-imports" />
+    </file>
+    <file name="src/main/kotlin/com/ecosmart/presentation/permissions/SolicitudPermisosViewModel.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+    </file>
+    <file name="src/main/kotlin/com/ecosmart/presentation/profile/HistorialScreen.kt">
+        <error line="112" column="13" source="standard:argument-list-wrapping" />
+        <error line="112" column="49" source="standard:argument-list-wrapping" />
+        <error line="112" column="94" source="standard:argument-list-wrapping" />
+        <error line="112" column="99" source="standard:argument-list-wrapping" />
+        <error line="112" column="102" source="standard:argument-list-wrapping" />
+        <error line="112" column="141" source="standard:max-line-length" />
+        <error line="112" column="148" source="standard:argument-list-wrapping" />
+    </file>
+    <file name="src/main/kotlin/com/ecosmart/presentation/profile/HistorialViewModel.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+        <error line="85" column="62" source="standard:function-literal" />
+        <error line="85" column="96" source="standard:argument-list-wrapping" />
+        <error line="85" column="98" source="standard:argument-list-wrapping" />
+        <error line="85" column="105" source="standard:function-literal" />
+        <error line="85" column="139" source="standard:function-literal" />
+        <error line="85" column="141" source="standard:function-literal" />
+        <error line="85" column="141" source="standard:max-line-length" />
+    </file>
+    <file name="src/main/kotlin/com/ecosmart/presentation/profile/PerfilScreen.kt">
+        <error line="28" column="1" source="standard:no-unused-imports" />
+        <error line="48" column="1" source="standard:no-unused-imports" />
+        <error line="52" column="1" source="standard:no-unused-imports" />
+        <error line="53" column="1" source="standard:no-unused-imports" />
+        <error line="57" column="1" source="standard:no-unused-imports" />
+        <error line="69" column="1" source="standard:no-unused-imports" />
+        <error line="76" column="1" source="standard:no-unused-imports" />
+        <error line="91" column="1" source="standard:no-unused-imports" />
+        <error line="283" column="40" source="standard:argument-list-wrapping" />
+        <error line="284" column="41" source="standard:argument-list-wrapping" />
+        <error line="285" column="41" source="standard:argument-list-wrapping" />
+        <error line="288" column="41" source="standard:argument-list-wrapping" />
+        <error line="289" column="40" source="standard:argument-list-wrapping" />
+        <error line="290" column="41" source="standard:argument-list-wrapping" />
+    </file>
+    <file name="src/main/kotlin/com/ecosmart/presentation/profile/PerfilViewModel.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+        <error line="10" column="1" source="standard:no-unused-imports" />
+    </file>
+    <file name="src/main/kotlin/com/ecosmart/presentation/theme/ComponentesEcoSmart.kt">
+        <error line="34" column="1" source="standard:no-unused-imports" />
+        <error line="54" column="1" source="standard:no-unused-imports" />
+        <error line="56" column="1" source="standard:no-unused-imports" />
+    </file>
+    <file name="src/main/kotlin/com/ecosmart/presentation/verification/VerificacionCaminataScreen.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+        <error line="62" column="1" source="standard:no-unused-imports" />
+        <error line="63" column="1" source="standard:no-unused-imports" />
+        <error line="298" column="141" source="standard:max-line-length" />
+    </file>
+    <file name="src/main/kotlin/com/ecosmart/presentation/verification/VerificacionFotoScreen.kt">
+        <error line="908" column="1" source="standard:no-consecutive-blank-lines" />
+    </file>
+    <file name="src/main/kotlin/com/ecosmart/presentation/verification/VerificacionFotoViewModel.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+    </file>
+    <file name="src/test/kotlin/com/ecosmart/application/activity/VerificarFotoConIATest.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+    </file>
+    <file name="src/test/kotlin/com/ecosmart/application/auth/RegistrarUsuarioTest.kt">
+        <error line="115" column="1" source="standard:no-consecutive-blank-lines" />
+    </file>
+    <file name="src/test/kotlin/com/ecosmart/application/profile/CalcularMetricasPerfilTest.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+    </file>
+    <file name="src/test/kotlin/com/ecosmart/domain/model/RegistroVerificacionTest.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+    </file>
+    <file name="src/test/kotlin/com/ecosmart/domain/model/UsuarioTest.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+    </file>
+    <file name="src/test/kotlin/com/ecosmart/infrastructure/migration/MigracionDatosLocalesTest.kt">
+        <error line="49" column="16" source="standard:argument-list-wrapping" />
+        <error line="49" column="30" source="standard:argument-list-wrapping" />
+        <error line="49" column="42" source="standard:argument-list-wrapping" />
+        <error line="49" column="67" source="standard:argument-list-wrapping" />
+        <error line="49" column="80" source="standard:argument-list-wrapping" />
+    </file>
+</baseline>

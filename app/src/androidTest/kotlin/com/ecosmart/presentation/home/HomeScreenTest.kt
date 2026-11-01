@@ -6,6 +6,8 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.ecosmart.app.R
 import com.ecosmart.domain.valueobject.CategoriaActividad
+import com.ecosmart.presentation.education.LeccionUi
+import com.ecosmart.presentation.education.PasoLeccionUi
 import com.ecosmart.presentation.theme.EcoSmartTheme
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -77,29 +79,104 @@ class HomeScreenTest {
         composeTestRule.onNodeWithText("3/4 actividades").assertExists()
     }
 
+    private fun leccion(id: String, titulo: String) = LeccionUi(
+        id = id,
+        titulo = titulo,
+        categoria = CategoriaActividad.RECICLAR,
+        duracionMinutos = 4,
+        resumen = "Resumen de $titulo",
+        introduccion = "Introducción",
+        ilustracionPortada = null,
+        descripcionPortada = "Portada",
+        pasos = List(3) { PasoLeccionUi("Paso ${it + 1}", "Texto", null, "") },
+        tip = null,
+        textoCierre = null,
+    )
+
     @Test
-    fun homeScreen_muestraTarjetaPuntosYCarruseles() {
+    fun homeScreen_muestraTarjetaPuntosYTarjetasDeLeccion() {
         composeTestRule.setContent {
             EcoSmartTheme {
                 HomeContenido(
                     actividades = cuatroActividadesTresCompletadas(),
                     puntosTotales = 1250,
                     onSeleccionarActividad = {},
+                    leccionesInicio = listOf(
+                        leccion("l1", "El circuito del reciclaje en CABA"),
+                        leccion("l2", "Cómo separar tus residuos"),
+                    ),
                 )
             }
         }
 
-        // Puntos
         composeTestRule.onNodeWithText("Tus puntos").assertExists()
         composeTestRule.onNodeWithText("1.250").assertExists()
-
-        // Títulos de secciones
         composeTestRule.onNodeWithText("Actividades de hoy").assertExists()
         composeTestRule.onNodeWithText("Contenido para vos").assertExists()
 
-        // Videos en carrusel
-        composeTestRule.onNodeWithText("¿Cómo afecta la contaminación?").assertExists()
-        composeTestRule.onNodeWithText("Tu guía de reciclaje").assertExists()
+        // Tarjetas de lección y ninguna de video
+        composeTestRule.onNodeWithText("El circuito del reciclaje en CABA").assertExists()
+        composeTestRule.onNodeWithText("Cómo separar tus residuos").assertExists()
+        composeTestRule.onNodeWithText("¿Cómo afecta la contaminación?").assertDoesNotExist()
+        composeTestRule.onNodeWithText("Tu guía de reciclaje").assertDoesNotExist()
+    }
+
+    @Test
+    fun homeScreen_muestraComoMaximoDosTarjetasDeLeccion() {
+        composeTestRule.setContent {
+            EcoSmartTheme {
+                HomeContenido(
+                    actividades = cuatroActividadesTresCompletadas(),
+                    puntosTotales = 1250,
+                    onSeleccionarActividad = {},
+                    leccionesInicio = listOf(
+                        leccion("l1", "Primera"),
+                        leccion("l2", "Segunda"),
+                        leccion("l3", "Tercera"),
+                    ),
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithText("Primera").assertExists()
+        composeTestRule.onNodeWithText("Segunda").assertExists()
+        composeTestRule.onNodeWithText("Tercera").assertDoesNotExist()
+    }
+
+    @Test
+    fun homeScreen_sinLecciones_omiteLaSeccionContenidoParaVos() {
+        composeTestRule.setContent {
+            EcoSmartTheme {
+                HomeContenido(
+                    actividades = cuatroActividadesTresCompletadas(),
+                    puntosTotales = 1250,
+                    onSeleccionarActividad = {},
+                    leccionesInicio = emptyList(),
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithText("Actividades de hoy").assertExists()
+        composeTestRule.onNodeWithText("Contenido para vos").assertDoesNotExist()
+    }
+
+    @Test
+    fun homeScreen_clickEnTarjetaDeLeccion_invocaOnVerLeccionConElId() {
+        var abierta = ""
+        composeTestRule.setContent {
+            EcoSmartTheme {
+                HomeContenido(
+                    actividades = cuatroActividadesTresCompletadas(),
+                    puntosTotales = 1250,
+                    onSeleccionarActividad = {},
+                    leccionesInicio = listOf(leccion("circuito", "El circuito del reciclaje en CABA")),
+                    onVerLeccion = { abierta = it },
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithText("El circuito del reciclaje en CABA").performClick()
+        assertEquals("circuito", abierta)
     }
 
     @Test

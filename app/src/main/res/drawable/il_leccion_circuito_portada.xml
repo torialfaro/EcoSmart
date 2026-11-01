@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="360dp"
+    android:height="240dp"
+    android:viewportWidth="360"
+    android:viewportHeight="240">
+    <path android:fillColor="#E6F2DF" android:pathData="M0,0h360v240h-360z" />
+    <path android:fillColor="#C9E3C0" android:pathData="M0,200h360v40h-360z" />
+    <!-- Contenedor verde -->
+    <path android:fillColor="#2E7D3E" android:pathData="M220,90h100v110h-100z" />
+    <path android:fillColor="#1F5E34" android:pathData="M212,78h116v18h-116z" />
+    <path android:fillColor="#E6F2DF" android:pathData="M262,125a8,8 0,1 1,16 0a8,8 0,1 1,-16 0z" />
+    <!-- Botella -->
+    <path android:fillColor="#7FC4E0" android:pathData="M60,110h30v90h-30z" />
+    <path android:fillColor="#7FC4E0" android:pathData="M68,70h14v40h-14z" />
+    <path android:fillColor="#3E9BD6" android:pathData="M66,62h18v10h-18z" />
+    <!-- Lata -->
+    <path android:fillColor="#E9751A" android:pathData="M110,130h38v70h-38z" />
+    <path android:fillColor="#FFE8BE" android:pathData="M110,152h38v22h-38z" />
+    <!-- Envase de cartón -->
+    <path android:fillColor="#FFB84D" android:pathData="M158,120h40v80h-40z" />
+    <path android:fillColor="#FFF1D6" android:pathData="M158,120l20,-18l20,18z" />
+</vector>

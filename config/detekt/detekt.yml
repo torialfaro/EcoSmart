@@ -5,9 +5,11 @@
 complexity:
   LongMethod:
     threshold: 40
+    ignoreAnnotated: ['Composable'] # los @Composable de UI declaran árboles largos
   LongParameterList:
     functionThreshold: 6
     constructorThreshold: 8
+    ignoreAnnotated: ['Composable'] # los @Composable reciben callbacks y modifier por convención
   TooManyFunctions:
     thresholdInClasses: 15
 
@@ -16,9 +18,12 @@ style:
     active: false # se usa TODO/FIXME normalmente durante /speckit.implement
   MagicNumber:
     active: false # 133 pasos, 3km, 30s, umbrales de nivel, etc. son constantes de negocio, no "mágicas"
+  MaxLineLength:
+    maxLineLength: 140 # igual que ktlint (.editorconfig)
 
 naming:
   FunctionNaming:
     active: true
+    ignoreAnnotated: ['Composable'] # los @Composable se nombran en PascalCase
   ClassNaming:
     active: true
