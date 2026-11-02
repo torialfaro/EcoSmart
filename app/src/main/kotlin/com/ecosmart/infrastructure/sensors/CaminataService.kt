@@ -77,15 +77,22 @@ class CaminataService : Service() {
     }
 
     private suspend fun completar(actual: EstadoCaminata.EnCurso, logrados: Int) {
-        val resultado = registrarCaminata(
-            DatosCaminata(
-                usuarioId = UsuarioId(actual.usuarioId),
-                actividadId = ActividadId(actual.actividadId),
-                metaPasos = actual.metaPasos,
-                pasosBase = 0,
-                pasosActuales = logrados,
-            ),
-        )
+        val resultado = try {
+            registrarCaminata(
+                DatosCaminata(
+                    usuarioId = UsuarioId(actual.usuarioId),
+                    actividadId = ActividadId(actual.actividadId),
+                    metaPasos = actual.metaPasos,
+                    pasosBase = 0,
+                    pasosActuales = logrados,
+                ),
+            )
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            // Sin red o backend dormido: no se corta el servicio; se reintenta con el próximo paso del sensor.
+            return
+        }
         if (resultado is ResultadoCaminata.Aprobada) {
             val puntos = resultado.registro.puntosOtorgados
             store.completar(puntos, resultado.pasosCaminados, actual.metaPasos)

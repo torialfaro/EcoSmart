@@ -35,6 +35,7 @@ router = APIRouter()
 
 PASOS_POR_BLOQUE = 133
 PUNTOS_POR_BLOQUE_CAMINATA = 50
+PUNTOS_CAMINATA_POR_META = 50  # puntosBase de las actividades Caminar (constitution.md)
 PUNTOS_FOTO_RECICLAR = 50
 TOPE_DIARIO_RECICLAR = 1
 PUNTOS_FOTO_REUTILIZAR = 100
@@ -265,7 +266,12 @@ async def otorgar_puntos_caminar(
             raise HTTPException(status_code=404, detail="Usuario no encontrado.")
         usuario = usuario_snap.to_dict() or {}
 
-        puntos = calcular_puntos("CAMINAR", datos.pasosLogrados or 0)
+        # Al completar la meta de pasos se otorgan los puntos fijos de la actividad (no por bloque de pasos).
+        meta_pasos = datos.metaPasos or caminata_actual.get("metaPasos") or 0
+        pasos = datos.pasosLogrados or 0
+        if meta_pasos <= 0 or pasos < meta_pasos:
+            raise HTTPException(status_code=400, detail="META_NO_ALCANZADA")
+        puntos = PUNTOS_CAMINATA_POR_META
         puntos_historicos = usuario.get("puntosHistoricos", 0) + puntos
         ultima_str = usuario.get("ultimaActividadAprobadaEn")
         ultima = date.fromisoformat(ultima_str) if ultima_str else None
