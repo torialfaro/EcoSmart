@@ -79,7 +79,7 @@ en las Environment Variables de Render (producción):
 
 | Variable | Desarrollo local | Producción (Render) |
 |---|---|---|
-| `FIREBASE_SERVICE_ACCOUNT_JSON` | Ruta al JSON de la cuenta de servicio descargado de Firebase Console (Project Settings → Service Accounts) | Mismo contenido, cargado como variable/secret file de Render — nunca commiteado |
+| `FIREBASE_SERVICE_ACCOUNT_JSON` | Ruta al JSON de la cuenta de servicio descargado de Firebase Console (Project Settings → Service Accounts) | El **contenido** del JSON pegado como valor de la variable (o la ruta de un Secret File de Render) — nunca commiteado |
 | `FIRESTORE_EMULATOR_HOST` | `localhost:8080` (apunta al emulador, ver quickstart.md §4) | **Ausente** — producción usa el Firestore real del proyecto |
 
 ### ⚠️ Riesgo del free tier de Render: cold start vs. timeout de 30s

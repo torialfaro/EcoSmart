@@ -8,6 +8,7 @@ endpoints NUNCA deben confiar en un `uid` enviado por el cliente en el body de l
 request (esa sería la puerta trasera que RF-D014 busca cerrar).
 """
 
+import json
 import logging
 import os
 
@@ -27,8 +28,14 @@ def _app_firebase() -> firebase_admin.App:
     """
     global _app
     if _app is None:
-        cred_path = os.environ.get("FIREBASE_SERVICE_ACCOUNT_JSON")
-        cred = credentials.Certificate(cred_path) if cred_path else credentials.ApplicationDefault()
+        # Acepta el contenido del JSON (variable de entorno de Render) o la ruta a un archivo (local).
+        fuente = os.environ.get("FIREBASE_SERVICE_ACCOUNT_JSON", "").strip()
+        if fuente.startswith("{"):
+            cred = credentials.Certificate(json.loads(fuente))
+        elif fuente:
+            cred = credentials.Certificate(fuente)
+        else:
+            cred = credentials.ApplicationDefault()
         _app = firebase_admin.initialize_app(cred)
     return _app
 
@@ -52,6 +59,7 @@ async def verificar_id_token(authorization: str = Header(default="")) -> str:
     token no es válido/expiró.
     """
     if not authorization.startswith("Bearer "):
+        logger.warning("Request sin Authorization Bearer (la app no envió token de Firebase)")
         raise HTTPException(status_code=401, detail="ID Token ausente o con formato inválido.")
 
     token = authorization.removeprefix("Bearer ").strip()
@@ -64,6 +72,8 @@ async def verificar_id_token(authorization: str = Header(default="")) -> str:
     try:
         decoded = auth.verify_id_token(token, app=app)
     except Exception as exc:  # noqa: BLE001 — cualquier fallo de verificación es un 401
+        # Solo el tipo y el mensaje sin el token: distingue vencido / proyecto distinto / certificados.
+        logger.warning("ID Token rechazado: %s: %s", type(exc).__name__, str(exc).replace(token, "<token>")[:200])
         raise HTTPException(status_code=401, detail="ID Token inválido o expirado.") from exc
 
     return decoded["uid"]
