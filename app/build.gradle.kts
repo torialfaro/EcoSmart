@@ -49,6 +49,13 @@ android {
             "ECOGPT_API_KEY",
             "\"${localProperty("ECOGPT_API_KEY")}\"",
         )
+        // Demo del prototipo: con ECOGPT_MODO_DEMO=true en local.properties, la verificación por foto responde
+        // "aprobado" sin llamar a la IA ni al backend. Apagado por defecto.
+        buildConfigField(
+            "boolean",
+            "MODO_DEMO_IA",
+            localProperty("ECOGPT_MODO_DEMO", "false").trim().lowercase(),
+        )
         buildConfigField(
             "String",
             "ECOGPT_BASE_URL",

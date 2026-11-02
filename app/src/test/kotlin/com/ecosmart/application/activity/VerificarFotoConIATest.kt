@@ -4,6 +4,7 @@ import com.ecosmart.domain.repository.RegistroVerificacionRepository
 import com.ecosmart.domain.repository.UsuarioRepository
 import com.ecosmart.domain.valueobject.ActividadId
 import com.ecosmart.domain.valueobject.CategoriaActividad
+import com.ecosmart.domain.valueobject.ResultadoVerificacion
 import com.ecosmart.domain.valueobject.UsuarioId
 import com.ecosmart.infrastructure.network.BackendConfianzaClient
 import com.ecosmart.infrastructure.network.EcoGptClient
@@ -12,8 +13,10 @@ import com.ecosmart.infrastructure.network.VeredictoEcoGptDto
 import com.ecosmart.infrastructure.security.CalculadorHuellaPerceptual
 import com.squareup.moshi.Moshi
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.io.File
@@ -29,7 +32,9 @@ class VerificarFotoConIATest {
     private val usuarioRepository = mockk<UsuarioRepository>(relaxed = true)
     private val aplicarTopeDiario = AplicarTopeDiario(registroVerificacionRepository, usuarioRepository)
     private val calculadorHuellaPerceptual = mockk<CalculadorHuellaPerceptual>()
-    private val verificarFotoConIA = VerificarFotoConIA(
+    private val verificarFotoConIA = crearCasoDeUso(modoDemo = false)
+
+    private fun crearCasoDeUso(modoDemo: Boolean) = VerificarFotoConIA(
         ecoGptClient = ecoGptClient,
         backendConfianzaClient = backendConfianzaClient,
         aplicarTopeDiario = aplicarTopeDiario,
@@ -37,6 +42,7 @@ class VerificarFotoConIATest {
         registroVerificacionRepository = registroVerificacionRepository,
         moshi = Moshi.Builder().build(),
         apiKey = "api-key-de-prueba",
+        modoDemo = modoDemo,
     )
 
     private val datos = DatosVerificacionFoto(
@@ -130,5 +136,19 @@ class VerificarFotoConIATest {
         val resultado = verificarFotoConIA(datos)
 
         assertTrue(resultado is ResultadoVerificarFotoConIA.DuplicadaLocalmente)
+    }
+
+    @Test
+    fun `en modo demo aprueba con los puntos de la categoria sin llamar a la IA ni al backend`() = runTest {
+        val resultado = crearCasoDeUso(modoDemo = true)(datos)
+
+        assertTrue(resultado is ResultadoVerificarFotoConIA.Completado)
+        val registro = (resultado as ResultadoVerificarFotoConIA.Completado).registro
+        assertEquals(ResultadoVerificacion.APROBADO, registro.resultado)
+        assertEquals(50, registro.puntosOtorgados)
+        coVerify(exactly = 0) {
+            ecoGptClient.verificarFotoActividad(any(), any(), any(), any(), any(), any())
+        }
+        coVerify(exactly = 0) { backendConfianzaClient.otorgarPuntosReciclarReutilizar(any()) }
     }
 }

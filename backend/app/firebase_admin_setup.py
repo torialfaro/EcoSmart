@@ -8,11 +8,14 @@ endpoints NUNCA deben confiar en un `uid` enviado por el cliente en el body de l
 request (esa sería la puerta trasera que RF-D014 busca cerrar).
 """
 
+import logging
 import os
 
 import firebase_admin
 from fastapi import Header, HTTPException
 from firebase_admin import auth, credentials, firestore
+
+logger = logging.getLogger(__name__)
 
 _app: firebase_admin.App | None = None
 
@@ -53,7 +56,13 @@ async def verificar_id_token(authorization: str = Header(default="")) -> str:
 
     token = authorization.removeprefix("Bearer ").strip()
     try:
-        decoded = auth.verify_id_token(token, app=_app_firebase())
+        app = _app_firebase()
+    except Exception as exc:  # noqa: BLE001 — credenciales ausentes o mal configuradas en el servidor
+        logger.exception("Firebase Admin sin credenciales válidas (revisar FIREBASE_SERVICE_ACCOUNT_JSON)")
+        raise HTTPException(status_code=500, detail="Backend sin credenciales de Firebase Admin.") from exc
+
+    try:
+        decoded = auth.verify_id_token(token, app=app)
     except Exception as exc:  # noqa: BLE001 — cualquier fallo de verificación es un 401
         raise HTTPException(status_code=401, detail="ID Token inválido o expirado.") from exc
 

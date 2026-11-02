@@ -22,6 +22,10 @@ import javax.inject.Singleton
 @Retention(AnnotationRetention.BINARY)
 annotation class EcoGptApiKey
 
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class ModoDemoIa
+
 /**
  * Cliente HTTP y Retrofit de EcoGPT (research.md §2). El timeout de 30s
  * exacto de RNF-008/SC-008 se fija acá en las 4 dimensiones de timeout de
@@ -49,6 +53,10 @@ object NetworkModule {
     @Provides
     @EcoGptApiKey
     fun provideEcoGptApiKey(): String = BuildConfig.ECOGPT_API_KEY
+
+    @Provides
+    @ModoDemoIa
+    fun provideModoDemoIa(): Boolean = BuildConfig.MODO_DEMO_IA
 
     @Provides
     @Singleton

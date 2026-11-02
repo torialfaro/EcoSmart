@@ -1,5 +1,6 @@
 package com.ecosmart.application.activity
 
+import com.ecosmart.domain.model.EstrategiaDePuntaje
 import com.ecosmart.domain.model.RegistroVerificacion
 import com.ecosmart.domain.repository.RegistroVerificacionRepository
 import com.ecosmart.domain.valueobject.ActividadId
@@ -8,6 +9,7 @@ import com.ecosmart.domain.valueobject.RegistroVerificacionId
 import com.ecosmart.domain.valueobject.ResultadoVerificacion
 import com.ecosmart.domain.valueobject.UsuarioId
 import com.ecosmart.infrastructure.di.EcoGptApiKey
+import com.ecosmart.infrastructure.di.ModoDemoIa
 import com.ecosmart.infrastructure.network.BackendConfianzaClient
 import com.ecosmart.infrastructure.network.EcoGptClient
 import com.ecosmart.infrastructure.network.EcoGptResponseMapper
@@ -28,6 +30,8 @@ import java.time.LocalDate
 import javax.inject.Inject
 
 private const val ESPERA_ANTES_DE_REINTENTAR_MS = 3_000L
+private const val ESPERA_SIMULADA_DEMO_MS = 1_500L
+private const val MOTIVO_MODO_DEMO = "Modo demo: respuesta simulada, no se consultó a la IA."
 
 data class DatosVerificacionFoto(
     val usuarioId: UsuarioId,
@@ -75,8 +79,11 @@ class VerificarFotoConIA @Inject constructor(
     private val registroVerificacionRepository: RegistroVerificacionRepository,
     private val moshi: Moshi,
     @EcoGptApiKey private val apiKey: String,
+    @ModoDemoIa private val modoDemo: Boolean,
 ) {
     suspend operator fun invoke(datos: DatosVerificacionFoto): ResultadoVerificarFotoConIA {
+        if (modoDemo) return aprobacionDeDemo(datos)
+
         val disponibilidad = aplicarTopeDiario.verificarDisponibilidad(datos.usuarioId, datos.categoria)
         if (disponibilidad.bloqueado) return ResultadoVerificarFotoConIA.TopeDiarioAlcanzado
 
@@ -158,6 +165,26 @@ class VerificarFotoConIA @Inject constructor(
             huellaImagen = huellaNueva,
         )
         return ResultadoVerificarFotoConIA.Completado(registro)
+    }
+
+    /**
+     * Demo del prototipo: aprueba sin consultar a la IA ni al backend de confianza. El registro es solo local
+     * (el cliente no puede escribir `registrosVerificacion` ni los puntos, RF-D014), así que no se persiste.
+     */
+    private suspend fun aprobacionDeDemo(datos: DatosVerificacionFoto): ResultadoVerificarFotoConIA {
+        delay(ESPERA_SIMULADA_DEMO_MS)
+        return ResultadoVerificarFotoConIA.Completado(
+            RegistroVerificacion(
+                id = RegistroVerificacionId.nuevo(),
+                usuarioId = datos.usuarioId,
+                actividadId = datos.actividadId,
+                categoria = datos.categoria,
+                fecha = LocalDate.now(),
+                resultado = ResultadoVerificacion.APROBADO,
+                motivoIA = MOTIVO_MODO_DEMO,
+                puntosOtorgados = EstrategiaDePuntaje.para(datos.categoria).calcularPuntos(1),
+            ),
+        )
     }
 
     /**

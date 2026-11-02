@@ -12,3 +12,5 @@ services:
         sync: false
       - key: ECOGPT_SHARED_API_KEY
         sync: false
+      - key: FIREBASE_SERVICE_ACCOUNT_JSON
+        sync: false
