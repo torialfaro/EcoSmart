@@ -3,8 +3,8 @@
 Implementa `POST /verificaciones` del contrato en
 `../specs/001-ecosmart-mvp/contracts/openapi.yaml`: recibe la foto +
 descripción que el cliente Android envía al verificar una actividad de
-Reciclar/Reutilizar, y llama a la API de **Gemini** (Google AI Studio, con
-visión, capa **100% gratuita** — sin tarjeta de crédito) para comparar la
+Reciclar/Reutilizar, y llama a la API de **Claude** (Anthropic, con
+visión) para comparar la
 imagen y la descripción del usuario contra el resultado esperado de la
 actividad. Devuelve `APROBADO`, `RECHAZADO` o `INDETERMINADO` con un
 motivo en tono alentador (nunca punitivo).
@@ -23,7 +23,7 @@ python -m venv .venv
 # source .venv/bin/activate   # Linux/Mac
 
 pip install -r requirements.txt
-copy .env.example .env        # y completar GEMINI_API_KEY + ECOGPT_SHARED_API_KEY
+copy .env.example .env        # y completar ANTHROPIC_API_KEY + ECOGPT_SHARED_API_KEY
 
 uvicorn app.main:app --reload --port 8000
 ```
@@ -40,30 +40,26 @@ curl -X POST http://localhost:8000/verificaciones \
   -F "huellasImagenesAprobadasPrevias="
 ```
 
-## 2. Obtener una API key de Gemini (gratis, sin tarjeta de crédito)
+## 2. Obtener una API key de Claude (Anthropic)
 
-1. Entrar a <https://aistudio.google.com/apikey> con una cuenta de Google.
-2. **Create API key** → elegir o crear un proyecto de Google Cloud (no
-   requiere billing habilitado para la capa gratuita).
-3. Copiar la key generada a `GEMINI_API_KEY`.
+1. Entrar a <https://console.anthropic.com/settings/keys> con tu cuenta.
+2. **Create Key** y copiar la key generada a `ANTHROPIC_API_KEY`.
 
-La capa gratuita de Google AI Studio no pide tarjeta de crédito y alcanza
-de sobra para un MVP académico (cuota diaria de miles de requests en los
-modelos Flash). Los límites exactos de cuota pueden cambiar — ver
-<https://ai.google.dev/gemini-api/docs/rate-limits> si algún request
-empieza a devolver error 429.
+El modelo por defecto es `claude-haiku-4-5` (configurable con
+`ANTHROPIC_MODEL`). Si un request devuelve error 429, revisá los límites
+de tu cuenta en <https://docs.anthropic.com/en/api/rate-limits>.
 
 ## 3. Desplegar en Render (free tier)
 
 1. Crear cuenta en <https://render.com> y conectar el repo de GitHub de EcoSmart.
 2. **New → Blueprint**, apuntando a este repo — Render va a detectar
    `backend/render.yaml` automáticamente y va a pedir los 2 valores marcados
-   `sync: false`: `GEMINI_API_KEY` y `ECOGPT_SHARED_API_KEY`.
+   `sync: false`: `ANTHROPIC_API_KEY` y `ECOGPT_SHARED_API_KEY`.
    - Si preferís crearlo a mano en vez de con el Blueprint: **New → Web
      Service**, Root Directory = `backend`, Build Command =
      `pip install -r requirements.txt`, Start Command =
      `uvicorn app.main:app --host 0.0.0.0 --port $PORT`, y cargar las
-     mismas 2 variables de entorno (`GEMINI_API_KEY`,
+     mismas 2 variables de entorno (`ANTHROPIC_API_KEY`,
      `ECOGPT_SHARED_API_KEY`) en **Environment**.
 3. Cuando termine el deploy, Render te da una URL pública tipo
    `https://ecosmart-ecogpt.onrender.com`.

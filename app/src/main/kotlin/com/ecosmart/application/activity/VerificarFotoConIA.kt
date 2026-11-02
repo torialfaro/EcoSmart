@@ -233,7 +233,7 @@ class VerificarFotoConIA @Inject constructor(
      * phrase HTTP crudo (p. ej. "Response.error()"), nunca el body de la respuesta — el
      * usuario veía ese texto genérico en vez del mensaje real en español que el backend
      * ya arma (`main.py` → `_error(...)`, p. ej. "La IA está con mucha demanda..." ante
-     * un 503 de Gemini). Se parsea el `errorBody()` con el `ErrorEcoGpt` del contrato y,
+     * un 503 de Claude). Se parsea el `errorBody()` con el `ErrorEcoGpt` del contrato y,
      * si falla el parseo (body vacío/formato inesperado), se cae al mensaje HTTP crudo.
      */
     private fun mensajeDeErrorEcoGpt(errorHttp: HttpException): String {

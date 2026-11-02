@@ -1,9 +1,9 @@
-"""Normalización de la imagen recibida antes de enviarla a Gemini.
+"""Normalización de la imagen recibida antes de enviarla a Claude.
 
 El cliente Android envía la imagen con Content-Type "image/*" (comodín, no
 un tipo concreto — ver `VerificarFotoConIA.kt`), así que no confiamos en el
 Content-Type del multipart: decodificamos los bytes con Pillow para
-detectar el formato real, y siempre reenviamos JPEG a la API de Gemini
+detectar el formato real, y siempre reenviamos JPEG a la API de Claude
 para no depender de qué formato haya llegado.
 """
 

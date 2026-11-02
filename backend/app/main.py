@@ -3,11 +3,10 @@
 
 Reemplaza al placeholder `https://api.ecogpt.example/v1/` (dominio RFC 2606
 que nunca resuelve) que hacía fallar toda verificación con "Sin conexión a
-internet". Este servicio es el único que conoce la API key real de Gemini
-(`GEMINI_API_KEY`, capa gratuita de Google AI Studio — ver research.md
-§2.1); el cliente Android solo conoce un secreto compartido
+internet". Este servicio es el único que conoce la API key real de Claude
+(`ANTHROPIC_API_KEY`); el cliente Android solo conoce un secreto compartido
 (`ECOGPT_SHARED_API_KEY`) que autentica sus propias llamadas a este
-backend — la key de Gemini nunca viaja al dispositivo ni al APK.
+backend — la key de Claude nunca viaja al dispositivo ni al APK.
 """
 
 import logging
@@ -18,9 +17,9 @@ from fastapi import FastAPI, File, Form, Header, UploadFile
 from fastapi.responses import JSONResponse
 
 from .ecogpt import (
-    GeminiModeloNoDisponibleError,
-    GeminiSobrecargadoError,
-    GeminiVeredictoInvalidoError,
+    ClaudeModeloNoDisponibleError,
+    ClaudeSobrecargadoError,
+    ClaudeVeredictoInvalidoError,
     verificar_con_ia,
 )
 from .imagenes import ImagenNoSoportadaError, preparar_imagen
@@ -79,25 +78,25 @@ async def verificar_foto_actividad(
             descripcion_usuario=descripcionUsuario,
             cantidad_huellas_previas=cantidad_huellas_previas,
         )
-    except GeminiVeredictoInvalidoError:
-        logger.exception("Gemini no devolvió un veredicto estructurado válido")
+    except ClaudeVeredictoInvalidoError:
+        logger.exception("Claude no devolvió un veredicto estructurado válido")
         return _error(500, "ERROR_VEREDICTO_IA", "No se pudo interpretar la respuesta de la IA. Reintentá.")
-    except GeminiSobrecargadoError:
-        logger.warning("Gemini devolvió 503 UNAVAILABLE incluso tras reintentar (alta demanda)")
+    except ClaudeSobrecargadoError:
+        logger.warning("Claude está saturado incluso tras reintentar (alta demanda)")
         return _error(
             503,
             "IA_SOBRECARGADA",
             "La IA está con mucha demanda en este momento. Esperá un minuto y volvé a intentar.",
         )
-    except GeminiModeloNoDisponibleError:
-        logger.error("Ningún modelo de Gemini configurado está disponible para esta API key (404)")
+    except ClaudeModeloNoDisponibleError:
+        logger.error("Ningún modelo de Claude configurado está disponible para esta API key (404)")
         return _error(
             503,
             "IA_NO_DISPONIBLE",
             "La IA no está disponible en este momento. Probá de nuevo en unos minutos.",
         )
     except Exception:
-        logger.exception("Error inesperado llamando a la API de Gemini")
+        logger.exception("Error inesperado llamando a la API de Claude")
         return _error(500, "ERROR_IA", "Ocurrió un error verificando la foto. Reintentá en unos segundos.")
 
     return VeredictoEcoGpt(veredicto=veredicto, motivo=motivo)

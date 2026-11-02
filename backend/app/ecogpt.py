@@ -1,91 +1,67 @@
-"""Llamada a Gemini (Google AI Studio, capa gratuita) que implementa el
-veredicto de EcoGPT.
-
-Corrección post-QA (2026-09-23, ronda 2): se reemplazó Claude/Anthropic
-(pago, versión anterior de este archivo) por Gemini, que tiene una capa
-gratuita real sin tarjeta de crédito (ver research.md §2.1) — requisito
-explícito del usuario: "este es un proyecto escolar... no puedo pagar por
-una IA".
+"""Llamada a Claude (Anthropic) que implementa el veredicto de EcoGPT.
 
 RF-027: el prompt combina la foto, el resultado esperado de la actividad y
-la descripción del usuario — le pedimos a Gemini que compare las tres
-cosas entre sí, no solo que describa la imagen. RNF-001: el tono del
-`motivo` debe ser alentador, nunca punitivo, incluso al rechazar.
+la descripción del usuario. RNF-001: el tono del `motivo` debe ser
+alentador, nunca punitivo, incluso al rechazar.
 
-Se usa salida estructurada nativa de Gemini (`response_mime_type` +
-`response_schema`) en vez de pedirle texto libre y parsear con regex/JSON
-best-effort: es la forma confiable de obtener siempre un JSON válido con
-el shape exacto que espera `VeredictoEcoGpt`.
-
-Corrección post-QA (2026-10-14): la capa gratuita de Gemini responde 503
-"UNAVAILABLE" ("This model is currently experiencing high demand") con
-cierta frecuencia en horas pico — es un error transitorio del lado de
-Google, no un bug nuestro. Se agrega un reintento automático con backoff
-ante ese error específico (`google.genai.errors.ServerError`) antes de
-propagarlo como falla real, igual que ya se hacía para el cold-start del
-hosting (ver `VerificarFotoConIA.kt` del lado Android).
+Salida estructurada: se fuerza el uso de una herramienta (`tool_choice`) cuyo
+`input_schema` es el shape de `VeredictoEcoGpt`, lo que garantiza un JSON válido.
 """
 
-import asyncio
-import json
+import base64
 import logging
 import os
-import time
 from typing import Optional, Tuple
 
-from google import genai
-from google.genai import errors as genai_errors
-from google.genai import types
+import anthropic
 
-MODELO_GEMINI = os.environ.get("GEMINI_MODEL", "gemini-3.8-flash")
-# Respaldos ante 503/404 del principal, en orden (lista separada por comas, configurable con
-# GEMINI_MODELOS_RESPALDO). Los 2.5 no sirven: Google los limita a cuentas que ya los usaban (404 en claves nuevas).
-MODELOS_GEMINI_RESPALDO = [
-    m.strip()
-    for m in os.environ.get("GEMINI_MODELOS_RESPALDO", "gemini-3.5-flash-lite,gemini-3.6-flash").split(",")
-    if m.strip()
+MODELO_CLAUDE = os.environ.get("ANTHROPIC_MODEL", "claude-haiku-4-5")
+# Respaldos ante sobrecarga/404 del principal (lista separada por comas).
+MODELOS_CLAUDE_RESPALDO = [
+    m.strip() for m in os.environ.get("ANTHROPIC_MODELOS_RESPALDO", "").split(",") if m.strip()
 ]
-_MODELOS = list(dict.fromkeys([MODELO_GEMINI, *MODELOS_GEMINI_RESPALDO]))
+_MODELOS = list(dict.fromkeys([MODELO_CLAUDE, *MODELOS_CLAUDE_RESPALDO]))
 
-_cliente = genai.Client(api_key=os.environ.get("GEMINI_API_KEY", ""))
-
-_INTENTOS_POR_MODELO = 2
-_ESPERA_ENTRE_REINTENTOS_S = 1.5
-# La app corta a los 30 s (RNF-008): no se arranca un modelo nuevo pasado este presupuesto.
-_PRESUPUESTO_TOTAL_S = 22.0
+# La app corta a los 30 s (RNF-008): timeout y reintentos acotados.
+_cliente = anthropic.AsyncAnthropic(
+    api_key=os.environ.get("ANTHROPIC_API_KEY", ""),
+    timeout=20.0,
+    max_retries=2,
+)
 
 logger = logging.getLogger("ecogpt")
 
-_ESQUEMA_VEREDICTO = {
-    "type": "OBJECT",
-    "properties": {
-        "veredicto": {
-            "type": "STRING",
-            "enum": ["APROBADO", "RECHAZADO", "INDETERMINADO"],
+_HERRAMIENTA_VEREDICTO = {
+    "name": "emitir_veredicto",
+    "description": "Emite el veredicto final de la verificación de la actividad.",
+    "input_schema": {
+        "type": "object",
+        "properties": {
+            "veredicto": {"type": "string", "enum": ["APROBADO", "RECHAZADO", "INDETERMINADO"]},
+            "motivo": {
+                "type": "string",
+                "description": (
+                    "Explicación breve, concreta y con tono alentador (nunca punitivo ni "
+                    "culpabilizador) de por qué se rechazó o quedó indeterminado. "
+                    "Cadena vacía si el veredicto es APROBADO."
+                ),
+            },
         },
-        "motivo": {
-            "type": "STRING",
-            "description": (
-                "Explicación breve, concreta y con tono alentador (nunca punitivo ni "
-                "culpabilizador) de por qué se rechazó o quedó indeterminado. "
-                "Cadena vacía si el veredicto es APROBADO."
-            ),
-        },
+        "required": ["veredicto", "motivo"],
     },
-    "required": ["veredicto", "motivo"],
 }
 
 
-class GeminiVeredictoInvalidoError(Exception):
-    """Gemini respondió sin un JSON válido con la forma esperada de veredicto."""
+class ClaudeVeredictoInvalidoError(Exception):
+    """Claude respondió sin un veredicto válido con la forma esperada."""
 
 
-class GeminiSobrecargadoError(Exception):
-    """Gemini devolvió 503 UNAVAILABLE incluso tras reintentar (alta demanda transitoria)."""
+class ClaudeSobrecargadoError(Exception):
+    """Claude está saturado (429/5xx/529) incluso tras reintentar."""
 
 
-class GeminiModeloNoDisponibleError(Exception):
-    """Ningún modelo configurado existe o está habilitado para la API key (404 en todos)."""
+class ClaudeModeloNoDisponibleError(Exception):
+    """Ningún modelo configurado existe o está habilitado para la API key."""
 
 
 def _construir_prompt(
@@ -105,43 +81,31 @@ Reglas de evaluación (aplicalas en este orden):
 2. RECHAZADO: la imagen claramente no corresponde a la actividad descripta, parece una foto de stock/internet no tomada por el propio usuario, está manipulada, o la descripción contradice lo que se ve.
 3. INDETERMINADO: la imagen tiene mala calidad, luz o encuadre que impide juzgar con confianza (en ese caso el motivo debe invitar a reintentar con mejor foto).
 
-El motivo nunca debe sonar punitivo o culpabilizador, incluso al rechazar — sé breve, concreto y alentador. Respondé únicamente con el JSON pedido, con tu decisión final."""
+El motivo nunca debe sonar punitivo o culpabilizador, incluso al rechazar — sé breve, concreto y alentador. Respondé usando la herramienta emitir_veredicto con tu decisión final."""
 
 
-async def _generar_con_respaldo(contenido):
-    """Prueba el modelo principal y, si Google lo devuelve saturado (5xx) o inexistente (404),
-    pasa al siguiente respaldo, sin superar el presupuesto de tiempo de la app."""
-    inicio = time.monotonic()
-    hubo_sobrecarga = False
+async def _generar_con_respaldo(mensajes):
     ultimo_error: Optional[Exception] = None
+    hubo_sobrecarga = False
     for modelo in _MODELOS:
-        if time.monotonic() - inicio > _PRESUPUESTO_TOTAL_S:
-            break
-        for intento in range(_INTENTOS_POR_MODELO):
-            try:
-                return await _cliente.aio.models.generate_content(
-                    model=modelo,
-                    contents=contenido,
-                    config=types.GenerateContentConfig(
-                        response_mime_type="application/json",
-                        response_schema=_ESQUEMA_VEREDICTO,
-                    ),
-                )
-            except genai_errors.ServerError as error:
-                logger.warning("Gemini %s falló (intento %d): %s", modelo, intento + 1, error)
-                hubo_sobrecarga = True
-                ultimo_error = error
-                if intento < _INTENTOS_POR_MODELO - 1:
-                    await asyncio.sleep(_ESPERA_ENTRE_REINTENTOS_S)
-            except genai_errors.ClientError as error:
-                if getattr(error, "code", None) != 404:
-                    raise
-                logger.warning("Gemini %s no disponible para esta clave (404): %s", modelo, error)
-                ultimo_error = error
-                break
+        try:
+            return await _cliente.messages.create(
+                model=modelo,
+                max_tokens=512,
+                tools=[_HERRAMIENTA_VEREDICTO],
+                tool_choice={"type": "tool", "name": "emitir_veredicto"},
+                messages=mensajes,
+            )
+        except anthropic.NotFoundError as error:
+            logger.warning("Claude %s no disponible (404): %s", modelo, error)
+            ultimo_error = error
+        except (anthropic.RateLimitError, anthropic.InternalServerError, anthropic.APIConnectionError) as error:
+            logger.warning("Claude %s saturado o sin conexión: %s", modelo, error)
+            hubo_sobrecarga = True
+            ultimo_error = error
     if hubo_sobrecarga:
-        raise GeminiSobrecargadoError(str(ultimo_error)) from ultimo_error
-    raise GeminiModeloNoDisponibleError(str(ultimo_error)) from ultimo_error
+        raise ClaudeSobrecargadoError(str(ultimo_error)) from ultimo_error
+    raise ClaudeModeloNoDisponibleError(str(ultimo_error)) from ultimo_error
 
 
 async def verificar_con_ia(
@@ -153,22 +117,32 @@ async def verificar_con_ia(
     cantidad_huellas_previas: int,
 ) -> Tuple[str, Optional[str]]:
     prompt = _construir_prompt(categoria, resultado_esperado, descripcion_usuario, cantidad_huellas_previas)
-    contenido = [types.Part.from_bytes(data=imagen_bytes, mime_type=media_type), prompt]
+    mensajes = [
+        {
+            "role": "user",
+            "content": [
+                {
+                    "type": "image",
+                    "source": {
+                        "type": "base64",
+                        "media_type": media_type,
+                        "data": base64.standard_b64encode(imagen_bytes).decode("ascii"),
+                    },
+                },
+                {"type": "text", "text": prompt},
+            ],
+        }
+    ]
 
-    respuesta = await _generar_con_respaldo(contenido)
+    respuesta = await _generar_con_respaldo(mensajes)
 
-    texto = respuesta.text
-    if not texto:
-        raise GeminiVeredictoInvalidoError("Gemini no devolvió contenido de texto")
-
-    try:
-        datos = json.loads(texto)
-    except json.JSONDecodeError as error:
-        raise GeminiVeredictoInvalidoError(f"Respuesta de Gemini no es JSON válido: {texto!r}") from error
+    datos = next((b.input for b in respuesta.content if getattr(b, "type", "") == "tool_use"), None)
+    if not isinstance(datos, dict):
+        raise ClaudeVeredictoInvalidoError("Claude no devolvió un veredicto estructurado")
 
     veredicto = datos.get("veredicto")
     if veredicto not in ("APROBADO", "RECHAZADO", "INDETERMINADO"):
-        raise GeminiVeredictoInvalidoError(f"Veredicto inesperado: {veredicto!r}")
+        raise ClaudeVeredictoInvalidoError(f"Veredicto inesperado: {veredicto!r}")
 
     motivo = (datos.get("motivo") or "").strip() or None
     if veredicto == "APROBADO":
