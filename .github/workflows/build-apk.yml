@@ -35,6 +35,15 @@ jobs:
             echo "ECOGPT_MODO_DEMO=false"
           } > local.properties
 
+      # Keystore de debug fijo: misma firma (SHA-1) en cada build, la que está registrada en Firebase.
+      # Sin esto el runner genera una clave nueva y el login con Google falla.
+      - name: Instalar debug.keystore
+        run: |
+          mkdir -p ~/.android
+          echo "$DEBUG_KEYSTORE_BASE64" | base64 -d > ~/.android/debug.keystore
+        env:
+          DEBUG_KEYSTORE_BASE64: ${{ secrets.DEBUG_KEYSTORE_BASE64 }}
+
       - name: Compilar APK debug
         run: gradle assembleDebug --no-daemon
 
