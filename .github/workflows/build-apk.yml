@@ -16,7 +16,10 @@ jobs:
           distribution: temurin
           java-version: 17
 
+      # El repo no tiene gradlew/gradle-wrapper.jar: se instala Gradle (misma versión que gradle-wrapper.properties)
       - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: 8.9
 
       # Archivos que no están en el repo (ver .gitignore)
       - name: Crear google-services.json
@@ -33,9 +36,7 @@ jobs:
           } > local.properties
 
       - name: Compilar APK debug
-        run: |
-          chmod +x ./gradlew
-          ./gradlew assembleDebug --no-daemon
+        run: gradle assembleDebug --no-daemon
 
       - uses: actions/upload-artifact@v4
         with:
