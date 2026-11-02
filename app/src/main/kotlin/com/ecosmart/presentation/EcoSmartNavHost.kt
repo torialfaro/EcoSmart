@@ -98,7 +98,6 @@ fun EcoSmartNavHost(
                 },
                 onVerLeccion = { id -> navController.navigate(EcoSmartRoute.ContenidoEducativoDetalle.crearRuta(id)) },
                 onVerPerfil = { navController.navigate(EcoSmartRoute.Perfil.ruta) },
-                onVerPuntosVerdes = { navController.navigate(EcoSmartRoute.PuntosVerdes.ruta) },
                 barraInferior = { BarraInferior(navController, PestanaInferior.INICIO) },
             )
         }
@@ -128,12 +127,16 @@ fun EcoSmartNavHost(
                     navController.navigate(destino)
                 },
                 onVolver = { navController.popBackStack() },
+                onVerLeccion = { id ->
+                    navController.navigate(EcoSmartRoute.ContenidoEducativoDetalle.crearRuta(id))
+                },
                 barraInferior = { BarraInferior(navController, PestanaInferior.ACTIVIDADES) },
             )
         }
         composable(EcoSmartRoute.PuntosVerdes.ruta) {
             PuntosVerdesScreen(
                 onVolver = { navController.popBackStack() },
+                barraInferior = { BarraInferior(navController, PestanaInferior.PUNTOS_VERDES) },
             )
         }
         composable(EcoSmartRoute.ContenidoEducativo.ruta) {
@@ -147,13 +150,16 @@ fun EcoSmartNavHost(
             )
         }
         composable(EcoSmartRoute.ContenidoEducativoDetalle.ruta, arguments = EcoSmartRoute.ContenidoEducativoDetalle.argumentos) {
-            val vieneDeInicio = navController.previousBackStackEntry?.destination?.route == EcoSmartRoute.Home.ruta
+            val origen = navController.previousBackStackEntry?.destination?.route
+            val pestana = when (origen) {
+                EcoSmartRoute.Home.ruta -> PestanaInferior.INICIO
+                EcoSmartRoute.ActividadDetalle.ruta -> PestanaInferior.ACTIVIDADES
+                else -> PestanaInferior.EDUCACION
+            }
             DetalleLeccionScreen(
                 onVolver = { navController.popBackStack() },
                 onVerActividades = { irAPestana(navController, EcoSmartRoute.Actividades.ruta) },
-                barraInferior = {
-                    BarraInferior(navController, if (vieneDeInicio) PestanaInferior.INICIO else PestanaInferior.EDUCACION)
-                },
+                barraInferior = { BarraInferior(navController, pestana) },
             )
         }
         composable(EcoSmartRoute.VerificacionCaminata.ruta, arguments = EcoSmartRoute.VerificacionCaminata.argumentos) {
@@ -204,9 +210,8 @@ private fun irAPestana(navController: NavHostController, ruta: String) = navCont
 }
 
 /**
- * Barra inferior del mockup (RF-UI-002b, RF-UI-002c): Inicio → Home, Actividades →
- * Actividades, Recompensas → Recompensas, Educación → ContenidoEducativo,
- * Puntos Verdes → PuntosVerdes, Perfil → Perfil.
+ * Barra inferior (RF-IA-009): Inicio → Home, Actividades → Actividades, Recompensas → Recompensas,
+ * Educación → ContenidoEducativo, Perfil → Perfil, Puntos Verdes → PuntosVerdes.
  */
 @Composable
 private fun BarraInferior(navController: NavHostController, seleccion: PestanaInferior) {
@@ -218,5 +223,6 @@ private fun BarraInferior(navController: NavHostController, seleccion: PestanaIn
         onRecompensas = { ir(EcoSmartRoute.Recompensas.ruta) },
         onEducacion = { ir(EcoSmartRoute.ContenidoEducativo.ruta) },
         onPerfil = { ir(EcoSmartRoute.Perfil.ruta) },
+        onPuntosVerdes = { ir(EcoSmartRoute.PuntosVerdes.ruta) },
     )
 }

@@ -1,6 +1,55 @@
 <!--
   SYNC IMPACT REPORT
   ==================
+  Version change: 2.3.0 → 2.4.0 (MINOR — nueva enmienda al Principio X que autoriza
+  la reconstrucción visual de las pantallas Inicio (S-01) y Actividad individual
+  (detalle, S-03 de actividades no medibles). Se hace sobre v2.3.0 y no la reemplaza:
+  la v2.3.0 ya está ocupada por la ampliación de Educación a las tarjetas educativas
+  de Inicio).
+  Reason: Se aprueba el rediseño únicamente visual de Inicio y Actividad individual,
+  adoptando como fuente de verdad los tableros "I1", "I2", "D1" y "D2" del lienzo de
+  Claude Design. Se autoriza una excepción a RF-UI-002, RF-UI-006 y RF-UI-008 y a la
+  composición de la barra inferior (RF-UI-002b/002c) para que Puntos Verdes vuelva a
+  tener su propio ícono. No se modifica ninguna regla de negocio, entidad, endpoint ni
+  persistencia, y ningún dato mostrado puede quedar fijo en el código.
+
+  Modified principles:
+    - Principio X: se agrega la "Enmienda para Inicio y Actividad individual (v2.4.0)".
+
+  Added sections/content:
+    - Fuente de verdad visual (tableros I1, I2, D1, D2), alcance de pantallas, excepciones
+      autorizadas, regla de datos (nada hardcodeado, total de categorías tomado del
+      dominio), invariantes de negocio, accesibilidad y ausencia de animaciones.
+
+  Removed sections: None.
+
+  Templates requiring updates:
+    ✅ .specify/memory/constitution.md — this file (updated)
+    ✅ .specify/templates/plan-template.md — genérico, sin cambio estructural necesario.
+    ✅ .specify/templates/spec-template.md — sin cambio estructural necesario.
+    ✅ .specify/templates/tasks-template.md — sin cambio estructural necesario.
+
+  Known ambiguities (a resolver en /speckit.clarify del spec 005 antes de /speckit.plan):
+    - Contradicción entre "una actividad por categoría por día" (enunciado del rediseño)
+      y los topes reales del dominio y del backend: Reciclar 1/día, Reutilizar 5/día y
+      Caminar sin tope (`EstrategiaDePuntaje`, `backend/app/puntos.py`, sección C de esta
+      constitución). Define qué significa "Hecha" por categoría, el total del progreso y
+      el texto "Podés hacer una actividad de cada categoría por día".
+    - Cómo expone el dominio/backend que una actividad "no está disponible hoy"
+      (hoy `Actividad.estaDisponibleHoy()` devuelve siempre `true`).
+    - Destino de la tarjeta de puntos (chevron sin destino definido).
+    - Cómo se asocia cada actividad con su lección relacionada ("Aprendé primero"); los
+      identificadores de actividad no son estables.
+    - Qué actividad se muestra por categoría cuando hay más de una (hoy hay dos de Reciclar).
+    - Origen del tip y de los tres pasos: el dominio guarda `pasosASeguir` como un único
+      texto y no tiene campo de tip.
+    - Sexto ícono de la barra inferior: afecta a toda pantalla que use `C-02`.
+
+  Follow-up TODOs:
+    - Inicializar spec 005 (`specs/005-redisenio-ui-inicio-actividad/spec.md`) alineado
+      con esta enmienda y ejecutar /speckit.clarify.
+
+  --- Historial previo ---
   Version change: 2.2.0 → 2.3.0 (MINOR — se amplía el alcance de la enmienda de
   Educación para incluir las tarjetas educativas de la pantalla Inicio, que
   reemplazan al carrusel de videos C-09; el resto de Inicio no cambia).
@@ -214,12 +263,51 @@ Lo marcado como «propuesta» o «a confirmar» en las secciones 10 y 13 de
   sistema escalado hasta 130% sin cortes mediante alturas mínimas, e identificación clara
   por lector de pantalla con decoraciones marcadas como tales).
 
+**Enmienda para Inicio y Actividad individual (v2.4.0)**:
+- **Fuente de verdad visual**: para las pantallas Inicio (S-01) y Actividad individual
+  (detalle, S-03 de actividades no medibles) la fuente de verdad visual pasa a ser
+  exclusivamente el diseño publicado en el lienzo de Claude Design, tableros "I1" e "I2"
+  (Inicio) y "D1" y "D2" (Actividad individual). Para estas pantallas reemplaza a §4 y §6
+  de `especificacion-ui-app-eco.md`; para el resto sigue rigiendo ese documento o la enmienda
+  vigente (Perfil, Educación).
+- **Alcance de pantallas**: solo Inicio y Actividad individual. Quedan fuera Actividades
+  (listado), Recompensas, Perfil, Educación y su detalle, Puntos Verdes y la captura de
+  foto; sus especificaciones no cambian. El bloque "Contenido para vos" de Inicio sigue
+  mostrando las tarjetas de lección definidas en la enmienda de Educación.
+- **Excepción autorizada a RF-UI-002, RF-UI-006 y RF-UI-008**: se autoriza expresamente
+  (1) reemplazar el encabezado, la tarjeta de puntos, la tarjeta "Tu progreso general" y la
+  tarjeta de actividad de Inicio por los componentes del nuevo diseño; (2) retirar de Inicio
+  el botón flotante de Puntos Verdes y devolver ese acceso a la barra inferior como sexto
+  ícono (ajuste a RF-UI-002b y RF-UI-002c); (3) reemplazar en la tarjeta de actividad y en el
+  detalle el indicador "0 / 1" y el botón "Realizarla" por un botón con una frase de
+  invitación; y (4) reemplazar los logos de actividad por los tres logos de categoría del
+  nuevo diseño.
+- **Regla de datos (no negociable)**: el sistema ya tiene backend. Ningún valor visible
+  puede quedar fijo en el código: nombre de la usuaria, puntos, progreso diario, estado de
+  cada categoría, títulos, puntos de cada actividad, pasos, tip, categoría y estado de la
+  actividad salen del dominio y del backend existentes. Los números y textos de los tableros
+  son ilustrativos y no se llevan al código como constantes. La cantidad de categorías del
+  progreso diario se obtiene de `CategoriaActividad` y de las reglas de tope ya vigentes;
+  la UI nunca asume ni calcula un total propio. La UI solo asocia cada categoría con su
+  logo y su color.
+- **Invariantes no negociables**: ninguna regla de negocio, puntaje, tope diario, racha,
+  nivel, verificación por IA ni persistencia se modifica (RF-UI-001, Principios III y IV).
+  Todo cambio vive en Frontend (UI) y, solo para exponer el estado ya existente, en
+  Presentación/ViewModel. No se crean ni cambian entidades, endpoints ni colecciones.
+- **Animaciones y transiciones**: ninguna en estas pantallas (`RF-UI-019`).
+- **Accesibilidad**: se DEBE cumplir `RF-UI-015` a `RF-UI-018` (contraste >= 4,5:1, zonas
+  táctiles >= 48×48 dp, texto del sistema hasta 130% sin cortes y lectura por lector de
+  pantalla con decoraciones marcadas como tales).
+
 **Rationale**: separar el esfuerzo de reconstruir la UI del esfuerzo de cambiar reglas
 de negocio reduce el riesgo de regresiones funcionales, permite auditar el cambio
 visual de forma aislada, y mantiene una única fuente de verdad gráfica en lugar de
 decisiones de diseño dispersas o reinterpretadas en el código. Las enmiendas v2.2.0 y
 v2.3.0 acotan el impacto exclusivamente a Educación y a sus tarjetas en Inicio, permitiendo modernizar la experiencia pedagógica
 con lecciones ilustradas paso a paso sin alterar el resto de la aplicación ni sus reglas.
+La enmienda v2.4.0 acota el impacto a Inicio y Actividad individual y fija que sus datos
+siempre provienen del backend y del dominio, de modo que un rediseño nunca introduce
+valores inventados ni reglas paralelas en la UI.
 
 ## Stack Tecnológico y Restricciones
 
@@ -361,4 +449,4 @@ iteración o feature. Las ambigüedades detectadas en el Sync Impact Report (al 
 de este archivo) DEBEN resolverse en `/speckit.specify` o `/speckit.clarify` antes de
 iniciar la implementación de la funcionalidad afectada.
 
-**Version**: 2.3.0 | **Ratified**: 2026-09-20 | **Last Amended**: 2026-10-30
+**Version**: 2.4.0 | **Ratified**: 2026-09-20 | **Last Amended**: 2026-11-01

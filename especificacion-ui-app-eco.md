@@ -214,6 +214,8 @@ Texto «Ver todas» o «Ver todos» en `type.link`, alineado a la derecha del t�
 
 ## 4. Pantalla 1 · Inicio (S-01)
 
+> **Nota:** esta sección fue reemplazada por [specs/005-redisenio-ui-inicio-actividad/spec.md](specs/005-redisenio-ui-inicio-actividad/spec.md) (Constitución v2.4.0). Lo que sigue queda solo como referencia histórica.
+
 **Objetivo:** dar un resumen de todo de un vistazo. Según la nota del diseño, las actividades se ven sin tener que hacer scroll vertical largo. Es la pantalla de arranque.
 
 El contenido es más alto que la pantalla: la zona entre el encabezado y la tab bar hace scroll vertical. El saludo y la tab bar no se mueven.
@@ -345,6 +347,8 @@ El contenido es más alto que la pantalla: la zona entre el encabezado y la tab 
 - «Elegí tu actividad» es una tarjeta especial: permite al usuario escoger una actividad propia en lugar de una predefinida (a confirmar).
 
 ## 6. Pantalla 3 · Caminar, detalle de actividad (S-03)
+
+> **Nota:** para las actividades no medibles (Reciclar y Reutilizar) el detalle fue reemplazado por [specs/005-redisenio-ui-inicio-actividad/spec.md](specs/005-redisenio-ui-inicio-actividad/spec.md) (Constitución v2.4.0). Esta sección sigue vigente para Caminar (medible).
 
 **Objetivo:** mostrar el progreso de una actividad con su puntaje y explicar en lenguaje simple cómo se registra (nota del diseño: cada actividad tiene su propia pantalla). Esta pantalla es el modelo para el detalle de las demás.
 

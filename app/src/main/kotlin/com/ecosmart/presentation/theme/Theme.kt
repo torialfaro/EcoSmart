@@ -81,13 +81,25 @@ val ColorChipReciclarTexto = ColorGreen700
 val ColorChipReutilizarFondo = ColorRecompensaCardBg
 val ColorChipReutilizarTexto = Color(0xFF8A5A00)
 val ColorChipCaminarFondo = ColorPastelAux3
-val ColorChipCaminarTexto = ColorGreen500
+val ColorChipCaminarTexto = ColorGreen700
 
 // Tip (C-16): alias semánticos de los tonos cálidos ya definidos para Racha/Recompensas
 val ColorTipFondo = ColorRecompensaCardBg
 val ColorTipBorde = ColorRachaBorde
 val ColorTipTitulo = ColorRachaTextoNumero
 val ColorTipTexto = ColorRachaTextoMensaje
+
+// --- Inicio y Actividad individual (spec 005, RF-IA-021) ---
+val ColorPanelReciclarInicio = Color(0xFFE6F2DF)
+val ColorPanelReciclarFin = Color(0xFFCFE8C6)
+val ColorPanelReutilizarInicio = Color(0xFFFFF1D6)
+val ColorPanelReutilizarFin = Color(0xFFFFE2A8)
+val ColorPanelCaminarInicio = Color(0xFFDFF0E6)
+val ColorPanelCaminarFin = Color(0xFFBFE0CC)
+val ColorLogoVerdeMedio = Color(0xFF3E8E4A)
+val ColorLogoVerdeOscuro = Color(0xFF1F5E34)
+val ColorLogoVerdeClaro = Color(0xFF7DB574)
+val ColorLogoAmbar = Color(0xFFE9A23B)
 
 private val EsquemaClaro = lightColorScheme(
     primary = VerdeBoton,

@@ -244,7 +244,7 @@ fun EncabezadoEcoSmart(
 private const val ID_HOJA_INLINE = "hojaSubtitulo"
 const val TAG_HOJA_SUBTITULO = "HojaSubtitulo"
 
-enum class PestanaInferior { INICIO, ACTIVIDADES, RECOMPENSAS, EDUCACION, PERFIL }
+enum class PestanaInferior { INICIO, ACTIVIDADES, RECOMPENSAS, EDUCACION, PERFIL, PUNTOS_VERDES }
 
 @Composable
 private fun iconoHoja(): ImageVector = ImageVector.vectorResource(R.drawable.ic_hoja)
@@ -252,7 +252,10 @@ private fun iconoHoja(): ImageVector = ImageVector.vectorResource(R.drawable.ic_
 @Composable
 private fun iconoCaminar(): ImageVector = ImageVector.vectorResource(R.drawable.ic_caminar)
 
-/** Barra inferior Inicio / Actividades / Recompensas / Educación / Perfil del mockup (RF-UI-002b, RF-UI-002c). Solo iconos, sin etiqueta de texto. */
+/**
+ * Barra inferior Inicio / Actividades / Recompensas / Educación / Perfil / Puntos Verdes (RF-IA-009, enmienda v2.4.0).
+ * Solo iconos, sin etiqueta de texto; cada ítem mide al menos 48 dp.
+ */
 @Composable
 fun BarraInferiorEcoSmart(
     seleccion: PestanaInferior,
@@ -261,6 +264,7 @@ fun BarraInferiorEcoSmart(
     onRecompensas: () -> Unit,
     onEducacion: () -> Unit,
     onPerfil: () -> Unit,
+    onPuntosVerdes: () -> Unit,
 ) {
     NavigationBar(containerColor = FondoPagina, tonalElevation = 0.dp) {
         val colores = NavigationBarItemDefaults.colors(
@@ -311,6 +315,12 @@ fun BarraInferiorEcoSmart(
                     Icon(Icons.Filled.Person, contentDescription = "Perfil")
                 }
             },
+            colors = colores,
+        )
+        NavigationBarItem(
+            selected = seleccion == PestanaInferior.PUNTOS_VERDES,
+            onClick = onPuntosVerdes,
+            icon = { Icon(Icons.Filled.LocationOn, contentDescription = "Puntos Verdes") },
             colors = colores,
         )
     }
@@ -675,27 +685,6 @@ fun TarjetaActividad(
     }
 }
 
-/** Enlace de sección (C-08): texto «Ver todas» o «Ver todos» alineado a la derecha, con área táctil ≥48x48. */
-@Composable
-fun EnlaceSeccion(
-    texto: String = "Ver todas",
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Box(
-        modifier = modifier
-            .defaultMinSize(minWidth = 48.dp, minHeight = 48.dp)
-            .clickable(onClick = onClick),
-        contentAlignment = Alignment.CenterEnd,
-    ) {
-        Text(
-            text = texto,
-            style = TypeLink,
-            color = ColorGreen700,
-        )
-    }
-}
-
 /**
  * Tarjeta de recompensa (C-10): imagen superior con relación ~4:3, esquinas radius.card,
  * título de hasta 2 líneas truncado con elipsis, fila inferior con costo («800 pts») y chevron ›.
@@ -771,94 +760,6 @@ fun TarjetaRecompensa(
                     )
                 }
             }
-        }
-    }
-}
-
-/**
- * Tarjeta de puntos (C-11): fondo color.green.100, radius.card (16dp), alto aprox. 80pt,
- * etiqueta «Tus puntos» (type.meta), valor numérico en type.points con icono de hoja color.leaf,
- * y chevron › a la derecha. Soporta ilustración o icono a la izquierda.
- */
-@Composable
-fun TarjetaPuntos(
-    puntos: Int,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    etiqueta: String = "Tus puntos",
-    iconoIzquierda: @Composable (() -> Unit)? = null,
-) {
-    Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .semantics(mergeDescendants = true) {
-                contentDescription = "$etiqueta, $puntos puntos"
-            },
-        shape = FormaTarjeta,
-        colors = CardDefaults.cardColors(containerColor = ColorGreen100),
-        elevation = CardDefaults.cardElevation(defaultElevation = ElevacionTarjeta),
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(14.dp),
-            ) {
-                if (iconoIzquierda != null) {
-                    iconoIzquierda()
-                } else {
-                    Box(
-                        modifier = Modifier
-                            .size(44.dp)
-                            .clip(CircleShape)
-                            .background(ColorSurfaceCard),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Image(
-                            painter = painterResource(R.drawable.logo_ecosmart_icono),
-                            contentDescription = null,
-                            modifier = Modifier.size(28.dp),
-                        )
-                    }
-                }
-
-                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Text(
-                        text = etiqueta,
-                        style = TypeMeta,
-                        color = ColorTextSecondary,
-                    )
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                    ) {
-                        Text(
-                            text = formatearPuntos(puntos),
-                            style = TypePoints,
-                            color = ColorGreen900,
-                        )
-                        Icon(
-                            iconoHoja(),
-                            contentDescription = null,
-                            tint = ColorLeaf,
-                            modifier = Modifier.size(16.dp),
-                        )
-                    }
-                }
-            }
-
-            Icon(
-                Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                contentDescription = null,
-                tint = ColorGreen900,
-                modifier = Modifier.size(24.dp),
-            )
         }
     }
 }

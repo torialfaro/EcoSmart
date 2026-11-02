@@ -1,85 +1,63 @@
 package com.ecosmart.presentation.home
 
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalLifecycleOwner
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.semantics.clearAndSetSemantics
-import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
-import com.ecosmart.app.R
-import com.ecosmart.domain.model.Actividad
 import com.ecosmart.domain.valueobject.ActividadId
-import com.ecosmart.domain.valueobject.CategoriaActividad
-import com.ecosmart.presentation.comun.iconoCategoria
 import com.ecosmart.presentation.education.LeccionUi
 import com.ecosmart.presentation.education.LeccionesInicioViewModel
 import com.ecosmart.presentation.education.TarjetasEducativasInicio
 import com.ecosmart.presentation.education.leccionesParaInicio
-import com.ecosmart.presentation.theme.BarraProgresoLineal
-import com.ecosmart.presentation.theme.BotonPrincipal
+import com.ecosmart.presentation.estadodiario.ActividadInicioUi
+import com.ecosmart.presentation.estadodiario.EstadoDiarioUi
 import com.ecosmart.presentation.theme.ColorBgScreen
 import com.ecosmart.presentation.theme.ColorGreen700
-import com.ecosmart.presentation.theme.ColorSurfaceCard
 import com.ecosmart.presentation.theme.ColorTextPrimary
-import com.ecosmart.presentation.theme.ColorTextSecondary
-import com.ecosmart.presentation.theme.CremaTexto
-import com.ecosmart.presentation.theme.ElevacionTarjeta
-import com.ecosmart.presentation.theme.EncabezadoEcoSmart
-import com.ecosmart.presentation.theme.EnlaceSeccion
-import com.ecosmart.presentation.theme.FormaTarjeta
+import com.ecosmart.presentation.theme.EncabezadoInicio
+import com.ecosmart.presentation.theme.FormaPill
 import com.ecosmart.presentation.theme.SpaceGapCard
 import com.ecosmart.presentation.theme.SpaceScreenX
-import com.ecosmart.presentation.theme.TarjetaActividad
-import com.ecosmart.presentation.theme.TarjetaPuntos
-import com.ecosmart.presentation.theme.TypeCardTitle
-import com.ecosmart.presentation.theme.TypeMeta
+import com.ecosmart.presentation.theme.TarjetaActividadConBoton
+import com.ecosmart.presentation.theme.TarjetaProgresoDiario
+import com.ecosmart.presentation.theme.TarjetaPuntosInicio
+import com.ecosmart.presentation.theme.TypeChip
 import com.ecosmart.presentation.theme.TypeSection
+import com.ecosmart.presentation.theme.ZonaTactilMinima
+
+const val TAG_LISTA_INICIO = "ListaInicio"
+
+private const val SUBTITULO_MARCA = "Pequeñas acciones, grandes cambios"
 
 /**
- * Pantalla Inicio reconstruida según S-01 (especificacion-ui-app-eco.md §4):
- * Encabezado con saludo y avatar, subtítulo con hoja, tarjeta de puntos C-11,
- * tarjeta de progreso general C-05 ("X/Y actividades" y barra %), carrusel horizontal C-06,
- * botón principal "Ver todas las actividades →" C-07 y carrusel horizontal de videos C-09.
+ * Pantalla Inicio rediseñada (spec 005, tableros I1/I2): encabezado verde con la tarjeta de puntos superpuesta,
+ * "Tu progreso de hoy", carrusel "Actividades de hoy", botón "Ver todas las actividades" y "Contenido para vos".
+ * Todos los valores salen de [HomeViewModel]; la barra inferior la aporta [barraInferior].
  */
 @Composable
 fun HomeScreen(
@@ -88,7 +66,6 @@ fun HomeScreen(
     onVerTodasLasActividades: () -> Unit = {},
     onVerLeccion: (String) -> Unit = {},
     onVerPerfil: () -> Unit,
-    onVerPuntosVerdes: () -> Unit = {},
     barraInferior: @Composable () -> Unit = {},
     leccionesViewModel: LeccionesInicioViewModel = hiltViewModel(),
 ) {
@@ -104,40 +81,7 @@ fun HomeScreen(
         onDispose { lifecycleOwner.lifecycle.removeObserver(observador) }
     }
 
-    val actividadesDelDia = remember(uiState.todasLasActividades, uiState.actividadesPorCategoria, uiState.pasosHoy) {
-        val lista = uiState.todasLasActividades.ifEmpty { uiState.actividadesPorCategoria.values.flatten() }
-        lista.map { act ->
-            val esCaminar = act.categoria == CategoriaActividad.CAMINAR
-            // Corrección post-QA: el progreso de Caminar sale únicamente del podómetro real (uiState.pasosHoy).
-            val progreso = if (esCaminar) uiState.pasosHoy else 0
-            val meta = if (esCaminar) META_PASOS_POR_DEFECTO_DISPLAY else 1
-            ActividadItemUi(
-                id = act.id.valor,
-                nombre = act.descripcionCorta,
-                categoria = act.categoria,
-                iconoRes = iconoCategoria(act.categoria),
-                progresoActual = progreso,
-                meta = meta,
-                puntosBase = act.puntosBase,
-                esMedible = meta > 1,
-            )
-        }
-    }
-
-    Scaffold(
-        containerColor = ColorBgScreen,
-        topBar = {
-            // S01-A, S01-B, S01-C: Saludo + Avatar + Subtítulo
-            EncabezadoEcoSmart(
-                saludo = if (uiState.nombreUsuario.isNotBlank()) "¡Hola, ${uiState.nombreUsuario}!" else "¡Hola!",
-                subtitulo = "Pequeñas acciones, grandes cambios",
-                inicialUsuario = uiState.nombreUsuario.ifBlank { "U" },
-                onAvatar = onVerPerfil,
-                mostrarHojaSubtitulo = true,
-            )
-        },
-        bottomBar = barraInferior,
-    ) { padding ->
+    Scaffold(containerColor = ColorBgScreen, bottomBar = barraInferior) { padding ->
         if (uiState.cargando) {
             Box(
                 modifier = Modifier.fillMaxSize().padding(padding),
@@ -148,15 +92,17 @@ fun HomeScreen(
             return@Scaffold
         }
 
+        // El bloque verde llega hasta el borde superior; solo se respeta el espacio de la barra inferior.
         HomeContenido(
-            actividades = actividadesDelDia,
+            nombreUsuario = uiState.nombreUsuario,
             puntosTotales = uiState.puntosHistoricos,
-            onSeleccionarActividad = { id -> onSeleccionarActividad(ActividadId(id)) },
+            estadoDiario = uiState.estadoDiario,
+            actividades = uiState.actividadesInicio,
+            onSeleccionarActividad = onSeleccionarActividad,
             onVerTodasLasActividades = onVerTodasLasActividades,
             onVerLeccion = onVerLeccion,
             onVerPerfil = onVerPerfil,
-            onVerPuntosVerdes = onVerPuntosVerdes,
-            modifier = Modifier.padding(padding),
+            modifier = Modifier.padding(bottom = padding.calculateBottomPadding()),
             leccionesInicio = leccionesInicio,
         )
     }
@@ -164,176 +110,87 @@ fun HomeScreen(
 
 @Composable
 fun HomeContenido(
-    actividades: List<ActividadItemUi>,
-    puntosTotales: Int = 0,
-    onSeleccionarActividad: (String) -> Unit,
+    nombreUsuario: String,
+    puntosTotales: Int,
+    estadoDiario: EstadoDiarioUi?,
+    actividades: List<ActividadInicioUi>,
+    onSeleccionarActividad: (ActividadId) -> Unit,
     onVerTodasLasActividades: () -> Unit = {},
     onVerLeccion: (String) -> Unit = {},
     onVerPerfil: () -> Unit = {},
-    onVerPuntosVerdes: () -> Unit = {},
     modifier: Modifier = Modifier,
     leccionesInicio: List<LeccionUi> = emptyList(),
 ) {
-    val totalActividades = actividades.size.coerceAtLeast(1)
-    val completadas = actividades.count { it.progresoActual >= it.meta && it.meta > 0 }
-    val fraccionProgreso = (completadas.toFloat() / totalActividades.toFloat()).coerceIn(0f, 1f)
-
-    Box(modifier = modifier.fillMaxSize()) {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(start = SpaceScreenX, end = SpaceScreenX, bottom = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(18.dp),
-        ) {
-            // S01-D: Tarjeta de puntos C-11 (planeta ilustrado decorativo RF-UI-018)
+    LazyColumn(
+        modifier = modifier.fillMaxSize().testTag(TAG_LISTA_INICIO),
+        contentPadding = PaddingValues(bottom = 24.dp),
+        verticalArrangement = Arrangement.spacedBy(18.dp),
+    ) {
         item {
-            TarjetaPuntos(
-                puntos = puntosTotales,
-                onClick = onVerPerfil,
-                iconoIzquierda = {
-                    Box(
-                        modifier = Modifier
-                            .size(44.dp)
-                            .clip(CircleShape)
-                            .background(ColorSurfaceCard)
-                            .clearAndSetSemantics {},
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Image(
-                            painter = painterResource(R.drawable.logo_ecosmart_icono),
-                            contentDescription = null,
-                            modifier = Modifier.size(28.dp),
-                        )
-                    }
-                },
-            )
-        }
-
-        // S01-E: Tarjeta de progreso general C-05
-        item {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = FormaTarjeta,
-                colors = CardDefaults.cardColors(containerColor = ColorSurfaceCard),
-                elevation = CardDefaults.cardElevation(defaultElevation = ElevacionTarjeta),
+            EncabezadoInicio(
+                saludo = if (nombreUsuario.isNotBlank()) "¡Hola, $nombreUsuario!" else "¡Hola!",
+                subtitulo = SUBTITULO_MARCA,
+                inicialUsuario = nombreUsuario.ifBlank { "U" },
+                onAvatar = onVerPerfil,
             ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
-                ) {
-                    Text(
-                        text = "Tu progreso general",
-                        style = TypeCardTitle,
-                        color = ColorTextPrimary,
-                    )
-
-                    BarraProgresoLineal(
-                        progreso = fraccionProgreso,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text(
-                            text = "$completadas/$totalActividades actividades",
-                            style = TypeMeta,
-                            color = ColorTextSecondary,
-                        )
-
-                        EnlaceSeccion(
-                            texto = "Ver todas",
-                            onClick = onVerTodasLasActividades,
-                        )
-                    }
-                }
+                TarjetaPuntosInicio(puntos = puntosTotales, onClick = onVerPerfil)
             }
         }
 
-        // S01-F: Título "Actividades de hoy" + Enlace "Ver todas"
-        item {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = "Actividades de hoy",
-                    style = TypeSection,
-                    color = ColorTextPrimary,
-                )
-                EnlaceSeccion(
-                    texto = "Ver todas",
-                    onClick = onVerTodasLasActividades,
-                )
-            }
+        // Sin lectura del estado del día no se muestra ningún número: la UI no inventa totales.
+        if (estadoDiario != null) {
+            item { TarjetaProgresoDiario(estado = estadoDiario, modifier = Modifier.padding(horizontal = SpaceScreenX)) }
         }
 
-        // S01-G: Carrusel horizontal de actividades C-06 (compactas)
+        item { TituloSeccion("Actividades de hoy") }
+
         item {
             LazyRow(
+                contentPadding = PaddingValues(horizontal = SpaceScreenX),
                 horizontalArrangement = Arrangement.spacedBy(SpaceGapCard),
                 modifier = Modifier.fillMaxWidth(),
             ) {
-                items(actividades, key = { it.id }) { actividad ->
-                    TarjetaActividad(
-                        nombre = actividad.nombre,
-                        iconoRes = actividad.iconoRes,
-                        progresoActual = actividad.progresoActual,
-                        meta = actividad.meta,
-                        puntosBase = actividad.puntosBase,
-                        onClick = { onSeleccionarActividad(actividad.id) },
-                        esCompacta = true,
-                        esMedible = actividad.esMedible,
-                        unidad = actividad.unidad,
+                items(actividades, key = { it.actividad.id.valor }) { tarjeta ->
+                    TarjetaActividadConBoton(
+                        actividad = tarjeta,
+                        onClick = { onSeleccionarActividad(tarjeta.actividad.id) },
                     )
                 }
             }
         }
 
-        // S01-H: Botón "Ver todas las actividades →" C-07
         item {
-            BotonPrincipal(
-                texto = "Ver todas las actividades",
+            OutlinedButton(
                 onClick = onVerTodasLasActividades,
-                conFlecha = true,
-            )
+                modifier = Modifier
+                    .padding(horizontal = SpaceScreenX)
+                    .fillMaxWidth()
+                    .defaultMinSize(minHeight = ZonaTactilMinima),
+                shape = FormaPill,
+                border = BorderStroke(1.5.dp, ColorGreen700),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = ColorGreen700),
+            ) {
+                Text(text = "Ver todas las actividades", style = TypeChip.copy(fontWeight = FontWeight.SemiBold))
+            }
         }
 
-        // S01-I: Título "Contenido para vos" (se omite sin lecciones)
         if (leccionesInicio.isNotEmpty()) {
+            item { TituloSeccion("Contenido para vos") }
             item {
-                Text(
-                    text = "Contenido para vos",
-                    style = TypeSection,
-                    color = ColorTextPrimary,
-                )
-            }
-
-            // S01-J: Tarjetas de lección compactas (máx. 2)
-            item {
-                TarjetasEducativasInicio(lecciones = leccionesParaInicio(leccionesInicio), onVerLeccion = onVerLeccion)
+                Box(modifier = Modifier.padding(horizontal = SpaceScreenX)) {
+                    TarjetasEducativasInicio(lecciones = leccionesParaInicio(leccionesInicio), onVerLeccion = onVerLeccion)
+                }
             }
         }
-    }
-
-    // Botón flotante circular verde estático en el lateral derecho hacia Puntos Verdes (RF-UI-002c)
-    IconButton(
-        onClick = onVerPuntosVerdes,
-        modifier = Modifier
-            .align(Alignment.CenterEnd)
-            .padding(end = 16.dp)
-            .size(56.dp)
-            .clip(CircleShape)
-            .background(ColorGreen700),
-    ) {
-        Icon(
-            imageVector = Icons.Filled.LocationOn,
-            contentDescription = "Puntos Verdes",
-            tint = CremaTexto,
-            modifier = Modifier.size(28.dp),
-        )
     }
 }
+
+@Composable
+private fun TituloSeccion(texto: String) {
+    Text(
+        text = texto,
+        style = TypeSection,
+        color = ColorTextPrimary,
+        modifier = Modifier.padding(horizontal = SpaceScreenX),
+    )
 }

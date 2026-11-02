@@ -42,6 +42,16 @@ val ZonaTactilMinima: Dp = 48.dp
 val FormaTarjetaLeccion = RoundedCornerShape(24.dp)
 val FormaHojaLeccion = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
 
+// --- Inicio y Actividad individual (spec 005, RF-IA-021) ---
+val RadiusPanelActividad: Dp = 24.dp
+val RadiusTarjetaActividad: Dp = 28.dp
+val FormaPanelActividad = RoundedCornerShape(24.dp)
+val FormaTarjetaActividad = RoundedCornerShape(28.dp)
+val ElevacionTarjetaSuave: Dp = 4.dp
+val TamanoLogoChico: Dp = 44.dp
+val TamanoLogoMedio: Dp = 76.dp
+val TamanoLogoGrande: Dp = 120.dp
+
 // --- Elevación / Sombras (shadow.*) ---
 val ElevacionTarjeta: Dp = 2.dp
 

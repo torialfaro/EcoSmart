@@ -37,7 +37,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.ecosmart.domain.valueobject.CategoriaActividad
-import com.ecosmart.presentation.comun.iconoCategoria
+import com.ecosmart.presentation.comun.logoCategoria
 import com.ecosmart.presentation.theme.ColorBgScreen
 import com.ecosmart.presentation.theme.ColorGreen700
 import com.ecosmart.presentation.theme.ColorSurfaceCard
@@ -118,7 +118,7 @@ fun ActividadesScreen(
                 id = act.id.valor,
                 nombre = act.descripcionCorta,
                 categoria = act.categoria,
-                iconoRes = iconoCategoria(act.categoria),
+                iconoRes = logoCategoria(act.categoria),
                 progresoActual = progreso,
                 meta = meta,
                 puntosBase = act.puntosBase,

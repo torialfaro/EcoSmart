@@ -1,6 +1,7 @@
 package com.ecosmart.presentation.comun
 
 import androidx.annotation.DrawableRes
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import com.ecosmart.app.R
 import com.ecosmart.domain.valueobject.CategoriaActividad
@@ -10,6 +11,12 @@ import com.ecosmart.presentation.theme.ColorChipReciclarFondo
 import com.ecosmart.presentation.theme.ColorChipReciclarTexto
 import com.ecosmart.presentation.theme.ColorChipReutilizarFondo
 import com.ecosmart.presentation.theme.ColorChipReutilizarTexto
+import com.ecosmart.presentation.theme.ColorPanelCaminarFin
+import com.ecosmart.presentation.theme.ColorPanelCaminarInicio
+import com.ecosmart.presentation.theme.ColorPanelReciclarFin
+import com.ecosmart.presentation.theme.ColorPanelReciclarInicio
+import com.ecosmart.presentation.theme.ColorPanelReutilizarFin
+import com.ecosmart.presentation.theme.ColorPanelReutilizarInicio
 import com.ecosmart.presentation.theme.ColorPastelCaminar
 import com.ecosmart.presentation.theme.ColorPastelReciclar
 import com.ecosmart.presentation.theme.ColorPastelReutilizar
@@ -57,4 +64,19 @@ fun colorFondoIlustracionCategoria(categoria: CategoriaActividad): Color = when 
     CategoriaActividad.RECICLAR -> ColorPastelReciclar
     CategoriaActividad.REUTILIZAR -> ColorPastelReutilizar
     CategoriaActividad.CAMINAR -> ColorPastelCaminar
+}
+
+/** Logo de categoría de Inicio, Actividades y el detalle de actividad (spec 005, `C-19`); `iconoCategoria()` sigue para el Historial. */
+@DrawableRes
+fun logoCategoria(categoria: CategoriaActividad): Int = when (categoria) {
+    CategoriaActividad.RECICLAR -> R.drawable.logo_categoria_reciclar
+    CategoriaActividad.REUTILIZAR -> R.drawable.logo_categoria_reutilizar
+    CategoriaActividad.CAMINAR -> R.drawable.logo_categoria_caminar
+}
+
+/** Degradé del panel de la tarjeta y del detalle de actividad (RF-IA-021). */
+fun degradePanelCategoria(categoria: CategoriaActividad): Brush = when (categoria) {
+    CategoriaActividad.RECICLAR -> Brush.verticalGradient(listOf(ColorPanelReciclarInicio, ColorPanelReciclarFin))
+    CategoriaActividad.REUTILIZAR -> Brush.verticalGradient(listOf(ColorPanelReutilizarInicio, ColorPanelReutilizarFin))
+    CategoriaActividad.CAMINAR -> Brush.verticalGradient(listOf(ColorPanelCaminarInicio, ColorPanelCaminarFin))
 }

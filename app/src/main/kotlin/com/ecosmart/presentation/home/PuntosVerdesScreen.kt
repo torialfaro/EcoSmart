@@ -2,13 +2,12 @@ package com.ecosmart.presentation.home
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -19,7 +18,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -115,9 +113,32 @@ fun PuntosVerdesScreen(
     val tituloHeader = if (puntoActual != null) "Punto Verde en ${puntoActual.nombre}" else "Puntos Verdes"
     val subtituloHeader = if (puntoActual != null) "Zona de ${puntoActual.direccion}" else "Encontrá tu punto más cercano"
 
+    Column(modifier = Modifier.fillMaxSize()) {
+        ContenidoPuntosVerdes(
+            uiState = uiState,
+            tituloHeader = tituloHeader,
+            subtituloHeader = subtituloHeader,
+            onSeleccionarPunto = viewModel::seleccionarPunto,
+            onVolver = onVolver,
+            modifier = Modifier.weight(1f),
+        )
+        barraInferior()
+    }
+}
+
+/** El mapa ocupa el espacio que deja la barra inferior, por lo que esta nunca lo tapa (RF-IA-009). */
+@Composable
+private fun ContenidoPuntosVerdes(
+    uiState: PuntosVerdesUiState,
+    tituloHeader: String,
+    subtituloHeader: String,
+    onSeleccionarPunto: (PuntoVerde) -> Unit,
+    onVolver: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Box(
-        modifier = Modifier
-            .fillMaxSize()
+        modifier = modifier
+            .fillMaxWidth()
             .background(ColorBgScreen),
     ) {
         when {
@@ -148,7 +169,7 @@ fun PuntosVerdesScreen(
                 // Mapa a pantalla completa
                 MapaPuntosVerdes(
                     puntos = uiState.puntos,
-                    onSeleccionarPunto = viewModel::seleccionarPunto,
+                    onSeleccionarPunto = onSeleccionarPunto,
                     modifier = Modifier.fillMaxSize(),
                 )
             }
