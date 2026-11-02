@@ -27,6 +27,9 @@ jobs:
         env:
           GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
 
+      - name: Validar google-services.json
+        run: python3 -m json.tool app/google-services.json > /dev/null || (echo "El secret GOOGLE_SERVICES_JSON está incompleto o mal codificado" && exit 1)
+
       - name: Crear local.properties
         run: |
           {
