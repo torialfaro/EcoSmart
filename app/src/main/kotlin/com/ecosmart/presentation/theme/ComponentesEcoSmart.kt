@@ -633,12 +633,15 @@ fun TarjetaActividad(
                 textAlign = if (esCompacta) TextAlign.Center else TextAlign.Start,
             )
 
-            Text(
-                text = progresoTexto,
-                style = TypeMeta,
-                color = ColorTextSecondary,
-                textAlign = if (esCompacta) TextAlign.Center else TextAlign.Start,
-            )
+            // Las actividades no medibles (meta 1) no muestran el indicador "0 / 1" (spec 005, RF-IA-006).
+            if (esMedible) {
+                Text(
+                    text = progresoTexto,
+                    style = TypeMeta,
+                    color = ColorTextSecondary,
+                    textAlign = if (esCompacta) TextAlign.Center else TextAlign.Start,
+                )
+            }
 
             if (esMedible && estado == EstadoTarjetaActividad.IN_PROGRESS) {
                 val ratio = if (meta > 0) progresoActual.toFloat() / meta.toFloat() else 0f
